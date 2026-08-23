@@ -33,7 +33,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBaseUrl: 'https://api.miuier.com/',
+      apiBaseUrl: 'https://api.miuier.com/api',
     },
   },
 
