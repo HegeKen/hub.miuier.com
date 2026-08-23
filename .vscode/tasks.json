@@ -1,0 +1,91 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "run-getNewBranch",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/get_new_branch.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "run-otaFormer",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/ota_former.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "run-XFUFull",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/ota_full.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "run-xfuFull",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/xfu_full.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "run-mgcFastboot",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/mgc_fastboot.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "run-getCurrentFastboot",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/get_current_fastboot.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "run-AndroidSecurityPatch",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/aspatch.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "run-fetchChangelog",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/fetch_changelog.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "run-all-jobs",
+			"dependsOn": [
+				"run-getNewBranch",
+				"run-otaFormer",
+				"run-otaFull",
+				"run-xfuFull",
+				"run-mgcFastboot",
+				"run-getCurrentFastboot",
+				"run-AndroidSecurityPatch",
+				"run-fetchChangelog"
+			],
+			"problemMatcher": []
+		}
+	]
+}
