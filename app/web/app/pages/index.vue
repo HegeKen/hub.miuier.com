@@ -30,6 +30,36 @@
       </div>
     </section>
 
+    <!-- Feedback -->
+    <section class="mx-auto mb-10 flex flex-col items-center gap-3" :aria-label="$t('feedback')">
+      <p class="text-center text-sm text-[var(--color-text-secondary)]">
+        {{ $t('feedbackNote') }}
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <a
+          href="https://github.com/HegeKen/hub.miuier.com/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-subtle)]"
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+          </svg>
+          {{ $t('feedbackIssues') }}
+        </a>
+        <a
+          href="mailto:hegeken@foxmail.com"
+          class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-subtle)]"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+            <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z"/>
+            <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z"/>
+          </svg>
+          {{ $t('feedbackEmail') }}
+        </a>
+      </div>
+    </section>
+
     <!-- Recent summary -->
     <section v-if="stats" class="mx-auto mb-10 max-w-xl text-center">
       <p class="text-sm text-[var(--color-text-secondary)]">
@@ -39,9 +69,14 @@
 
     <!-- Recent 7-day ROM updates -->
       <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)]"v-if="stats?.recent?.length" aria-label="Recent updates">
-        <div class="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3.5">
-          <h2 class="text-sm font-semibold text-[var(--color-text)]">{{ $t('recent7dList') }}</h2>
-          <span class="rounded-full bg-[var(--color-accent-soft)] px-2.5 py-0.5 text-xs font-semibold tabular-nums text-[var(--color-accent)]">
+        <div class="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-3.5">
+          <div class="min-w-0">
+            <h2 class="text-sm font-semibold text-[var(--color-text)]">{{ $t('recent7dList') }}</h2>
+            <p class="mt-0.5 text-xs tabular-nums text-[var(--color-text-tertiary)]">
+              {{ $t('statsGeneratedAt') }} {{ generatedAtText }}
+            </p>
+          </div>
+          <span class="shrink-0 rounded-full bg-[var(--color-accent-soft)] px-2.5 py-0.5 text-xs font-semibold tabular-nums text-[var(--color-accent)]">
             {{ stats.recentRoms.toLocaleString() }}
           </span>
         </div>
@@ -143,6 +178,16 @@ const brandCount = computed(() => {
     }
   }
   return brands.size
+})
+
+// stats.json 的生成时间，格式化为本地时区 YYYY-MM-DD HH:mm:ss
+const generatedAtText = computed(() => {
+  const ts = stats.value?.generatedAt
+  if (!ts) return ''
+  const d = new Date(ts)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 })
 
 useHead({
