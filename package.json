@@ -1,0 +1,12 @@
+{
+  "name": "miroms",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n web,admin -c blue,green \"pnpm --dir app/web dev\" \"pnpm --dir app/admin dev\"",
+    "dev:web": "pnpm --dir app/web dev",
+    "dev:admin": "pnpm --dir app/admin dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

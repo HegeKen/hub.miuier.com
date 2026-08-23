@@ -1,6 +1,3 @@
-[submodule "public/data"]
-	path = public/data
-	url = https://github.com/HegeKen/miroms
 [submodule "data"]
 	path = data
 	url = https://github.com/HegeKen/miroms
