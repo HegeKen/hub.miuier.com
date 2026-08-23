@@ -6,7 +6,7 @@
         <p>&copy; 2019 - {{ new Date().getFullYear() }} MiROMS HUB.</p> 
         <div class="flex items-center gap-5">
           <a
-            href="https://github.com/HegeKen/miroms.com"
+            href="https://github.com/HegeKen/hub.miuier.com"
             target="_blank"
             rel="noopener noreferrer"
             class="transition-colors hover:text-[var(--color-text)]"
