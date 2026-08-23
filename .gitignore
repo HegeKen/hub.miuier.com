@@ -1,0 +1,22 @@
+node_modules
+.DS_Store
+.nuxt
+.output
+dist
+data/.DS_Store
+data/scripts/__pycache__
+
+# Web app
+app/web/node_modules
+app/web/.nuxt
+app/web/.output
+app/web/dist
+
+# Admin app
+app/admin/node_modules
+app/admin/.nuxt
+app/admin/.output
+app/admin/dist
+
+# pnpm local store
+.pnpm-store/
