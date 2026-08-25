@@ -184,10 +184,24 @@ const { locale } = useI18n()
 const { t } = useI18n()
 const { buildDevicesIndexUrl } = useApi()
 
+const route = useRoute()
+const router = useRouter()
+
 const searchQuery = ref('')
 const selectedBrand = ref('')
 const selectedAndroid = ref('')
-const selectedOs = ref('')
+const selectedOs = ref(typeof route.query.os === 'string' ? route.query.os : '')
+
+// Sync OS filter to URL query (?os=OS3)，支持分享链接直接命中筛选结果
+watch(selectedOs, (val) => {
+  const query = { ...route.query }
+  if (val) {
+    query.os = val
+  } else {
+    delete query.os
+  }
+  router.replace({ query })
+})
 
 const formatBrand = (b) => b.toLowerCase() === 'xiaomi' ? 'Xiaomi' : b.toUpperCase()
 

@@ -25,6 +25,14 @@ export function useApi() {
     return buildUrl('/v3/stats.json')
   }
 
+  const buildRomsIndexUrl = (): string => {
+    return buildUrl('/v3/roms/index.json')
+  }
+
+  const buildRomsUrl = (os: string): string => {
+    return buildUrl(`/v3/roms/${os}.json`)
+  }
+
   const buildDownloadLink = (version: string, filename: string): string => {
     return `https://bkt-sgp-miui-ota-update-alisgp.oss-ap-southeast-1.aliyuncs.com/${version}/${filename}`
   }
@@ -41,6 +49,8 @@ export function useApi() {
     buildDeviceUrl,
     buildDevicesIndexUrl,
     buildStatsUrl,
+    buildRomsIndexUrl,
+    buildRomsUrl,
     buildDownloadLink,
     buildChangelogUrl,
   }

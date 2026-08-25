@@ -116,6 +116,7 @@ const navItems = computed(() => {
   return [
     { label: 'home', path: base },
     { label: 'devices', path: base + '/devices' },
+    { label: 'roms', path: base + '/roms' },
   ]
 })
 

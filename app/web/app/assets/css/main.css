@@ -51,6 +51,11 @@
     @apply transition-colors duration-150;
   }
 
+  /* 表格单元格统一用正常文本色；次要信息列用浅一点的颜色（--color-text-secondary）实现视觉层次 */
+  td {
+    @apply text-[var(--color-text)];
+  }
+
   ::selection {
     background: var(--color-accent);
     color: #fff;
