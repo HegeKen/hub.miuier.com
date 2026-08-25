@@ -131,9 +131,7 @@
                   <span class="font-mono text-xs text-[var(--color-text-tertiary)]">NULL</span>
                 </template>
                 <template v-else>
-                  <span v-if="col.isJson" class="mr-1.5 inline-block rounded bg-[var(--color-accent-soft)] px-1 py-0.5 font-mono text-[10px] text-[var(--color-accent)]">
-                    JSON
-                  </span>
+                  <span v-if="col.isJson" class="mr-1.5 inline-block rounded bg-[var(--color-accent-soft)] px-1 py-0.5 font-mono text-[10px] text-[var(--color-accent)]"></span>
                   <span class="block truncate">{{ cellText(row[col.name]) }}</span>
                 </template>
               </td>
