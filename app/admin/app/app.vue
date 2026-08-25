@@ -174,6 +174,7 @@ const doLogout = () => {
 const navItems = [
   { label: '仪表盘', to: '/', icon: 'home' },
   { label: '机型管理', to: '/devices-manager', icon: 'table' },
+  { label: '设备系列', to: '/series-manager', icon: 'tag' },
   { label: '设备管理', to: '/devices', icon: 'device' },
   { label: '分支管理', to: '/branches', icon: 'tag' },
   { label: 'ROM 管理', to: '/roms', icon: 'archive' },
@@ -183,6 +184,7 @@ const navItems = [
 const titleMap = {
   '/': '仪表盘',
   '/devices-manager': '机型管理',
+  '/series-manager': '设备系列',
   '/devices': '设备管理',
   '/branches': '分支管理',
   '/roms': 'ROM 管理',

@@ -1,3 +1,4 @@
+import mysql from 'mysql2/promise'
 import { getPool, ALLOWED_TABLES, type AllowedTable } from './db'
 
 /**
@@ -38,7 +39,7 @@ export interface TableCheckReport {
   dismissals: Dismissal[]
 }
 
-export interface Dismissal {
+export interface Dismissal extends mysql.RowDataPacket {
   id: number
   table_name: string
   rule_id: string
@@ -48,6 +49,14 @@ export interface Dismissal {
   created_at: number
 }
 
+/** 违规计数查询结果行（COUNT(*) 返回字符串） */
+interface CountRow extends mysql.RowDataPacket {
+  total: string
+}
+
+/** 样本查询结果行（列不固定，动态拼接） */
+interface SampleRow extends mysql.RowDataPacket {}
+
 export const DISMISSALS_TABLE = 'check_dismissals'
 
 /** 各表样本上下文字段（便于识别具体记录） */
@@ -55,6 +64,7 @@ const CONTEXT_COLS: Record<AllowedTable, string[]> = {
   devices: ['device', 'code'],
   branches: ['branch', 'name_zh'],
   roms: ['device', 'version'],
+  series: ['brand', 'name_zh'],
 }
 
 /* ---------------- 规则定义 ---------------- */
@@ -360,6 +370,35 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       violation: 'update_date IS NOT NULL AND update_date <= 0',
     },
   ],
+
+  series: [
+    {
+      id: 'brand_enum',
+      name: 'brand 枚举',
+      column: 'brand',
+      description: '系列所属品牌：xiaomi / redmi / poco',
+      severity: 'error',
+      violation: "brand IS NOT NULL AND brand NOT IN ('xiaomi','redmi','poco')",
+    },
+    {
+      id: 'name_empty',
+      name: '名称空字符串',
+      column: 'name_zh/name_en',
+      description: '系列中英文名称不应为空字符串（应使用 NULL）',
+      severity: 'error',
+      violation: "(name_zh IS NOT NULL AND name_zh='') OR (name_en IS NOT NULL AND name_en='')",
+      sampleCols: ['name_zh', 'name_en'],
+    },
+    JSON_RULE('device_ids', 'device_ids 应为合法 JSON 数组，如 [12,34,56]'),
+    {
+      id: 'device_ids_empty',
+      name: 'device_ids 为空数组',
+      column: 'device_ids',
+      description: '系列应至少归属一台设备；空数组 [] 属异常（可先建系列再补设备）',
+      severity: 'warning',
+      violation: "device_ids IS NOT NULL AND TRIM(device_ids) = '[]'",
+    },
+  ],
 }
 
 /* ---------------- 忽略（dismiss）管理 ---------------- */
@@ -401,7 +440,8 @@ export async function addDismissal(
      ON DUPLICATE KEY UPDATE reason = VALUES(reason)`,
     [table, ruleId, Number(rowId) || 0, String(reason || '').slice(0, 500), Date.now()],
   )
-  return (await listDismissals(table, ruleId, Number(rowId) || 0))[0]
+  // upsert 刚写入成功，该记录必然存在
+  return (await listDismissals(table, ruleId, Number(rowId) || 0))[0]!
 }
 
 export async function removeDismissal(table: AllowedTable, ruleId: string, rowId = 0): Promise<boolean> {
@@ -462,7 +502,7 @@ export async function runTableCheck(table: AllowedTable, summaryOnly = false): P
         return { ...rule, total: 0, samples: [], dismissed: true }
       }
 
-      const [countRows] = await getPool().query<Array<{ total: string }>>(
+      const [countRows] = await getPool().query<CountRow[]>(
         `SELECT COUNT(*) AS total FROM \`${table}\` t WHERE ${rule.violation} ${dismissalClause}`,
         [table, rule.id],
       )
@@ -471,7 +511,7 @@ export async function runTableCheck(table: AllowedTable, summaryOnly = false): P
       let samples: Array<Record<string, unknown>> = []
       if (!summaryOnly && total > 0) {
         const sampleCols = (rule.sampleCols || [rule.column]).map((c) => `\`${c}\``)
-        const [rows] = await getPool().query<Array<Record<string, unknown>>>(
+        const [rows] = await getPool().query<SampleRow[]>(
           `SELECT t.id, ${context.join(', ')}, ${sampleCols.join(', ')}
            FROM \`${table}\` t
            WHERE ${rule.violation} ${dismissalClause}
