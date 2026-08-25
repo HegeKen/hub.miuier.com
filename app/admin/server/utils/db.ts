@@ -4,6 +4,10 @@ import { createError } from 'h3'
 /**
  * 数据库访问层：直连 MySQL（miroms 库），提供参数化查询与表结构元数据。
  * 表名白名单 + 列名校验，防止 SQL 注入与越权操作。
+ *
+ * 支持两种连接模式：
+ * 1. 默认连接：使用 runtimeConfig.db 配置（本地模式）
+ * 2. 请求级连接：从 x-db-config 请求头读取客户端传来的配置（远程模式）
  */
 
 export const ALLOWED_TABLES = ['devices', 'branches', 'roms'] as const
@@ -23,31 +27,85 @@ export interface ColumnMeta {
   isLong: boolean
 }
 
-let pool: mysql.Pool | null = null
+// ---- 连接池管理 ----
 
-export function getPool(): mysql.Pool {
-  if (!pool) {
-    const cfg = useRuntimeConfig().db as {
-      host: string
-      port: number
-      user: string
-      password: string
-      database: string
-    }
-    pool = mysql.createPool({
-      host: cfg.host,
-      port: cfg.port,
-      user: cfg.user,
-      password: cfg.password,
-      database: cfg.database,
-      connectionLimit: 10,
-      connectTimeout: 10_000,
-      dateStrings: true,
-      charset: 'utf8mb4',
-    })
-  }
-  return pool
+const POOL_OPTS = {
+  connectionLimit: 10,
+  connectTimeout: 10_000,
+  dateStrings: true,
+  charset: 'utf8mb4' as const,
 }
+
+/** 默认连接池（从 runtimeConfig 创建，作为 fallback） */
+let defaultPool: mysql.Pool | null = null
+
+/** 活跃的请求级连接池及其配置键 */
+let activePool: mysql.Pool | null = null
+let activeConfigKey = ''
+
+/** 当前请求的 DB 配置（由 Nitro 插件在每个请求开始时设置） */
+let requestDbConfig: Record<string, unknown> | null = null
+
+/** 供 Nitro 插件调用：设置当前请求的 DB 配置 */
+export function setRequestDbConfig(config: Record<string, unknown> | null) {
+  requestDbConfig = config
+}
+
+function getConfigKey(config: Record<string, unknown>): string {
+  return `${config.host}:${config.port}:${config.user}:${config.database}`
+}
+
+function getRuntimeConfig() {
+  return useRuntimeConfig().db as {
+    host: string
+    port: number
+    user: string
+    password: string
+    database: string
+  }
+}
+
+function ensureDefaultPool(): mysql.Pool {
+  if (!defaultPool) {
+    const cfg = getRuntimeConfig()
+    defaultPool = mysql.createPool({ ...cfg, ...POOL_OPTS })
+  }
+  return defaultPool
+}
+
+/**
+ * 获取当前请求对应的连接池。
+ * 优先使用插件设置的请求级配置，否则使用默认池。
+ * 当配置变更时自动释放旧池并创建新池。
+ */
+export function getPool(): mysql.Pool {
+  const config = requestDbConfig
+
+  // 无请求配置 → 使用默认池
+  if (!config) return ensureDefaultPool()
+
+  const key = getConfigKey(config)
+
+  // 配置未变 → 复用现有池
+  if (activePool && activeConfigKey === key) return activePool
+
+  // 配置变更 → 关闭旧池，创建新池
+  if (activePool) {
+    activePool.end().catch(() => {})
+    activePool = null
+  }
+
+  activePool = mysql.createPool({ ...config, ...POOL_OPTS })
+  activeConfigKey = key
+
+  // 连接配置变更，清除元数据缓存
+  metaCache.clear()
+  jsonColsCache = null
+
+  return activePool
+}
+
+// ---- 表名白名单 ----
 
 /** 校验表名是否在白名单内，非法表名直接 400 */
 export function assertTable(table: string): asserts table is AllowedTable {
@@ -56,7 +114,7 @@ export function assertTable(table: string): asserts table is AllowedTable {
   }
 }
 
-/* ---------------- 表结构元数据（带缓存） ---------------- */
+// ---- 表结构元数据（带缓存，按连接配置隔离） ----
 
 const META_CACHE_TTL = 60_000
 const metaCache = new Map<string, { columns: ColumnMeta[]; expires: number }>()
@@ -74,11 +132,11 @@ async function getJsonColumns(): Promise<Map<string, Set<string>>> {
   if (jsonColsCache && jsonColsCache.expires > Date.now()) {
     return jsonColsCache.map
   }
-  const [rows] = await getPool().query<Array<{ CONSTRAINT_NAME: string; CHECK_CLAUSE: string }>>(
+  const [rows] = await getPool().query(
     `SELECT CONSTRAINT_NAME, CHECK_CLAUSE
      FROM information_schema.CHECK_CONSTRAINTS
      WHERE CONSTRAINT_SCHEMA = DATABASE()`,
-  )
+  ) as [Array<{ CONSTRAINT_NAME: string; CHECK_CLAUSE: string }>, unknown]
   const map = new Map<string, Set<string>>()
   for (const r of rows) {
     // 约束名形如 roms_chk_1 → 表名 roms
@@ -86,9 +144,9 @@ async function getJsonColumns(): Promise<Map<string, Set<string>>> {
     if (!tableMatch) continue
     const colMatch = /json_valid\(`([^`]+)`\)/i.exec(r.CHECK_CLAUSE)
     if (!colMatch) continue
-    const table = tableMatch[1]
+    const table = tableMatch[1]!
     if (!map.has(table)) map.set(table, new Set())
-    map.get(table)!.add(colMatch[1])
+    map.get(table)!.add(colMatch[1]!)
   }
   jsonColsCache = { map, expires: Date.now() + META_CACHE_TTL }
   return map
@@ -103,23 +161,21 @@ export async function getTableMeta(table: string): Promise<ColumnMeta[]> {
 
   const jsonCols = await getJsonColumns()
 
-  const [rows] = await getPool().query<
-    Array<{
-      COLUMN_NAME: string
-      DATA_TYPE: string
-      COLUMN_TYPE: string
-      IS_NULLABLE: string
-      COLUMN_DEFAULT: string | null
-      COLUMN_COMMENT: string
-      COLUMN_KEY: string
-    }>
-  >(
+  const [rows] = await getPool().query(
     `SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COLUMN_COMMENT, COLUMN_KEY
      FROM information_schema.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?
      ORDER BY ORDINAL_POSITION`,
     [table],
-  )
+  ) as [Array<{
+    COLUMN_NAME: string
+    DATA_TYPE: string
+    COLUMN_TYPE: string
+    IS_NULLABLE: string
+    COLUMN_DEFAULT: string | null
+    COLUMN_COMMENT: string
+    COLUMN_KEY: string
+  }>, unknown]
 
   const jsonColsOfTable = jsonCols.get(table) || new Set<string>()
   const columns: ColumnMeta[] = rows.map((r) => {
@@ -202,7 +258,7 @@ export function sanitizeSort(meta: ColumnMeta[], sort?: string, order?: string) 
 
 export async function pingDatabase(): Promise<{ ok: boolean; version?: string; error?: string }> {
   try {
-    const [rows] = await getPool().query<Array<{ 'VERSION()': string }>>('SELECT VERSION() AS version')
+    const [rows] = await getPool().query('SELECT VERSION() AS version') as [Array<{ version: string }>, unknown]
     return { ok: true, version: rows[0]?.version }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) }

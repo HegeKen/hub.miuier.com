@@ -107,6 +107,14 @@ export function useAdminApi() {
     return $fetch(`/api/db/${table}/${id}`, { method: 'DELETE' })
   }
 
+  /** 批量更新同机型所有分支的指定字段（仅 full_brands/brands/full_names/names） */
+  const batchUpdateDevice = async (table: string, device: string, fields: Record<string, unknown>) => {
+    return $fetch<{ ok: boolean; affectedRows: number }>(`/api/db/${table}/batch-update-device`, {
+      method: 'POST',
+      body: { device, fields },
+    })
+  }
+
   const runSql = async (sql: string) => {
     return $fetch<{ ok: boolean; duration: number; fields: string[]; rows: unknown[]; rowCount: number; affectedRows: number }>(
       '/api/db/sql',
@@ -148,6 +156,7 @@ export function useAdminApi() {
     createRecord,
     updateRecord,
     deleteRecord,
+    batchUpdateDevice,
     runSql,
     getStats,
     runCheck,

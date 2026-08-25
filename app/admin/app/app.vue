@@ -1,5 +1,13 @@
 <template>
   <div class="min-h-screen">
+    <!-- 未登录：仅渲染页面内容（登录页） -->
+    <template v-if="!authed">
+      <NuxtPage />
+      <Toast />
+    </template>
+
+    <!-- 已登录：完整布局 -->
+    <template v-else>
     <!-- 移动端遮罩 -->
     <Transition
       enter-active-class="transition-opacity duration-200"
@@ -67,14 +75,23 @@
           <p class="text-xs text-[var(--color-text-tertiary)]">
             MySQL 直连 · 数据管理后台
           </p>
-          <a
-            href="https://hubman.miuier.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="mt-1 inline-block text-xs font-medium text-[var(--color-accent)] hover:underline"
-          >
-            hubman.miuier.com ↗
-          </a>
+          <div class="mt-2 flex items-center gap-3">
+            <a
+              href="https://hubman.miuier.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-xs font-medium text-[var(--color-accent)] hover:underline"
+            >
+              hubman.miuier.com ↗
+            </a>
+            <button
+              type="button"
+              class="text-xs text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-danger)]"
+              @click="doLogout"
+            >
+              断开连接
+            </button>
+          </div>
         </div>
       </aside>
     </Transition>
@@ -122,6 +139,7 @@
     </div>
 
     <Toast />
+    </template>
   </div>
 </template>
 
@@ -129,13 +147,33 @@
 import { useDarkMode } from '~/composables/useDarkMode'
 
 const route = useRoute()
+const router = useRouter()
 const { initDarkMode } = useDarkMode()
+const { isLoggedIn, clearConfig } = useDbConfig()
 const sidebarOpen = ref(false)
+const authed = ref(false)
 
-onMounted(() => initDarkMode())
+onMounted(() => {
+  initDarkMode()
+  authed.value = isLoggedIn()
+  if (!authed.value && route.path !== '/login') {
+    router.push('/login')
+  }
+})
+
+// 监听路由变化，更新登录状态
+watch(() => route.path, () => {
+  authed.value = isLoggedIn()
+})
+
+const doLogout = () => {
+  clearConfig()
+  router.push('/login')
+}
 
 const navItems = [
   { label: '仪表盘', to: '/', icon: 'home' },
+  { label: '机型管理', to: '/devices-manager', icon: 'table' },
   { label: '设备管理', to: '/devices', icon: 'device' },
   { label: '分支管理', to: '/branches', icon: 'tag' },
   { label: 'ROM 管理', to: '/roms', icon: 'archive' },
@@ -144,6 +182,7 @@ const navItems = [
 
 const titleMap = {
   '/': '仪表盘',
+  '/devices-manager': '机型管理',
   '/devices': '设备管理',
   '/branches': '分支管理',
   '/roms': 'ROM 管理',
