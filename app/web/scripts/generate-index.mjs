@@ -3,9 +3,13 @@
 /**
  * Generate v3/index.json + v3/stats.json from individual device JSON files.
  * Reads from ../../data/api/v3/devices/ and outputs to ../../data/api/v3/
+ *
+ * Also generates v3/roms/index.json + v3/roms/{os}.json, a flat list of all
+ * ROM packages grouped by OS major version (OS3 / V14 / ...), so the frontend
+ * can list every recovery/package of a given OS version via a single file.
  */
 
-import { readdir, readFile, writeFile } from 'fs/promises'
+import { readdir, readFile, writeFile, mkdir } from 'fs/promises'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -13,9 +17,46 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const DEVICES_DIR = join(__dirname, '../../../data/api/v3/devices')
 const INDEX_FILE = join(__dirname, '../../../data/api/v3/index.json')
 const STATS_FILE = join(__dirname, '../../../data/api/v3/stats.json')
+const ROMS_DIR = join(__dirname, '../../../data/api/v3/roms')
+const ROMS_INDEX_FILE = join(ROMS_DIR, 'index.json')
 
 // 近 N 天窗口（ROM 版本按 release 日期统计）
 const RECENT_DAYS = 7
+
+// 品牌优先排序：Xiaomi > REDMI > POCO
+const brandOrder = { xiaomi: 0, redmi: 1, poco: 2 }
+const primaryBrand = (b) => {
+  const brands = b || []
+  for (const name of brands) {
+    const key = name.toLowerCase()
+    if (key in brandOrder) return brandOrder[key]
+  }
+  return 99
+}
+
+// 从版本号前缀提取 OS 大版本标识（OS3 / V14 / V816 ...），非现代大版本前缀返回空串
+function extractOsVersion(version) {
+  const m = String(version || '').match(/^(OS\d+|V\d+)/)
+  return m ? m[0] : ''
+}
+
+// 优先使用设备 JSON 中显式写入的 os 字段（更准确），否则回退到版本号前缀推断
+function resolveOs(rom, version) {
+  const explicit = String(rom.os || '').trim()
+  if (explicit) return explicit
+  return extractOsVersion(version)
+}
+
+// OS 大版本排序：OS 系在前，然后各自按数字降序；非数字字母类别（Stock / STAN）排最末并按字母序
+const osSort = (a, b) => {
+  const isOsA = a.startsWith('OS')
+  const isOsB = b.startsWith('OS')
+  if (isOsA !== isOsB) return isOsA ? -1 : 1
+  const numA = parseInt(a.replace(/\D/g, ''), 10) || 0
+  const numB = parseInt(b.replace(/\D/g, ''), 10) || 0
+  if (numA !== numB) return numB - numA
+  return a.localeCompare(b)
+}
 
 async function generateIndex() {
   try {
@@ -30,6 +71,10 @@ async function generateIndex() {
 
     const devices = []
     const recent = []
+
+    // 按 OS 大版本分组的扁平 ROM 列表
+    const romsByOs = new Map()             // os -> rom array
+    const osDeviceCount = new Map()        // os -> Set<device>
 
     for (const file of jsonFiles) {
       try {
@@ -50,18 +95,47 @@ async function generateIndex() {
 
         // Collect ROM versions released within the recent window
         for (const branch of data.branches || []) {
+          const region = branch.region || ''
+          const zone = branch.zone || ''
+          const branchName = branch.name || {}
           for (const rom of branch.roms || []) {
+            const version = rom.miui || ''
             const release = rom.release || ''
+
+            // 按 OS 大版本分组（优先使用显式 os 字段，回退到版本号推断）
+            const os = resolveOs(rom, version)
+            if (os) {
+              if (!romsByOs.has(os)) romsByOs.set(os, [])
+              romsByOs.get(os).push({
+                os,
+                bigver: rom.bigver || '',
+                device: data.device,
+                name: data.name,
+                brand: data.brand,
+                version,
+                android: rom.android || '',
+                region,
+                zone,
+                branchName,
+                release,
+                aspatch: rom.aspatch || '',
+                recovery: rom.recovery || '',
+                fastboot: rom.fastboot || '',
+              })
+              if (!osDeviceCount.has(os)) osDeviceCount.set(os, new Set())
+              osDeviceCount.get(os).add(data.device)
+            }
+
             if (release && release >= sinceStr) {
               recent.push({
                 device: data.device,
                 name: data.name,
                 brand: data.brand,
-                version: rom.miui || '',
+                version,
                 android: rom.android || '',
                 release,
-                region: branch.region || '',
-                branchName: branch.name || {},
+                region,
+                branchName,
               })
             }
           }
@@ -75,19 +149,10 @@ async function generateIndex() {
     devices.sort((a, b) => a.device.localeCompare(b.device))
 
     // Sort recent ROMs by release date (newest first), then brand order (Xiaomi > REDMI > POCO), then device + version
-    const brandOrder = { xiaomi: 0, redmi: 1, poco: 2 }
-    const primaryBrand = (b) => {
-      const brands = b.brand || []
-      for (const name of brands) {
-        const key = name.toLowerCase()
-        if (key in brandOrder) return brandOrder[key]
-      }
-      return 99
-    }
     recent.sort((a, b) => {
       if (a.release !== b.release) return a.release < b.release ? 1 : -1
-      const ba = primaryBrand(a)
-      const bb = primaryBrand(b)
+      const ba = primaryBrand(a.brand)
+      const bb = primaryBrand(b.brand)
       if (ba !== bb) return ba - bb
       const dev = a.device.localeCompare(b.device)
       return dev !== 0 ? dev : a.version.localeCompare(b.version)
@@ -105,6 +170,37 @@ async function generateIndex() {
     }
     await writeFile(STATS_FILE, JSON.stringify(stats, null, 2), 'utf-8')
     console.log(`Generated stats (${recent.length} ROMs updated since ${sinceStr}) -> ${STATS_FILE}`)
+
+    // ---- 生成按 OS 大版本拆分的 ROM 列表 ----
+    await mkdir(ROMS_DIR, { recursive: true })
+
+    for (const [os, roms] of romsByOs) {
+      // 排序：发布时间（新→旧、空值置后）→ 品牌 → 设备代号 → 区域 → 版本号（新→旧）
+      roms.sort((a, b) => {
+        const ra = a.release || ''
+        const rb = b.release || ''
+        if (ra !== rb) {
+          if (!ra) return 1
+          if (!rb) return -1
+          return ra < rb ? 1 : -1
+        }
+        const ba = primaryBrand(a.brand)
+        const bb = primaryBrand(b.brand)
+        if (ba !== bb) return ba - bb
+        const dev = a.device.localeCompare(b.device)
+        if (dev !== 0) return dev
+        const rg = a.region.localeCompare(b.region)
+        if (rg !== 0) return rg
+        return b.version.localeCompare(a.version)
+      })
+      await writeFile(join(ROMS_DIR, `${os}.json`), JSON.stringify(roms, null, 2), 'utf-8')
+    }
+
+    const osIndex = Array.from(romsByOs.keys())
+      .sort(osSort)
+      .map((os) => ({ os, count: romsByOs.get(os).length, deviceCount: osDeviceCount.get(os).size }))
+    await writeFile(ROMS_INDEX_FILE, JSON.stringify(osIndex, null, 2), 'utf-8')
+    console.log(`Generated ROM index (${osIndex.length} OS versions, ${osIndex.reduce((s, o) => s + o.count, 0)} ROMs) -> ${ROMS_INDEX_FILE}`)
   } catch (e) {
     console.error('Failed to generate index:', e.message)
     process.exit(1)

@@ -221,7 +221,7 @@
                           {{ (branch.roms?.length || 0) - index }}
                         </td>
                         <td class="px-4 py-2.5 font-mono text-xs">{{ rom.miui }}</td>
-                        <td class="px-4 py-2.5 tabular-nums">{{ rom.android }}</td>
+                        <td class="px-4 py-2.5 tabular-nums text-[var(--color-text-secondary)]">{{ rom.android }}</td>
                         <td class="px-4 py-2.5 tabular-nums text-[var(--color-text-secondary)]">
                           {{ rom.release || $t('na') }}
                         </td>
