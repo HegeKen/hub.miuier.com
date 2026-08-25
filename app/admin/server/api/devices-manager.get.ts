@@ -34,6 +34,7 @@ interface BranchRow extends mysql.RowDataPacket {
 }
 
 interface DeviceRow extends mysql.RowDataPacket {
+  ref_id: number
   device: string
   full_names: string | null
   names: string | null
@@ -91,6 +92,7 @@ export default defineEventHandler(async (event) => {
   if (!device) {
     const [rows] = await getPool().query<DeviceRow[]>(
       `SELECT d.device,
+              COALESCE(MAX(CASE WHEN d.tag = 'CnOO' THEN d.id END), MIN(d.id)) AS ref_id,
               MAX(d.full_names) AS full_names,
               MAX(d.names) AS names,
               MAX(d.brands) AS brands,
@@ -101,6 +103,7 @@ export default defineEventHandler(async (event) => {
     )
     return {
       devices: rows.map((r) => ({
+        id: Number(r.ref_id || 0),
         device: r.device,
         name: pickName(r.full_names, r.names, r.device),
         brands: cleanJsonStr(r.brands),

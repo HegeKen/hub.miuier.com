@@ -19,6 +19,7 @@ const INDEX_FILE = join(__dirname, '../../../data/api/v3/index.json')
 const STATS_FILE = join(__dirname, '../../../data/api/v3/stats.json')
 const ROMS_DIR = join(__dirname, '../../../data/api/v3/roms')
 const ROMS_INDEX_FILE = join(ROMS_DIR, 'index.json')
+const SERIES_FILE = join(__dirname, '../../../data/api/v3/series.json')
 
 // 近 N 天窗口（ROM 版本按 release 日期统计）
 const RECENT_DAYS = 7
@@ -72,6 +73,18 @@ async function generateIndex() {
     const devices = []
     const recent = []
 
+    // 读取设备系列排序索引（series.json），用于控制设备列表顺序（品牌 → 系列 → 系列内序号）
+    let seriesRank = new Map()
+    try {
+      const raw = await readFile(SERIES_FILE, 'utf-8')
+      const seriesData = JSON.parse(raw)
+      if (Array.isArray(seriesData.order)) {
+        seriesRank = new Map(seriesData.order.map((d, i) => [d, i]))
+      }
+    } catch (e) {
+      console.warn(`Skipping series.json: ${e.message}`)
+    }
+
     // 按 OS 大版本分组的扁平 ROM 列表
     const romsByOs = new Map()             // os -> rom array
     const osDeviceCount = new Map()        // os -> Set<device>
@@ -86,6 +99,7 @@ async function generateIndex() {
           device: data.device,
           name: data.name,
           brand: data.brand,
+          series: data.series || [],
           code: data.code,
           android: data.android,
           supports: data.supports,
@@ -145,8 +159,13 @@ async function generateIndex() {
       }
     }
 
-    // Sort by device codename
-    devices.sort((a, b) => a.device.localeCompare(b.device))
+    // 设备列表排序：优先按系列排序索引（品牌 → 系列 → 系列内序号），未入系列则按代号排末尾
+    devices.sort((a, b) => {
+      const ra = seriesRank.has(a.device) ? seriesRank.get(a.device) : Number.MAX_SAFE_INTEGER
+      const rb = seriesRank.has(b.device) ? seriesRank.get(b.device) : Number.MAX_SAFE_INTEGER
+      if (ra !== rb) return ra - rb
+      return a.device.localeCompare(b.device)
+    })
 
     // Sort recent ROMs by release date (newest first), then brand order (Xiaomi > REDMI > POCO), then device + version
     recent.sort((a, b) => {

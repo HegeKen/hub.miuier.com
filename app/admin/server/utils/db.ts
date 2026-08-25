@@ -10,7 +10,7 @@ import { createError } from 'h3'
  * 2. 请求级连接：从 x-db-config 请求头读取客户端传来的配置（远程模式）
  */
 
-export const ALLOWED_TABLES = ['devices', 'branches', 'roms'] as const
+export const ALLOWED_TABLES = ['devices', 'branches', 'roms', 'series'] as const
 export type AllowedTable = (typeof ALLOWED_TABLES)[number]
 
 export interface ColumnMeta {
@@ -124,7 +124,7 @@ const metaCache = new Map<string, { columns: ColumnMeta[]; expires: number }>()
  * 1. information_schema.CHECK_CONSTRAINTS 中的 json_valid(`col`) 约束
  * 2. 列名启发式（数据模型内已知 JSON 字段）
  */
-const JSON_NAME_HINT = /^(full_brands|full_names|names|xiaomi|redmi|poco|logs_zh|logs_en)$/i
+const JSON_NAME_HINT = /^(full_brands|full_names|names|xiaomi|redmi|poco|logs_zh|logs_en|device_ids)$/i
 
 let jsonColsCache: { map: Map<string, Set<string>>; expires: number } | null = null
 

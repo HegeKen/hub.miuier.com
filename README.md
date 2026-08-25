@@ -67,20 +67,20 @@ pnpm dev:admin
 
 ```bash
 # 执行全部数据抓取任务
-python3 data/scripts/get_new_branch.py    # Fastboot + OTA 探测
-python3 data/scripts/ota_former.py         # OTA 版本检测
-python3 data/scripts/ota_full.py           # 全量 OTA 偏移探测
-python3 data/scripts/xfu_full.py           # 本地 HTML 核查
-python3 data/scripts/get_current_fastboot.py  # 当前 Fastboot 包
-python3 data/scripts/mgc_fastboot.py       # 小米社区 API
-python3 data/scripts/fetch_changelog.py    # changelog + 卡刷包
-python3 data/scripts/aspatch.py            # 安全补丁提取
+python3 data/scripts/get_new_branch.py         # Fastboot + OTA 探测
+python3 data/scripts/ota_former.py             # OTA 版本检测
+python3 data/scripts/ota_full.py               # 全量 OTA 偏移探测
+python3 data/scripts/xfu_full.py               # 本地 HTML 核查
+python3 data/scripts/get_current_fastboot.py   # 当前 Fastboot 包
+python3 data/scripts/mgc_fastboot.py           # 小米社区 API
+python3 data/scripts/fetch_changelog.py        # changelog + 卡刷包
+python3 data/scripts/aspatch.py                # 安全补丁提取
 
 # 数据导出
-python3 data/scripts/exporter.py           # V1/V2/V3 导出
+python3 data/scripts/exporter.py               # V1/V2/V3 导出
 
 # 设备同步
-python3 data/scripts/sync_devices.py       # 同步设备列表到 data.py
+python3 data/scripts/sync_devices.py           # 同步设备列表到 data.py
 ```
 
 也可以通过 VS Code Tasks（`Ctrl+Shift+B`）运行上述任务。
