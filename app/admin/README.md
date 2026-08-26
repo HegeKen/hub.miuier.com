@@ -1,5 +1,7 @@
 # MiROMS HUB - 数据管理后台 (app/admin)
 
+> 🌐 **简体中文:** [README.md](README.md) · **English:** [README_EN.md](README_EN.md)
+
 管理后台：**直连 MySQL 数据库**（`miroms` 库），直接对 `devices` / `branches` / `roms` / `series` 四张表进行增删改查，
 表结构与 `data/db_structure/*.sql` 保持一致。UI 设计风格与 `app/web` 统一（同一套 CSS 变量、Tailwind、深色模式、橙色主题）。
 
@@ -117,3 +119,12 @@ app/admin/
     ├── plugins/              # db-config.client.ts（自动附加 x-db-config 请求头）
     └── pages/                # index(仪表盘) / login / devices / devices-manager / branches / roms / series-manager / sql
 ```
+
+## 相关文档
+
+| 文档 | 简体中文 | English |
+| --- | --- | --- |
+| 项目总览 | [../../README.md](../../README.md) | [../../README_EN.md](../../README_EN.md) |
+| 前端站点 | [../web/README.md](../web/README.md) | [../web/README_EN.md](../web/README_EN.md) |
+| 本后台 | [README.md](README.md) | [README_EN.md](README_EN.md) |
+| 数据仓库 | [../../data/README.md](../../data/README.md) | [../../data/README_EN.md](../../data/README_EN.md) |

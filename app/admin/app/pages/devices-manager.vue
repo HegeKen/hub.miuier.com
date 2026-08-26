@@ -600,21 +600,34 @@ const filtered = computed(() => {
 const filteredAvailable = computed(() => {
   if (!detail.value?.availableBranches) return []
   const k = pickerSearch.value.trim().toLowerCase()
-  const all = detail.value.availableBranches
-  if (!k) return all
-  return all.filter(
-    (b) =>
-      (b.nameZh && b.nameZh.toLowerCase().includes(k))
-      || (b.nameEn && b.nameEn.toLowerCase().includes(k))
-      || (b.tag && b.tag.toLowerCase().includes(k))
-      || (b.region && b.region.toLowerCase().includes(k)),
-  )
+  let all = detail.value.availableBranches
+  if (k) {
+    all = all.filter(
+      (b) =>
+        (b.nameZh && b.nameZh.toLowerCase().includes(k))
+        || (b.nameEn && b.nameEn.toLowerCase().includes(k))
+        || (b.tag && b.tag.toLowerCase().includes(k))
+        || (b.region && b.region.toLowerCase().includes(k)),
+    )
+  }
+  // 将文件名识别到的分支提到第一顺位（vercode/tag 并 region 完全匹配置顶，其次仅 vercode/tag 匹配）
+  const dt = branchDetected.value
+  if (dt?.tag) {
+    const m = (b) => b.vercode === dt.tag || b.tag === dt.tag
+    const score = (b) =>
+      m(b) && b.region === dt.region ? 0
+        : (m(b) ? 1 : 2)
+    all = [...all].sort((a, b) => score(a) - score(b))
+  }
+  return all
 })
 
 /** 文件名提取后，找到的同 tag 分支数量 */
 const matchedBranchCount = computed(() => {
   if (!branchDetected.value?.tag || !detail.value?.availableBranches) return 0
-  return detail.value.availableBranches.filter((b) => b.tag === branchDetected.value.tag).length
+  return detail.value.availableBranches.filter(
+    (b) => b.tag === branchDetected.value.tag || b.vercode === branchDetected.value.tag,
+  ).length
 })
 
 const onBlur = () => {
@@ -675,11 +688,11 @@ const buildFormOptions = () => {
   // 存储值用双引号包裹（如 "Xiaomi, Redmi"），label 展示不带引号
   const brandsOptions = ['Xiaomi', 'Redmi', 'POCO', 'Xiaomi, Redmi', 'Xiaomi, POCO', 'Redmi, POCO', 'Xiaomi, Redmi, POCO'].map((v) => ({ value: `"${v}"`, label: v }))
   const carrierOptions = [
-    { value: '', label: '(无运营商)' },
-    { value: 'chinatelecom', label: '中国电信' },
-    { value: 'chinamobile', label: '中国移动' },
-    { value: 'chinaunicom', label: '中国联通' },
-    { value: 'chinatelecom, chinamobile, chinaunicom', label: '全运营商' },
+    { value: "['']", label: '(无运营商)' },
+    { value: "['chinatelecom']", label: '中国电信' },
+    { value: "['chinamobile']", label: '中国移动' },
+    { value: "['chinaunicom']", label: '中国联通' },
+    { value: "['','chinatelecom','chinamobile','chinaunicom']", label: '全运营商' },
   ]
   return {
     tag: tags.map((t) => ({ value: t, label: t })),
@@ -701,7 +714,7 @@ const openBranchEdit = async (b) => {
     devtag: b.devtag,
     devcode: b.devcode,
     branchcode: b.branchcode,
-    carrier: b.carrier || '',
+    carrier: b.carrierRaw || b.carrier || '',
     full_brands: b.full_brands || '',
     brands: b.brands || '',
     full_names: b.full_names || '',
@@ -861,6 +874,7 @@ const onCreateExtract = () => {
   createDetected.value = info
   if (info) {
     createDeviceName.value = info.device
+    createDevtag.value = info.devtag || ''
     createDevcode.value = info.devcode || ''
     push('success', `已从文件名提取设备信息：${info.device}`)
   } else {
@@ -883,9 +897,7 @@ const doCreateDevice = async () => {
       devtag: createDevtag.value.trim() || null,
       devcode: createDevcode.value.trim() || null,
       branchcode: genBranchcode(name, detected?.code || ''),
-      carrier: detected?.carrier
-        ? JSON.stringify(['', detected.carrier])
-        : "['','chinatelecom','chinamobile','chinaunicom']",
+      carrier: pickCarrier(findBranchDef(detected)),
     }
     const res = await createRecord('devices', payload)
     push('success', `机型 ${name} 已创建（id=${res.id}）`)
@@ -925,14 +937,9 @@ const onBranchFilenameDetected = async () => {
   pickerOpen.value = false
   await ensureColumns()
   const b = detail.value.baseline
+  const src = findBrandSource()
   const suffix = info.code || ''
   const newCode = suffix ? `${b.device}${suffix}` : b.device
-
-  // 生成 carrier 列表
-  let carrierValue = b.carrier || ''
-  if (info.carrier) {
-    carrierValue = JSON.stringify(['', info.carrier])
-  }
 
   formRecord.value = {
     // id 留空 = 新增
@@ -943,13 +950,13 @@ const onBranchFilenameDetected = async () => {
     devtag: b.devtag || '',
     devcode: info.devcode || b.devcode || '',
     branchcode: genBranchcode(b.device, suffix),
-    carrier: carrierValue,
-    brands: wrapBrands(b.brands),
-    full_names: '',
-    names: '',
-    xiaomi: '',
-    redmi: '',
-    poco: '',
+    carrier: pickCarrier(findBranchDef(info)),
+    brands: wrapBrands(src?.brands || b.brands),
+    full_names: src?.full_names || '',
+    names: src?.names || '',
+    xiaomi: src?.xiaomi || '',
+    redmi: src?.redmi || '',
+    poco: src?.poco || '',
     image: b.image || '',
     launch_date: b.launch_date || '',
     internal: b.internal || '',
@@ -979,10 +986,48 @@ function genBranchcode(deviceName, suffix) {
   return dev + sfx
 }
 
+/** 从已收录分支中挑选一个信息最全的分支，作为新增分支时品牌/名称的推荐来源 */
+const findBrandSource = () => {
+  const branches = detail.value?.branches || []
+  if (branches.length === 0) return null
+  const hasNames = (b) => (b.full_names && String(b.full_names).trim())
+    || (b.names && String(b.names).trim())
+  const hasBrands = (b) => (b.brands && String(b.brands).trim())
+    || (b.xiaomi && String(b.xiaomi).trim())
+    || (b.redmi && String(b.redmi).trim())
+    || (b.poco && String(b.poco).trim())
+  return branches.find((b) => hasNames(b) && hasBrands(b))
+    || branches.find(hasNames)
+    || branches.find(hasBrands)
+    || branches.find((b) => b.isBaseline)
+    || branches[0]
+}
+
+/** 全运营商默认值（含空元素，用于无 carrier / 无匹配分支时的兜底） */
+const DEFAULT_CARRIER = "['','chinatelecom','chinamobile','chinaunicom']"
+
+/** 从 branches 表定义中查找与识别信息匹配的分支（优先 code，其次 vercode/tag） */
+const findBranchDef = (info) => {
+  const all = detail.value?.allBranches || []
+  if (all.length === 0) return null
+  const byCode = info?.code ? all.find((b) => b.code === info.code) : null
+  if (byCode) return byCode
+  const byTag = info?.tag ? all.find((b) => b.vercode === info.tag || b.tag === info.tag) : null
+  if (byTag) return byTag
+  return null
+}
+
+/** 取分支定义的 carrier 原始值；无则回退全运营商默认 */
+const pickCarrier = (def) => {
+  const raw = def?.carrierRaw || ''
+  return raw && String(raw).trim() ? String(raw).trim() : DEFAULT_CARRIER
+}
+
 const onBranchPicked = async (branch) => {
   pickerOpen.value = false
   await ensureColumns()
   const b = detail.value.baseline
+  const src = findBrandSource()
   const suffix = branch.code || ''
   const newCode = suffix ? `${b.device}${suffix}` : b.device
 
@@ -995,13 +1040,13 @@ const onBranchPicked = async (branch) => {
     devtag: b.devtag || '',
     devcode: b.devcode || '',
     branchcode: genBranchcode(b.device, suffix),
-    carrier: branch.carrier || b.carrier || '',
-    brands: wrapBrands(b.brands),
-    full_names: '',
-    names: '',
-    xiaomi: '',
-    redmi: '',
-    poco: '',
+    carrier: pickCarrier(branch),
+    brands: wrapBrands(src?.brands || b.brands),
+    full_names: src?.full_names || '',
+    names: src?.names || '',
+    xiaomi: src?.xiaomi || '',
+    redmi: src?.redmi || '',
+    poco: src?.poco || '',
     image: b.image || '',
     launch_date: b.launch_date || '',
     internal: b.internal || '',
@@ -1090,41 +1135,51 @@ function parseRomFilename(filename) {
   let region = ''
   let carrier = ''
   let devcode = ''
+  let devtag = ''
 
   if (version.toUpperCase().includes('CNXM')) {
     region = 'cn'
     tag = 'CnOO'
     const codeMatch = version.match(/([A-Z0-9]{6,})$/i)
-    if (codeMatch) devcode = codeMatch[1]
+    if (codeMatch) {
+      devcode = codeMatch[1]
+      devtag = codeMatch[1].length >= 2 ? codeMatch[1].substring(0, 2) : ''
+    }
   } else {
     // 从后缀代码提取 tag
     const codeMatch = version.match(/([A-Z0-9]{4,})$/i)
     if (codeMatch) {
-      const code = codeMatch[1]
+      // 安卓 16 起版本码首位为 W（系统版本标识），剥掉才是真正的 devcode（如 WDREUXM → DREUXM）
+      let code = codeMatch[1]
+      if (code.length > 6 && code.startsWith('W')) {
+        code = code.slice(1)
+      }
       const tagInfo = TAG_MAP[code]
       if (tagInfo) {
         tag = code
         region = tagInfo.region
         carrier = tagInfo.carrier
       } else if (code.length >= 6) {
-        // 6+ 位：前4位=tag，后2位=运营商
-        const baseTag = code.substring(0, 4)
-        const carrierCode = code.substring(4)
+        // 6+ 位（如 HyperOS 的 DREUXM→EUXM、MIXM）：后4位对应 branches.vercode/tag，其余为构建前缀
+        const baseTag = code.substring(code.length - 4)
         const baseInfo = TAG_MAP[baseTag]
         if (baseInfo) {
           tag = baseTag
           region = baseInfo.region
-          carrier = carrierCode
+          carrier = baseInfo.carrier
         } else {
-          tag = code
-          region = code.toLowerCase()
+          tag = baseTag
+          region = baseTag.toLowerCase()
         }
       } else {
         tag = code
         region = code.toLowerCase()
       }
+      devcode = code
+      devtag = code.length >= 2 ? code.substring(0, 2) : ''
+    } else {
+      devcode = ''
     }
-    devcode = codeMatch ? codeMatch[1] : ''
   }
 
   return {
@@ -1135,6 +1190,7 @@ function parseRomFilename(filename) {
     code: codeSuffix,
     carrier,
     devcode,
+    devtag,
     version,
   }
 }

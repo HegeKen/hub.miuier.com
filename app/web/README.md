@@ -1,5 +1,7 @@
 # MiROMS HUB - 前端站点 (app/web)
 
+> 🌐 **简体中文:** [README.md](README.md) · **English:** [README_EN.md](README_EN.md)
+
 小米 / Redmi / POCO 设备 ROM 信息站，部署于 [hub.miuier.com](https://hub.miuier.com)，
 提供机型浏览、ROM 刷机包查询（MIUI & HyperOS）、更新日志、下载链接、近期更新统计与反馈入口。
 
@@ -38,7 +40,7 @@ pnpm index      # 仅重新生成数据索引（不启动服务）
 ## 数据来源
 
 - **生产环境**：`runtimeConfig.public.apiBaseUrl`（`https://api.miuier.com/api`），即 `data` 子模块经
-  Cloudflare Pages 托管在 `api.miuier.com` 的 JSON 数据（详见 `../data/README.md`）。
+  Cloudflare Pages 托管在 `api.miuier.com` 的 JSON 数据（详见 `../../data/README.md`）。
 - **开发环境**：`server/api/data/[...path].ts` 代理，直接读取本地 `../../data/api` 下的静态 JSON
   （含路径穿越防护），前端 URL 统一为 `/api/data/v3/...`。
 - **索引生成**：`scripts/generate-index.mjs` 从 `data/api/v3/devices/*.json` 汇总生成
@@ -79,10 +81,13 @@ app/web/
 ## 部署
 
 - 站点托管于 `hub.miuier.com`，构建命令为 `pnpm build`（产物 `.output/`）；仓库内不含托管 / CI 配置。
-- 数据侧 `api.miuier.com` 由 `data` 子模块的 `CNAME` 与 Cloudflare Pages deploy hook 决定（见 `../data/README.md`）。
+- 数据侧 `api.miuier.com` 由 `data` 子模块的 `CNAME` 与 Cloudflare Pages deploy hook 决定（见 `../../data/README.md`）。
 
 ## 相关文档
 
-- 项目总览：`../README.md`
-- 管理后台：`../admin/README.md`
-- 数据仓库（API 格式 / 表结构 / 脚本）：`../data/README.md`
+| 文档 | 简体中文 | English |
+| --- | --- | --- |
+| 项目总览 | [../../README.md](../../README.md) | [../../README_EN.md](../../README_EN.md) |
+| 本站点 | [README.md](README.md) | [README_EN.md](README_EN.md) |
+| 管理后台 | [../admin/README.md](../admin/README.md) | [../admin/README_EN.md](../admin/README_EN.md) |
+| 数据仓库（API 格式 / 表结构 / 脚本） | [../../data/README.md](../../data/README.md) | [../../data/README_EN.md](../../data/README_EN.md) |
