@@ -25,6 +25,10 @@ export function useApi() {
     return buildUrl('/v3/stats.json')
   }
 
+  const buildStatisticsUrl = (): string => {
+    return buildUrl('/v3/statistics.json')
+  }
+
   const buildRomsIndexUrl = (): string => {
     return buildUrl('/v3/roms/index.json')
   }
@@ -49,6 +53,7 @@ export function useApi() {
     buildDeviceUrl,
     buildDevicesIndexUrl,
     buildStatsUrl,
+    buildStatisticsUrl,
     buildRomsIndexUrl,
     buildRomsUrl,
     buildDownloadLink,

@@ -11,7 +11,7 @@
     </section>
 
     <!-- Stats -->
-    <section v-if="devices" class="mx-auto mb-14 grid max-w-3xl grid-cols-2 gap-y-8 py-2 sm:grid-cols-4" aria-label="Statistics">
+    <section v-if="statistics" class="mx-auto mb-14 grid max-w-3xl grid-cols-2 gap-y-8 py-2 sm:grid-cols-4" aria-label="Statistics">
       <div class="text-center">
         <div class="text-3xl font-semibold tabular-nums">{{ totalDevices }}</div>
         <div class="mt-1 text-sm text-[var(--color-text-secondary)]">{{ $t('devices') }}</div>
@@ -25,8 +25,8 @@
         <div class="mt-1 text-sm text-[var(--color-text-secondary)]">ROMs</div>
       </div>
       <div class="text-center">
-        <div class="text-3xl font-semibold tabular-nums">{{ brandCount }}</div>
-        <div class="mt-1 text-sm text-[var(--color-text-secondary)]">{{ $t('brand') }}</div>
+        <div class="text-3xl font-semibold tabular-nums">{{ todayNewRoms }}</div>
+        <div class="mt-1 text-sm text-[var(--color-text-secondary)]">{{ $t('todayNew') }}</div>
       </div>
     </section>
 
@@ -148,12 +148,7 @@
 <script setup>
 const { locale } = useI18n()
 const { t } = useI18n()
-const { buildDevicesIndexUrl, buildStatsUrl } = useApi()
-
-const { data: devices, error } = await useAsyncData(
-  'devices-index',
-  () => $fetch(buildDevicesIndexUrl())
-)
+const { buildStatsUrl, buildStatisticsUrl } = useApi()
 
 // 近 7 日更新的 ROM 版本列表（由 generate-index.mjs 生成 v3/stats.json）
 // cache: 'no-store' 绕过浏览器对旧版 stats.json 的缓存
@@ -162,23 +157,16 @@ const { data: stats } = await useAsyncData(
   () => $fetch(buildStatsUrl(), { cache: 'no-store' }).catch(() => null)
 )
 
-const totalDevices = computed(() => devices.value?.length || 0)
-const totalBranches = computed(() =>
-  devices.value?.reduce((sum, d) => sum + (d.branchCount || 0), 0) || 0
+// 顶部统计卡片数据来自数据库真实统计（v3/statistics.json，口径与后台一致）
+const { data: statistics } = await useAsyncData(
+  'devices-statistics',
+  () => $fetch(buildStatisticsUrl(), { cache: 'no-store' }).catch(() => null)
 )
-const totalRoms = computed(() =>
-  devices.value?.reduce((sum, d) => sum + (d.romCount || 0), 0) || 0
-)
-const brandCount = computed(() => {
-  if (!devices.value) return 0
-  const brands = new Set()
-  for (const d of devices.value) {
-    for (const b of d.brand || []) {
-      brands.add(b.toLowerCase())
-    }
-  }
-  return brands.size
-})
+
+const totalDevices = computed(() => statistics.value?.deviceCount || 0)
+const totalBranches = computed(() => statistics.value?.branchCount || 0)
+const totalRoms = computed(() => statistics.value?.romCount || 0)
+const todayNewRoms = computed(() => statistics.value?.todayNewRoms || 0)
 
 // stats.json 的生成时间，格式化为本地时区 YYYY-MM-DD HH:mm:ss
 const generatedAtText = computed(() => {

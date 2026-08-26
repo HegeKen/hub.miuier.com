@@ -72,6 +72,7 @@ const zhMessages = {
   chinaMainlandDev: '中国大陆开发版',
   globalStable: '国际正式版',
   globalDev: '国际开发版',
+  todayNew: '今日新增',
 }
 
 const enMessages = {
@@ -148,6 +149,7 @@ const enMessages = {
   chinaMainlandDev: 'China Mainland Dev',
   globalStable: 'Global Stable',
   globalDev: 'Global Dev',
+  todayNew: 'Today New',
 }
 
 export default defineI18nConfig(() => ({
