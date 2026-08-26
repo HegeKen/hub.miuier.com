@@ -207,6 +207,28 @@ export function searchableColumns(meta: ColumnMeta[]): string[] {
     .map((c) => c.name)
 }
 
+/**
+ * 校验 JSON 字段值：兼容 Python 风格单引号数组/对象（如 ['a','b'] / {'zh':'x'}）。
+ * 这类值在本库存储中广泛使用（carrier/brands 等），严格 JSON.parse 会误判。
+ */
+function isValidJsonValue(raw: string): boolean {
+  try {
+    JSON.parse(raw)
+    return true
+  } catch {
+    /* 尝试兼容单引号 */
+  }
+  if (/'/.test(raw)) {
+    try {
+      JSON.parse(raw.replace(/'/g, '"'))
+      return true
+    } catch {
+      /* 仍非法 */
+    }
+  }
+  return false
+}
+
 /** 过滤请求体：只保留真实列名，自动跳过主键；'' 转为 NULL */
 export function sanitizeRecord(meta: ColumnMeta[], body: Record<string, unknown>, skipId = true): Record<string, unknown> {
   const valid = new Set(meta.map((c) => c.name))
@@ -225,11 +247,9 @@ export function sanitizeRecord(meta: ColumnMeta[], body: Record<string, unknown>
       continue
     }
 
-    // JSON 字段：客户端提交字符串，服务端做二次校验
+    // JSON 字段：客户端提交字符串，服务端做二次校验（兼容单引号数组/对象）
     if (col.isJson && typeof value === 'string') {
-      try {
-        JSON.parse(value)
-      } catch {
+      if (!isValidJsonValue(value)) {
         throw createError({ statusCode: 400, message: `字段 ${col.name} 不是合法的 JSON` })
       }
     }

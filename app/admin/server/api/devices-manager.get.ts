@@ -145,6 +145,7 @@ export default defineEventHandler(async (event) => {
     devcode: r.devcode,
     branchcode: r.branchcode,
     carrier: cleanJsonStr(r.carrier),
+    carrierRaw: r.carrier,
     full_brands: r.full_brands,
     brands: cleanJsonStr(r.brands),
     full_names: r.full_names,
@@ -186,11 +187,12 @@ export default defineEventHandler(async (event) => {
     name_en: string | null
     tag: string | null
     code: string | null
+    vercode: string | null
     region: string | null
     carrier: string | null
   }
   const [allBranches] = await getPool().query<BranchDefRow[]>(
-    `SELECT id, branch, name_zh, name_en, tag, code, region, carrier
+    `SELECT id, branch, name_zh, name_en, tag, code, vercode, region, carrier
      FROM branches ORDER BY id`,
   )
 
@@ -208,8 +210,10 @@ export default defineEventHandler(async (event) => {
       nameEn: b.name_en,
       tag: b.tag,
       code: b.code,
+      vercode: b.vercode,
       region: b.region,
       carrier: cleanJsonStr(b.carrier),
+      carrierRaw: b.carrier,
     }))
 
   return {
@@ -223,8 +227,10 @@ export default defineEventHandler(async (event) => {
       nameEn: b.name_en,
       tag: b.tag,
       code: b.code,
+      vercode: b.vercode,
       region: b.region,
       carrier: cleanJsonStr(b.carrier),
+      carrierRaw: b.carrier,
     })),
     availableBranches,
     allBranchesBrandData,

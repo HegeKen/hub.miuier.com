@@ -4,6 +4,8 @@
 
 > Xiaomi / Redmi / POCO ROM data platform, covering MIUI & HyperOS firmware information.
 
+> 🌐 **简体中文:** [README.md](README.md) · **English:** [README_EN.md](README_EN.md)
+
 ---
 
 ## 项目结构
@@ -108,6 +110,15 @@ python3 data/scripts/deploy.py                 # 仅触发部署（deploy hook�
 | 后台 | Nuxt 4 / Vue 3 / TypeScript / mysql2 |
 | 数据 | MySQL / Python 3（纯标准库） |
 | 部署 | Cloudflare Pages（web → hub.miuier.com，data → api.miuier.com） |
+
+## 文档
+
+| 文档 | 简体中文 | English |
+| --- | --- | --- |
+| 项目总览 | [README.md](README.md) | [README_EN.md](README_EN.md) |
+| 前端站点 | [app/web/README.md](app/web/README.md) | [app/web/README_EN.md](app/web/README_EN.md) |
+| 管理后台 | [app/admin/README.md](app/admin/README.md) | [app/admin/README_EN.md](app/admin/README_EN.md) |
+| 数据仓库 | [data/README.md](data/README.md) | [data/README_EN.md](data/README_EN.md) |
 
 ## License
 

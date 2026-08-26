@@ -270,10 +270,25 @@ const validateJson = () => {
     if (!col.isJson || isBilingual(col)) continue
     const v = form.value[col.name]
     if (v === '' || v === null || v === undefined) continue
-    try {
-      JSON.parse(v)
-    } catch (e) {
-      errors[col.name] = e instanceof Error ? e.message : '解析失败'
+    // 兼容 Python 风格单引号数组/对象（如 ['a','b'] / {'zh':'x'}）
+    const parsed = (() => {
+      try {
+        JSON.parse(v)
+        return true
+      } catch {
+        if (/'/.test(v)) {
+          try {
+            JSON.parse(v.replace(/'/g, '"'))
+            return true
+          } catch {
+            return false
+          }
+        }
+        return false
+      }
+    })()
+    if (!parsed) {
+      errors[col.name] = '解析失败'
     }
   }
   jsonInvalid.value = errors
