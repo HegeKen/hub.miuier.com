@@ -7,6 +7,6 @@
     "dev:admin": "pnpm --dir app/admin dev"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^10.0.5"
   }
 }
