@@ -5,7 +5,7 @@
     "dev": "concurrently -k -n web,admin -c blue,green \"pnpm --dir app/web dev\" \"pnpm --dir app/admin dev\"",
     "dev:web": "pnpm --dir app/web dev",
     "dev:admin": "pnpm --dir app/admin dev",
-    "build:admin": "pnpm --dir app/admin build"
+    "build:admin": "pnpm --dir app/admin install && pnpm --dir app/admin build"
   },
   "devDependencies": {
     "concurrently": "^10.0.5"
