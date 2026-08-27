@@ -67,7 +67,7 @@ Built with Nuxt 4, connects directly to MySQL (`miroms` database) to manage devi
 
 ## Data Layer
 
-See [data/README.md](data/README.md).
+See [data/README.md](https://github.com/HegeKen/miroms/blob/master/README.md).
 
 - **Source**: MySQL database (`devices` / `branches` / `roms` / `series` tables)
 - **Export**: Python scripts generate V1/V2/V3 JSON from the database
