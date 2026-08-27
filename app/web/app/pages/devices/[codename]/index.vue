@@ -445,6 +445,30 @@ const branchName = (b) =>
   b?.name?.zh ||
   b?.id
 
+// ROM 排序：版本号为主（降序），release_date 为辅（降序、空值置后）
+const romVersionParts = (version) => {
+  const m = String(version || '').match(/^[A-Za-z]*(\d+(?:\.\d+)*)/)
+  return m ? m[1].split('.').map((n) => parseInt(n, 10) || 0) : []
+}
+const compareRoms = (a, b) => {
+  const va = romVersionParts(a.miui)
+  const vb = romVersionParts(b.miui)
+  const len = Math.max(va.length, vb.length)
+  for (let i = 0; i < len; i++) {
+    const x = va[i] || 0
+    const y = vb[i] || 0
+    if (x !== y) return y - x
+  }
+  const ra = a.release || ''
+  const rb = b.release || ''
+  if (ra !== rb) {
+    if (!ra) return 1
+    if (!rb) return -1
+    return ra < rb ? 1 : -1
+  }
+  return 0
+}
+
 const { data: device, error, pending } = await useAsyncData(
   'device-' + codename.value,
   async () => {
@@ -462,7 +486,10 @@ const filteredBranches = computed(() => {
   if (selectedZone.value) {
     branches = branches.filter((b) => b.zone === selectedZone.value)
   }
-  return branches
+  return branches.map((b) => ({
+    ...b,
+    roms: [...(b.roms || [])].sort(compareRoms),
+  }))
 })
 
 // 打开 ROM 详情模态框

@@ -410,6 +410,30 @@ const zoneLabel = (rom) =>
   rom.branchName?.zh ||
   (rom.zone === '1' ? t('china') : rom.zone === '2' ? t('global') : '')
 
+// ROM 排序：版本号为主（降序），release_date 为辅（降序、空值置后）
+const romVersionParts = (version) => {
+  const m = String(version || '').match(/^[A-Za-z]*(\d+(?:\.\d+)*)/)
+  return m ? m[1].split('.').map((n) => parseInt(n, 10) || 0) : []
+}
+const compareRoms = (a, b) => {
+  const va = romVersionParts(a.version)
+  const vb = romVersionParts(b.version)
+  const len = Math.max(va.length, vb.length)
+  for (let i = 0; i < len; i++) {
+    const x = va[i] || 0
+    const y = vb[i] || 0
+    if (x !== y) return y - x
+  }
+  const ra = a.release || ''
+  const rb = b.release || ''
+  if (ra !== rb) {
+    if (!ra) return 1
+    if (!rb) return -1
+    return ra < rb ? 1 : -1
+  }
+  return 0
+}
+
 const { data: osIndex } = await useAsyncData('roms-index', () => $fetch(buildRomsIndexUrl()))
 
 // OS 名称本地化：Stock 中文「原生安卓」、STAN 中文「现代原生安卓」，其余大版本编码保持不变
@@ -455,7 +479,10 @@ const deviceGroups = computed(() => {
     }
     groups.get(rom.device).roms.push(rom)
   }
-  return Array.from(groups.values())
+  return Array.from(groups.values()).map((group) => ({
+    ...group,
+    roms: [...group.roms].sort(compareRoms),
+  }))
 })
 
 // 每台设备内部按页切分 ROM：超过阈值时启用分页，否则一次性展示全部

@@ -41,6 +41,37 @@ function extractOsVersion(version) {
   return m ? m[0] : ''
 }
 
+// 版本号排序 key：提取 V/OS 前缀后的数字段，如 "V10.1.1.0.MXDCNFI" -> [10, 1, 1, 0]
+function romVersionParts(version) {
+  const m = String(version || '').match(/^[A-Za-z]*(\d+(?:\.\d+)*)/)
+  return m ? m[1].split('.').map((n) => parseInt(n, 10) || 0) : []
+}
+
+// ROM 排序：版本号为主（降序），release_date 为辅（降序、空值置后）
+function compareRoms(a, b) {
+  const va = romVersionParts(a.version)
+  const vb = romVersionParts(b.version)
+  const len = Math.max(va.length, vb.length)
+  for (let i = 0; i < len; i++) {
+    const x = va[i] || 0
+    const y = vb[i] || 0
+    if (x !== y) return y - x
+  }
+  const ra = a.release || ''
+  const rb = b.release || ''
+  if (ra !== rb) {
+    if (!ra) return 1
+    if (!rb) return -1
+    return ra < rb ? 1 : -1
+  }
+  const ba = primaryBrand(a.brand)
+  const bb = primaryBrand(b.brand)
+  if (ba !== bb) return ba - bb
+  const dev = a.device.localeCompare(b.device)
+  if (dev !== 0) return dev
+  return a.region.localeCompare(b.region)
+}
+
 // 优先使用设备 JSON 中显式写入的 os 字段（更准确），否则回退到版本号前缀推断
 function resolveOs(rom, version) {
   const explicit = String(rom.os || '').trim()
@@ -194,24 +225,8 @@ async function generateIndex() {
     await mkdir(ROMS_DIR, { recursive: true })
 
     for (const [os, roms] of romsByOs) {
-      // 排序：发布时间（新→旧、空值置后）→ 品牌 → 设备代号 → 区域 → 版本号（新→旧）
-      roms.sort((a, b) => {
-        const ra = a.release || ''
-        const rb = b.release || ''
-        if (ra !== rb) {
-          if (!ra) return 1
-          if (!rb) return -1
-          return ra < rb ? 1 : -1
-        }
-        const ba = primaryBrand(a.brand)
-        const bb = primaryBrand(b.brand)
-        if (ba !== bb) return ba - bb
-        const dev = a.device.localeCompare(b.device)
-        if (dev !== 0) return dev
-        const rg = a.region.localeCompare(b.region)
-        if (rg !== 0) return rg
-        return b.version.localeCompare(a.version)
-      })
+      // 排序：版本号为主（新→旧）→ 发布日期（新→旧、空值置后）→ 品牌 → 设备代号 → 区域
+      roms.sort((a, b) => compareRoms(a, b))
       await writeFile(join(ROMS_DIR, `${os}.json`), JSON.stringify(roms, null, 2), 'utf-8')
     }
 
