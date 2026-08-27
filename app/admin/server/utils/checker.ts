@@ -140,6 +140,16 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       violation: "devcode IS NOT NULL AND devcode NOT REGEXP '^[A-Z0-9]{6}$'",
     },
     {
+      id: 'devcode_contains_devtag',
+      name: 'devcode 应包含 devtag',
+      column: 'devcode',
+      description: 'devcode 非空时，devtag 应作为子串出现在 devcode 中（如 devtag=MA 对应 devcode 含 MA 的版本号后缀）',
+      severity: 'error',
+      violation:
+        "devcode IS NOT NULL AND devcode <> '' AND (devtag IS NULL OR devtag = '' OR INSTR(devcode, devtag) = 0)",
+      sampleCols: ['devcode', 'devtag'],
+    },
+    {
       id: 'carrier_structure',
       name: 'carrier 结构',
       column: 'carrier',
