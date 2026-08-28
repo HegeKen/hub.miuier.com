@@ -39,9 +39,14 @@
       >
         <!-- Logo -->
         <NuxtLink to="/" class="flex h-14 items-center gap-2.5 border-b border-[var(--color-border)] px-5" @click="sidebarOpen = false">
-          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-accent)] text-base font-bold text-white">M</span>
-          <span class="text-sm font-semibold tracking-tight text-[var(--color-text)]">
-            MiROMS HUB<span class="text-[var(--color-accent)]"> 数据管理</span>
+          <img
+            :src="logoUrl"
+            alt="MiROMS HUB"
+            class="h-8 w-auto shrink-0"
+          />
+          <span class="flex flex-col items-center text-sm font-semibold leading-tight tracking-tight text-[var(--color-text)]">
+            <span>MiROMS HUB</span>
+            <span class="text-[var(--color-accent)]">数据管理</span>
           </span>
         </NuxtLink>
 
@@ -144,6 +149,7 @@
 </template>
 
 <script setup>
+import logoUrl from '~/assets/images/logo.svg'
 import { useDarkMode } from '~/composables/useDarkMode'
 
 const route = useRoute()

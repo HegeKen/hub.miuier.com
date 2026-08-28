@@ -3,9 +3,11 @@
     <div class="w-full max-w-md">
       <!-- Logo -->
       <div class="mb-8 text-center">
-        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-2xl font-bold text-white">
-          M
-        </div>
+        <img
+          :src="logoUrl"
+          alt="MiROMS HUB"
+          class="mx-auto mb-3 h-12 w-auto"
+        />
         <h1 class="text-xl font-bold tracking-tight text-[var(--color-text)]">MiROMS HUB</h1>
         <p class="mt-1 text-sm text-[var(--color-text-secondary)]">数据管理后台</p>
       </div>
@@ -96,6 +98,8 @@
 
 <script setup>
 // 无需 layout: false，app.vue 已根据登录状态条件渲染
+
+import logoUrl from '~/assets/images/logo.svg'
 
 const router = useRouter()
 const { saveConfig } = useDbConfig()
