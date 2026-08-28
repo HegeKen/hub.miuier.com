@@ -2,8 +2,14 @@
   <div class="container-page">
     <!-- Hero -->
     <section class="pb-14 pt-16 text-center sm:pb-16 sm:pt-24">
-      <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl text-HyperBlue">
-        Mi<span class="text-[var(--color-accent)]">ROMs</span> HUB
+      <h1 class="text-center">
+        <img
+          :src="logoUrl"
+          :alt="$t('site')"
+          class="mx-auto h-24 w-auto sm:h-32"
+          width="708"
+          height="340"
+        />
       </h1>
       <p class="mt-3 text-base text-[var(--color-text-secondary)]">
         {{ $t('devicesSub') }}
@@ -146,6 +152,8 @@
 </template>
 
 <script setup>
+import logoUrl from '~/assets/images/logo.svg'
+
 const { locale } = useI18n()
 const { t } = useI18n()
 const { buildStatsUrl, buildStatisticsUrl } = useApi()

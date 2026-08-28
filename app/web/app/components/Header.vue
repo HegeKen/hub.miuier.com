@@ -13,8 +13,8 @@
           :src="logoUrl"
           :alt="$t('site')"
           class="h-10 w-auto"
-          width="2137"
-          height="736"
+          width="708"
+          height="340"
         />
       </NuxtLink>
 
@@ -104,7 +104,7 @@
 </template>
 
 <script setup>
-import logoUrl from '~/assets/images/LOGO.png'
+import logoUrl from '~/assets/images/logo.svg'
 
 const { locale } = useI18n()
 const route = useRoute()
