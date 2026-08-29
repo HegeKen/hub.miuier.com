@@ -119,38 +119,58 @@
             :to="'/' + locale + '/devices/' + device.device"
             class="group block bg-[var(--color-bg-surface)] px-4 py-3.5 transition-colors hover:bg-[var(--color-bg-subtle)] sm:flex sm:items-center sm:justify-between sm:gap-4 sm:px-5"
           >
-            <!-- Mobile: codename + brands + arrow top row, name bottom row -->
-            <div class="min-w-0 flex-1 sm:hidden">
-              <div class="flex items-center gap-2">
-                <span class="font-mono text-sm font-medium text-[var(--color-text)]">{{ device.device }}</span>
-                <div class="ml-auto flex shrink-0 items-center gap-2">
-                  <span
-                    v-for="brand in device.brand || []"
-                    :key="brand"
-                    class="text-xs text-[var(--color-text-tertiary)]"
-                  >
-                    {{ formatBrand(brand) }}
-                  </span>
-                  <svg
-                    class="h-4 w-4 shrink-0 text-[var(--color-text-tertiary)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--color-text)]"
-                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                  </svg>
+            <!-- Mobile: thumbnail + codename + brands + arrow, name below -->
+            <div class="flex min-w-0 items-center gap-3 sm:hidden">
+              <img
+                v-if="(deviceImageStage[device.device] || 0) < 2"
+                :src="deviceImgSrc(device)"
+                :alt="deviceName(device)"
+                class="h-10 w-10 shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] object-contain"
+                loading="lazy"
+                @error="onDeviceImgError(device, $event)"
+              />
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-sm font-medium text-[var(--color-text)]">{{ device.device }}</span>
+                  <div class="ml-auto flex shrink-0 items-center gap-2">
+                    <span
+                      v-for="brand in device.brand || []"
+                      :key="brand"
+                      class="text-xs text-[var(--color-text-tertiary)]"
+                    >
+                      {{ formatBrand(brand) }}
+                    </span>
+                    <svg
+                      class="h-4 w-4 shrink-0 text-[var(--color-text-tertiary)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--color-text)]"
+                      xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </div>
                 </div>
+                <p class="mt-0.5 truncate text-xs text-[var(--color-text-secondary)]">
+                  {{ deviceName(device) }}
+                </p>
               </div>
-              <p class="mt-0.5 truncate text-xs text-[var(--color-text-secondary)]">
-                {{ deviceName(device) }}
-              </p>
             </div>
-            <!-- Desktop: name as primary, codename below -->
-            <div class="hidden min-w-0 sm:block">
-              <h3 class="truncate font-medium text-[var(--color-text)]">
-                {{ deviceName(device) }}
-              </h3>
-              <p class="mt-0.5 truncate font-mono text-xs text-[var(--color-text-tertiary)]">
-                {{ device.device }}
-              </p>
+            <!-- Desktop: thumbnail + name as primary, codename below -->
+            <div class="hidden min-w-0 items-center gap-4 sm:flex">
+              <img
+                v-if="(deviceImageStage[device.device] || 0) < 2"
+                :src="deviceImgSrc(device)"
+                :alt="deviceName(device)"
+                class="h-12 w-12 shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] object-contain"
+                loading="lazy"
+                @error="onDeviceImgError(device, $event)"
+              />
+              <div class="min-w-0">
+                <h3 class="truncate font-medium text-[var(--color-text)]">
+                  {{ deviceName(device) }}
+                </h3>
+                <p class="mt-0.5 truncate font-mono text-xs text-[var(--color-text-tertiary)]">
+                  {{ device.device }}
+                </p>
+              </div>
             </div>
             <div class="flex shrink-0 items-center gap-3">
               <span
@@ -182,7 +202,28 @@
 <script setup>
 const { locale } = useI18n()
 const { t } = useI18n()
-const { buildDevicesIndexUrl } = useApi()
+const { buildDevicesIndexUrl, buildDeviceImageUrl, buildBrandImageUrl } = useApi()
+
+// 机型缩略图加载状态：0=机型图，1=品牌默认图，2=隐藏；无封面时按品牌显示默认图（Xiaomi→mi.svg 等）
+const deviceImageStage = reactive({})
+
+const deviceImgSrc = (device) => {
+  const stage = deviceImageStage[device.device] || 0
+  return stage === 1 ? buildBrandImageUrl(device.brand?.[0]) : buildDeviceImageUrl(device.device)
+}
+
+const onDeviceImgError = (device, e) => {
+  const cur = e.currentTarget.currentSrc || e.currentTarget.src || ''
+  const stage = deviceImageStage[device.device] || 0
+  const failedDevice = cur.includes(`${device.device}.png`)
+  if (failedDevice) {
+    // 机型图失败 -> 切到品牌默认图（仅当尚未切换时；两个 img 并发报错时忽略重复）
+    if (stage === 0) deviceImageStage[device.device] = 1
+  } else {
+    // 品牌默认图也失败 -> 隐藏
+    if (stage === 1) deviceImageStage[device.device] = 2
+  }
+}
 
 const route = useRoute()
 const router = useRouter()
