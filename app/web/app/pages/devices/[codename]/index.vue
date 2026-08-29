@@ -43,36 +43,43 @@
       </nav>
 
       <!-- Title -->
-      <header class="mb-8">
-        <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
-          {{ deviceName(device) }}
-        </h1>
-        <p class="mt-2 font-mono text-sm text-[var(--color-text-tertiary)]">{{ device.device }}</p>
-      </header>
+
 
       <!-- Device Info -->
-      <dl class="mb-10 overflow-hidden rounded-xl border border-[var(--color-border)]">
-        <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-          <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('devname') }}</dt>
-          <dd class="text-sm font-medium">{{ deviceName(device) }}</dd>
+      <div class="mb-10 flex overflow-hidden rounded-xl border border-[var(--color-border)]">
+        <div class="flex w-28 shrink-0 items-center justify-center border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-3 sm:w-36">
+          <img
+            v-if="!deviceImageError"
+            :src="deviceImageSrc"
+            :alt="deviceName(device)"
+            class="max-h-40 w-auto max-w-full object-contain"
+            loading="lazy"
+            @error="onDeviceImageError"
+          />
         </div>
-        <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-          <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('devcode') }}</dt>
-          <dd class="font-mono text-sm">{{ device.device }}</dd>
-        </div>
-        <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-          <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('brand') }}</dt>
-          <dd class="text-sm">{{ (device.brand || []).join(' / ') || '—' }}</dd>
-        </div>
-        <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-          <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('android') }}</dt>
-          <dd class="text-sm">{{ (device.android || []).join(', ') || '—' }}</dd>
-        </div>
-        <div class="grid gap-1 px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-          <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('supports') }}</dt>
-          <dd class="text-sm">{{ (device.supports || []).join(', ') || '—' }}</dd>
-        </div>
-      </dl>
+        <dl class="min-w-0 flex-1">
+          <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
+            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('devname') }}</dt>
+            <dd class="text-sm font-medium">{{ deviceName(device) }}</dd>
+          </div>
+          <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
+            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('devcode') }}</dt>
+            <dd class="font-mono text-sm">{{ device.device }}</dd>
+          </div>
+          <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
+            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('brand') }}</dt>
+            <dd class="text-sm">{{ (device.brand || []).join(' / ') || '—' }}</dd>
+          </div>
+          <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
+            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('android') }}</dt>
+            <dd class="text-sm">{{ (device.android || []).join(', ') || '—' }}</dd>
+          </div>
+          <div class="grid gap-1 px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
+            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('supports') }}</dt>
+            <dd class="text-sm">{{ (device.supports || []).join(', ') || '—' }}</dd>
+          </div>
+        </dl>
+      </div>
 
       <!-- Branch Filter -->
       <div class="mb-6 flex flex-wrap gap-2">
@@ -413,10 +420,29 @@ import { validateCodename, sanitizeString } from '~/utils/validation'
 const route = useRoute()
 const { locale } = useI18n()
 const { t } = useI18n()
-const { buildDeviceUrl, buildDownloadLink, buildChangelogUrl } = useApi()
+const { buildDeviceUrl, buildDeviceImageUrl, buildBrandImageUrl, buildDownloadLink, buildChangelogUrl } = useApi()
 
 const selectedZone = ref('')
 const expandedBranches = ref([])
+
+// 机型照片加载失败时按品牌显示默认图（Xiaomi→mi.svg，POCO→POCO.png，REDMI→REDMI.png），再失败才隐藏
+const brandFallback = ref(false)
+const deviceImageError = ref(false)
+
+const deviceImageSrc = computed(() => {
+  if (!device.value?.device) return ''
+  return brandFallback.value
+    ? buildBrandImageUrl(device.value.brand?.[0])
+    : buildDeviceImageUrl(device.value.device)
+})
+
+const onDeviceImageError = () => {
+  if (brandFallback.value) {
+    deviceImageError.value = true
+  } else {
+    brandFallback.value = true
+  }
+}
 
 // ROM Detail Modal
 const romModal = ref(null)        // 当前展示的 ROM 对象
@@ -479,6 +505,9 @@ const { data: device, error, pending } = await useAsyncData(
     return await $fetch(buildDeviceUrl(sanitized))
   }
 )
+
+// 机型切换后重置照片加载状态
+watch(() => device.value?.device, () => { brandFallback.value = false; deviceImageError.value = false })
 
 const filteredBranches = computed(() => {
   if (!device.value?.branches) return []
