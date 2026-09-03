@@ -1,3 +1,4 @@
+import { defineI18nConfig } from '@nuxtjs/i18n'
 const zhMessages = {
   site: 'MiROMS HUB',
   home: '首页',
@@ -36,6 +37,8 @@ const zhMessages = {
   cunicom: '联通定制包',
   na: '未发布',
   download: '下载',
+  copy: '复制',
+  copied: '已复制',
   skiptocontent: '跳转到主要内容',
   mainnav: '主导航',
   footernav: '底部导航',
@@ -115,6 +118,8 @@ const enMessages = {
   cunicom: 'China Unicom',
   na: 'N/A',
   download: 'Download',
+  copy: 'Copy',
+  copied: 'Copied',
   skiptocontent: 'Skip to main content',
   mainnav: 'Main navigation',
   footernav: 'Footer navigation',

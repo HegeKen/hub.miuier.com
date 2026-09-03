@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_图层_1" data-name="图层_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 6661.42 2267.72">
+  <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #ec6819;
+      }
+
+      .st1 {
+        fill: #ec681a;
+        fill-rule: evenodd;
+        stroke: #231815;
+        stroke-miterlimit: 10;
+        stroke-width: .5px;
+      }
+
+      .st2 {
+        font-family: MiSansLatin-Heavy, 'MiSans Latin';
+        font-size: 1000px;
+        font-weight: 800;
+      }
+
+      .st3 {
+        fill: #231815;
+        letter-spacing: 0em;
+      }
+
+      .st4 {
+        fill: #3159a7;
+      }
+    </style>
+  </defs>
+  <text class="st2" transform="translate(46.75 1486.48)"><tspan class="st4" x="0" y="0">Mi</tspan><tspan class="st0" x="1203.98" y="0">ROMs</tspan><tspan class="st3" x="4097.95" y="0"> </tspan><tspan class="st4" x="4378.94" y="0">HUB</tspan></text>
+  <path id="Fill_1" class="st1" d="M1183.98,689.47c-18.94-18.88-46.18-20.99-79.46-20.99s-60.59,2.13-79.53,21.05c-18.94,18.92-20.86,46.16-20.86,79.44s1.91,60.54,20.86,79.46c18.94,18.92,46.2,20.83,79.53,20.83s60.59-1.91,79.53-20.83c18.94-18.92,20.86-46.16,20.86-79.46.02-33.33-1.94-60.61-20.92-79.51Z"/>
+</svg>

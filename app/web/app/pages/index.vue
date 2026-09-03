@@ -152,7 +152,7 @@
 </template>
 
 <script setup>
-import logoUrl from '~/assets/images/logo.svg'
+import logoUrl from '~/assets/images/words.svg'
 
 const { locale } = useI18n()
 const { t } = useI18n()
