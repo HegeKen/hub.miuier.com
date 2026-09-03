@@ -165,10 +165,10 @@
                 <span class="inline-flex items-center gap-1.5">
                   <span
                     class="dot"
-                    :class="branch.zone === '1' ? 'bg-[var(--color-warn)]' : 'bg-[var(--color-info)]'"
+                    :class="branchDotColor(branch)"
                     aria-hidden="true"
                   ></span>
-                  {{ branch.zone === '1' ? $t('china') : $t('global') }}
+                  {{ branchRegionLabel(branch) }}
                 </span>
                 <span
                   v-if="branch.tags?.branchtag === 'F'"
@@ -398,37 +398,81 @@
             <div>
               <h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">{{ $t('download') }}</h4>
               <div class="flex flex-col gap-1.5">
-                <a
+                <div
                   v-if="romModal?.recovery"
-                  :href="buildDownloadLink(romModal.miui, romModal.recovery)"
-                  class="inline-flex items-center gap-2 rounded-lg bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
-                  target="_blank" rel="noopener noreferrer"
+                  class="flex gap-1.5"
                 >
-                  <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                  {{ $t('recovery') }}
-                </a>
-                <a
+                  <a
+                    :href="buildDownloadLink(romModal.miui, romModal.recovery)"
+                    class="flex-1 inline-flex items-center gap-2 rounded-lg bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+                    target="_blank" rel="noopener noreferrer"
+                  >
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    {{ $t('recovery') }}
+                  </a>
+                  <button
+                    type="button"
+                    :aria-label="$t('copy')"
+                    class="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] px-2.5 text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]"
+                    @click="copyLink(buildDownloadLink(romModal.miui, romModal.recovery))"
+                  >
+                    <svg v-if="copiedUrl === buildDownloadLink(romModal.miui, romModal.recovery)" class="h-4 w-4 text-[var(--color-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    <svg v-else class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z" /></svg>
+                  </button>
+                </div>
+                <div
                   v-if="romModal?.fastboot"
-                  :href="buildDownloadLink(romModal.miui, romModal.fastboot)"
-                  class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]"
-                  target="_blank" rel="noopener noreferrer"
+                  class="flex gap-1.5"
                 >
-                  <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                  {{ $t('fastboot') }}
-                </a>
+                  <a
+                    :href="buildDownloadLink(romModal.miui, romModal.fastboot)"
+                    class="flex-1 inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]"
+                    target="_blank" rel="noopener noreferrer"
+                  >
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    {{ $t('fastboot') }}
+                  </a>
+                  <button
+                    type="button"
+                    :aria-label="$t('copy')"
+                    class="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] px-2.5 text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]"
+                    @click="copyLink(buildDownloadLink(romModal.miui, romModal.fastboot))"
+                  >
+                    <svg v-if="copiedUrl === buildDownloadLink(romModal.miui, romModal.fastboot)" class="h-4 w-4 text-[var(--color-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    <svg v-else class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z" /></svg>
+                  </button>
+                </div>
                 <template v-if="romModal?.ctelecom || romModal?.cmobile || romModal?.cunicom">
-                  <a v-if="romModal.ctelecom" :href="buildDownloadLink(romModal.miui, romModal.ctelecom)" class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                    {{ $t('ctelecom') }}
-                  </a>
-                  <a v-if="romModal.cmobile" :href="buildDownloadLink(romModal.miui, romModal.cmobile)" class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                    {{ $t('cmobile') }}
-                  </a>
-                  <a v-if="romModal.cunicom" :href="buildDownloadLink(romModal.miui, romModal.cunicom)" class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                    {{ $t('cunicom') }}
-                  </a>
+                  <div v-if="romModal.ctelecom" class="flex gap-1.5">
+                    <a :href="buildDownloadLink(romModal.miui, romModal.ctelecom)" class="flex-1 inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
+                      <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                      {{ $t('ctelecom') }}
+                    </a>
+                    <button type="button" :aria-label="$t('copy')" class="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] px-2.5 text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" @click="copyLink(buildDownloadLink(romModal.miui, romModal.ctelecom))">
+                      <svg v-if="copiedUrl === buildDownloadLink(romModal.miui, romModal.ctelecom)" class="h-4 w-4 text-[var(--color-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                      <svg v-else class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z" /></svg>
+                    </button>
+                  </div>
+                  <div v-if="romModal.cmobile" class="flex gap-1.5">
+                    <a :href="buildDownloadLink(romModal.miui, romModal.cmobile)" class="flex-1 inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
+                      <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                      {{ $t('cmobile') }}
+                    </a>
+                    <button type="button" :aria-label="$t('copy')" class="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] px-2.5 text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" @click="copyLink(buildDownloadLink(romModal.miui, romModal.cmobile))">
+                      <svg v-if="copiedUrl === buildDownloadLink(romModal.miui, romModal.cmobile)" class="h-4 w-4 text-[var(--color-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                      <svg v-else class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z" /></svg>
+                    </button>
+                  </div>
+                  <div v-if="romModal.cunicom" class="flex gap-1.5">
+                    <a :href="buildDownloadLink(romModal.miui, romModal.cunicom)" class="flex-1 inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
+                      <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                      {{ $t('cunicom') }}
+                    </a>
+                    <button type="button" :aria-label="$t('copy')" class="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] px-2.5 text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" @click="copyLink(buildDownloadLink(romModal.miui, romModal.cunicom))">
+                      <svg v-if="copiedUrl === buildDownloadLink(romModal.miui, romModal.cunicom)" class="h-4 w-4 text-[var(--color-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                      <svg v-else class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z" /></svg>
+                    </button>
+                  </div>
                 </template>
               </div>
             </div>
@@ -493,6 +537,23 @@ const romModalBranch = ref(null)  // ROM 所在的分支
 const romModalLogs = ref(null)    // 更新日志
 const romModalLoading = ref(false)
 const localeKey = computed(() => (locale.value.startsWith('zh') ? 'zh' : 'en'))
+
+// 复制下载链接到剪贴板
+const copiedUrl = ref('')
+const copyLink = async (url) => {
+  try {
+    await navigator.clipboard.writeText(url)
+  } catch (e) {
+    const input = document.createElement('textarea')
+    input.value = url
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+  }
+  copiedUrl.value = url
+  setTimeout(() => { copiedUrl.value = '' }, 1500)
+}
 
 const codename = computed(() => {
   const param = route.params.codename
@@ -579,6 +640,18 @@ const regionLabel = (region) => {
   const labels = REGION_LABELS[region]
   if (!labels) return String(region || '').toUpperCase()
   return locale.value.startsWith('zh') ? labels.zh : labels.en
+}
+
+// 分支卡片上的区域标签：优先显示具体区域（如 中国台湾 / 欧洲经济区 / 俄罗斯），无 region 时回退到 zone 的 中国/国际
+const CHINA_REGIONS = ['cn', 'tw', 'hk', 'mo']
+const isChinaRegion = (region) => CHINA_REGIONS.includes(region)
+const branchRegionLabel = (b) => {
+  if (b?.region) return regionLabel(b.region)
+  return b?.zone === '1' ? t('china') : t('global')
+}
+const branchDotColor = (b) => {
+  if (b?.region) return isChinaRegion(b.region) ? 'bg-[var(--color-warn)]' : 'bg-[var(--color-info)]'
+  return b?.zone === '1' ? 'bg-[var(--color-warn)]' : 'bg-[var(--color-info)]'
 }
 
 // 当前机型实际支持的区域（按 branch.region 动态生成），去重并保持稳定顺序
