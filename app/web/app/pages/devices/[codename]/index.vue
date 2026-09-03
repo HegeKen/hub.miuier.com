@@ -81,36 +81,70 @@
         </dl>
       </div>
 
+      <!-- ROM Search -->
+      <div class="mb-6">
+        <div class="relative">
+          <svg
+            class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            :placeholder="$t('searchRomPlaceholder')"
+            class="input-base pl-11 pr-10"
+          />
+          <button
+            v-if="searchQuery"
+            type="button"
+            class="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text)]"
+            aria-label="Clear search"
+            @click="searchQuery = ''"
+          >
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <!-- Branch Filter -->
       <div class="mb-6 flex flex-wrap gap-2">
         <button
           type="button"
           class="filter-pill"
-          :class="selectedZone === '' ? 'filter-pill-active' : ''"
-          @click="selectedZone = ''"
+          :class="selectedRegion === '' ? 'filter-pill-active' : ''"
+          @click="selectedRegion = ''"
         >
           {{ $t('alldevices') }}
         </button>
         <button
+          v-for="region in availableRegions"
+          :key="region"
           type="button"
           class="filter-pill"
-          :class="selectedZone === '1' ? 'filter-pill-active' : ''"
-          @click="selectedZone = '1'"
+          :class="selectedRegion === region ? 'filter-pill-active' : ''"
+          @click="selectedRegion = region"
         >
-          {{ $t('china') }}
-        </button>
-        <button
-          type="button"
-          class="filter-pill"
-          :class="selectedZone === '2' ? 'filter-pill-active' : ''"
-          @click="selectedZone = '2'"
-        >
-          {{ $t('global') }}
+          {{ regionLabel(region) }}
         </button>
       </div>
 
       <!-- Branches & ROMs -->
       <section class="space-y-3 pb-4">
+        <div
+          v-if="searchQuery && filteredBranches.length === 0"
+          class="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-10 text-center text-sm text-[var(--color-text-secondary)]"
+        >
+          {{ $t('noRomResults') }}
+        </div>
         <div
           v-for="branch in filteredBranches"
           :key="branch.id + '-' + branch.tags?.branch"
@@ -264,7 +298,7 @@
                             <a
                               v-if="rom.ctelecom"
                               :href="buildDownloadLink(rom.miui, rom.ctelecom)"
-                              class="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:underline"
+                              class="font-medium text-[var(--color-accent)] hover:underline"
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -273,7 +307,7 @@
                             <a
                               v-if="rom.cmobile"
                               :href="buildDownloadLink(rom.miui, rom.cmobile)"
-                              class="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:underline"
+                              class="font-medium text-[var(--color-accent)] hover:underline"
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -282,7 +316,7 @@
                             <a
                               v-if="rom.cunicom"
                               :href="buildDownloadLink(rom.miui, rom.cunicom)"
-                              class="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:underline"
+                              class="font-medium text-[var(--color-accent)] hover:underline"
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -383,10 +417,18 @@
                   {{ $t('fastboot') }}
                 </a>
                 <template v-if="romModal?.ctelecom || romModal?.cmobile || romModal?.cunicom">
-                  <div class="h-px bg-[var(--color-border)]"></div>
-                  <a v-if="romModal.ctelecom" :href="buildDownloadLink(romModal.miui, romModal.ctelecom)" class="text-xs font-medium text-[var(--color-accent)] hover:underline" target="_blank" rel="noopener noreferrer">{{ $t('ctelecom') }}</a>
-                  <a v-if="romModal.cmobile" :href="buildDownloadLink(romModal.miui, romModal.cmobile)" class="text-xs font-medium text-[var(--color-accent)] hover:underline" target="_blank" rel="noopener noreferrer">{{ $t('cmobile') }}</a>
-                  <a v-if="romModal.cunicom" :href="buildDownloadLink(romModal.miui, romModal.cunicom)" class="text-xs font-medium text-[var(--color-accent)] hover:underline" target="_blank" rel="noopener noreferrer">{{ $t('cunicom') }}</a>
+                  <a v-if="romModal.ctelecom" :href="buildDownloadLink(romModal.miui, romModal.ctelecom)" class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    {{ $t('ctelecom') }}
+                  </a>
+                  <a v-if="romModal.cmobile" :href="buildDownloadLink(romModal.miui, romModal.cmobile)" class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    {{ $t('cmobile') }}
+                  </a>
+                  <a v-if="romModal.cunicom" :href="buildDownloadLink(romModal.miui, romModal.cunicom)" class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]" target="_blank" rel="noopener noreferrer">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    {{ $t('cunicom') }}
+                  </a>
                 </template>
               </div>
             </div>
@@ -422,7 +464,8 @@ const { locale } = useI18n()
 const { t } = useI18n()
 const { buildDeviceUrl, buildDeviceImageUrl, buildBrandImageUrl, buildDownloadLink, buildChangelogUrl } = useApi()
 
-const selectedZone = ref('')
+const selectedRegion = ref('')
+const searchQuery = ref('')
 const expandedBranches = ref([])
 
 // 机型照片加载失败时按品牌显示默认图（Xiaomi→mi.svg，POCO→POCO.png，REDMI→REDMI.png），再失败才隐藏
@@ -509,16 +552,92 @@ const { data: device, error, pending } = await useAsyncData(
 // 机型切换后重置照片加载状态
 watch(() => device.value?.device, () => { brandFallback.value = false; deviceImageError.value = false })
 
+// region 值 → 显示名（zh/en），未保底值则回退到 region 大写
+const REGION_LABELS = {
+  cn: { zh: '中国', en: 'China' },
+  tw: { zh: '中国台湾', en: 'Taiwan' },
+  global: { zh: '国际', en: 'Global' },
+  eea: { zh: '欧洲', en: 'Europe' },
+  ru: { zh: '俄罗斯', en: 'Russia' },
+  in: { zh: '印度', en: 'India' },
+  tr: { zh: '土耳其', en: 'Turkey' },
+  id: { zh: '印度尼西亚', en: 'Indonesia' },
+  jp: { zh: '日本', en: 'Japan' },
+  mx: { zh: '墨西哥', en: 'Mexico' },
+  br: { zh: '巴西', en: 'Brazil' },
+  hk: { zh: '中国香港', en: 'Hong Kong' },
+  sg: { zh: '新加坡', en: 'Singapore' },
+}
+
+const regionLabel = (region) => {
+  const labels = REGION_LABELS[region]
+  if (!labels) return String(region || '').toUpperCase()
+  return locale.value.startsWith('zh') ? labels.zh : labels.en
+}
+
+// 当前机型实际支持的区域（按 branch.region 动态生成），去重并保持稳定顺序
+const availableRegions = computed(() => {
+  if (!device.value?.branches) return []
+  const regions = new Set()
+  for (const b of device.value.branches) {
+    if (b.show === '1' && b.region) regions.add(b.region)
+  }
+  return [...regions]
+})
+
+// 机型切换后，若已选区域不在当前机型支持范围内，则重置为「全部设备」
+watch(availableRegions, (regions) => {
+  if (selectedRegion.value && !regions.includes(selectedRegion.value)) {
+    selectedRegion.value = ''
+  }
+})
+
+// 搜索匹配：版本号 / Android 版本 / 分支名 / 分支标签 / release 等关键词
+const romMatchesQuery = (rom, branch, query) => {
+  if (!query) return true
+  const haystack = [
+    rom.miui,
+    rom.android,
+    rom.release,
+    rom.aspatch,
+    branchName(branch),
+    branch.id,
+    branch.tags?.branch,
+    branch.tags?.branchtag,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+  return haystack.includes(query)
+}
+
 const filteredBranches = computed(() => {
   if (!device.value?.branches) return []
+  const q = searchQuery.value.trim().toLowerCase()
   let branches = device.value.branches.filter((b) => b.show === '1')
-  if (selectedZone.value) {
-    branches = branches.filter((b) => b.zone === selectedZone.value)
+  if (selectedRegion.value) {
+    branches = branches.filter((b) => b.region === selectedRegion.value)
   }
-  return branches.map((b) => ({
-    ...b,
-    roms: [...(b.roms || [])].sort(compareRoms),
-  }))
+  return branches
+    .map((b) => {
+      let roms = [...(b.roms || [])].sort(compareRoms)
+      if (q) roms = roms.filter((r) => romMatchesQuery(r, b, q))
+      return { ...b, roms }
+    })
+    .filter((b) => !q || b.roms.length > 0)
+})
+
+// 搜索时自动展开命中分支；清空搜索时收起
+watch(searchQuery, () => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) {
+    expandedBranches.value = []
+    return
+  }
+  expandedBranches.value = (device.value?.branches || [])
+    .filter((b) => b.show === '1' && (!selectedRegion.value || b.region === selectedRegion.value))
+    .filter((b) => (b.roms || []).some((r) => romMatchesQuery(r, b, q)))
+    .map((b) => branchKey(b))
 })
 
 // 打开 ROM 详情模态框

@@ -79,14 +79,30 @@ function resolveOs(rom, version) {
   return extractOsVersion(version)
 }
 
-// OS 大版本排序：OS 系在前，然后各自按数字降序；非数字字母类别（Stock / STAN）排最末并按字母序
+// 大版本排序 key：提取字母前缀后的数字段，如 "OS4" -> ['OS', [4]]，"V12.5" -> ['V', [12, 5]]
+const osSortKey = (os) => {
+  const m = String(os).match(/^(OS|V)?(\d+(?:\.\d+)*)$/)
+  if (!m) return { prefix: '', parts: [] }
+  return { prefix: m[1] || '', parts: m[2].split('.').map((n) => parseInt(n, 10) || 0) }
+}
+// OS 大版本排序：OS 系在前，然后按版本数字段降序（V12.5 排在 V12 与 V13 之间）；
+// 无数字前缀类别（Stock / STAN）排最末并按字母序
 const osSort = (a, b) => {
-  const isOsA = a.startsWith('OS')
-  const isOsB = b.startsWith('OS')
-  if (isOsA !== isOsB) return isOsA ? -1 : 1
-  const numA = parseInt(a.replace(/\D/g, ''), 10) || 0
-  const numB = parseInt(b.replace(/\D/g, ''), 10) || 0
-  if (numA !== numB) return numB - numA
+  const ka = osSortKey(a)
+  const kb = osSortKey(b)
+  // 无数字前缀（Stock / STAN）排最末
+  if (!ka.parts.length || !kb.parts.length) {
+    if (!ka.parts.length && !kb.parts.length) return a.localeCompare(b)
+    return ka.parts.length ? -1 : 1
+  }
+  // OS 系（HyperOS）优先于其它数字系（MIUI V 系）
+  if (ka.prefix !== kb.prefix) return ka.prefix === 'OS' ? -1 : 1
+  const len = Math.max(ka.parts.length, kb.parts.length)
+  for (let i = 0; i < len; i++) {
+    const x = ka.parts[i] || 0
+    const y = kb.parts[i] || 0
+    if (x !== y) return y - x
+  }
   return a.localeCompare(b)
 }
 
