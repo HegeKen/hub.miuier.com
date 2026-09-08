@@ -58,25 +58,25 @@
           />
         </div>
         <dl class="min-w-0 flex-1">
-          <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('devname') }}</dt>
-            <dd class="text-sm font-medium">{{ deviceName(device) }}</dd>
+          <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
+            <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('devname') }}</dt>
+            <dd class="min-w-0 break-words text-sm font-medium">{{ deviceName(device) }}</dd>
           </div>
-          <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('devcode') }}</dt>
-            <dd class="font-mono text-sm">{{ device.device }}</dd>
+          <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
+            <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('devcode') }}</dt>
+            <dd class="min-w-0 break-words font-mono text-sm">{{ device.device }}</dd>
           </div>
-          <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('brand') }}</dt>
-            <dd class="text-sm">{{ (device.brand || []).join(' / ') || '—' }}</dd>
+          <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
+            <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('brand') }}</dt>
+            <dd class="min-w-0 break-words text-sm">{{ (device.brand || []).join(' / ') || '—' }}</dd>
           </div>
-          <div class="grid gap-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('android') }}</dt>
-            <dd class="text-sm">{{ (device.android || []).join(', ') || '—' }}</dd>
+          <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
+            <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('android') }}</dt>
+            <dd class="min-w-0 break-words text-sm">{{ (device.android || []).join(', ') || '—' }}</dd>
           </div>
-          <div class="grid gap-1 px-4 py-3 sm:grid-cols-[160px_1fr] sm:gap-4 sm:px-5">
-            <dt class="text-sm text-[var(--color-text-secondary)]">{{ $t('supports') }}</dt>
-            <dd class="text-sm">{{ (device.supports || []).join(', ') || '—' }}</dd>
+          <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
+            <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('supports') }}</dt>
+            <dd class="min-w-0 break-words text-sm">{{ (device.supports || []).join(', ') || '—' }}</dd>
           </div>
         </dl>
       </div>
