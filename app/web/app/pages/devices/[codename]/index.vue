@@ -575,12 +575,22 @@ const branchName = (b) =>
   b?.name?.zh ||
   b?.id
 
-// ROM 排序：版本号为主（降序），release_date 为辅（降序、空值置后）
+// ROM 排序：版本族（HyperOS/OS 优先于 MIUI/V）为主，同族内版本号降序，release_date 为辅
 const romVersionParts = (version) => {
   const m = String(version || '').match(/^[A-Za-z]*(\d+(?:\.\d+)*)/)
   return m ? m[1].split('.').map((n) => parseInt(n, 10) || 0) : []
 }
+const romFamilyRank = (version) => {
+  const m = String(version || '').match(/^([A-Za-z]+)/)
+  const prefix = m ? m[1].toUpperCase() : ''
+  if (prefix.startsWith('OS')) return 0
+  if (prefix.startsWith('V')) return 1
+  return 2
+}
 const compareRoms = (a, b) => {
+  const fa = romFamilyRank(a.miui)
+  const fb = romFamilyRank(b.miui)
+  if (fa !== fb) return fa - fb
   const va = romVersionParts(a.miui)
   const vb = romVersionParts(b.miui)
   const len = Math.max(va.length, vb.length)
