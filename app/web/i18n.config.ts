@@ -1,4 +1,3 @@
-import { defineI18nConfig } from '@nuxtjs/i18n'
 const zhMessages = {
   site: 'MiROMS HUB',
   home: '首页',
@@ -47,6 +46,7 @@ const zhMessages = {
   toggletheme: '切换深色 / 浅色模式',
   langswitch: '选择语言',
   totop: '返回顶部',
+  authorsite: '作者主页',
   alldevices: '全部设备',
   china: '中国',
   global: '国际',
@@ -128,6 +128,7 @@ const enMessages = {
   toggletheme: 'Toggle dark / light mode',
   langswitch: 'Select language',
   totop: 'Back to Top',
+  authorsite: 'Author',
   alldevices: 'All Devices',
   china: 'China',
   global: 'Global',

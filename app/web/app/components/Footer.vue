@@ -13,6 +13,14 @@
           >
             GitHub
           </a>
+          <a
+            href="https://www.helilab.cn/#/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="transition-colors hover:text-[var(--color-text)]"
+          >
+            {{ $t('authorsite') }}
+          </a>
           <a href="#top" class="transition-colors hover:text-[var(--color-text)]">
             {{ $t('totop') }}
           </a>

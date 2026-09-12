@@ -9,7 +9,7 @@ export default defineNuxtConfig({
       },
       // 让 VS Code 把 server/** 归入主 TS 项目（含 nitropack 路径别名与 node 类型），
       // 否则 server 文件只被独立的 .nuxt/tsconfig.server.json 覆盖，编辑器里会误报
-      include: ['../server/**/*'],
+      include: ['../server/**/*', '../i18n.config.ts'],
     },
   },
 

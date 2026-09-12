@@ -80,7 +80,7 @@
           <p class="text-xs text-[var(--color-text-tertiary)]">
             MySQL 直连 · 数据管理后台
           </p>
-          <div class="mt-2 flex items-center gap-3">
+          <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
             <a
               href="https://hubman.miuier.com"
               target="_blank"
@@ -88,6 +88,14 @@
               class="text-xs font-medium text-[var(--color-accent)] hover:underline"
             >
               hubman.miuier.com ↗
+            </a>
+            <a
+              href="https://www.helilab.cn/#/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-xs font-medium text-[var(--color-accent)] hover:underline"
+            >
+              helilab.cn ↗
             </a>
             <button
               type="button"

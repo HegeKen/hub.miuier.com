@@ -1,3 +1,7 @@
 {
-  "extends": "./app/web/.nuxt/tsconfig.json"
+  "extends": "./app/web/.nuxt/tsconfig.json",
+  "compilerOptions": {
+    // 根目录没有自己的依赖，继承来的 types: ["node"] 需在 web 包的 @types 下解析
+    "typeRoots": ["./app/web/node_modules/@types"]
+  }
 }

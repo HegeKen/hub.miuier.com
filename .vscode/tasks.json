@@ -20,7 +20,7 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "run-XFUFull",
+			"label": "run-otaFull",
 			"type": "shell",
 			"command": "python3",
 			"args": ["${workspaceFolder}/data/scripts/ota_full.py"],
