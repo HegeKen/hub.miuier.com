@@ -6,7 +6,7 @@ export default defineNuxtConfig({
 
   // 管理后台使用 SPA 模式：页面数据全部通过服务端 API 从数据库实时读取
   ssr: false,
-  devtools: { enabled: false },
+  devtools: { enabled: true },
 
   modules: ['@nuxtjs/tailwindcss'],
 

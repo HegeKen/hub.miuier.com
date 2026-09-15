@@ -379,6 +379,144 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       severity: 'error',
       violation: 'update_date IS NOT NULL AND update_date <= 0',
     },
+
+    /* ---- 字段对应关系（参照 entryChecker / validate_device_entry） ---- */
+    {
+      id: 'type_bigver',
+      name: 'type 与 bigver 对应',
+      column: 'type/bigver',
+      description: '系统类型需与大版本号前缀一致：HyperOS→HyperOS、MIUI→MIUI、STAN→STAN',
+      severity: 'error',
+      violation:
+        "(type='HyperOS' AND (bigver IS NULL OR bigver NOT LIKE 'HyperOS%')) " +
+        "OR (type='MIUI' AND (bigver IS NULL OR bigver NOT LIKE 'MIUI%')) " +
+        "OR (type='STAN' AND (bigver IS NULL OR bigver NOT LIKE 'STAN%'))",
+      sampleCols: ['type', 'bigver'],
+    },
+    {
+      id: 'bigver_version',
+      name: 'bigver 与 version 大版本对应',
+      column: 'bigver/version',
+      description: '大版本号数字需与版本号前缀一致：HyperOS 3→OS3.*、MIUI 14→V14.*、STAN A15→A15*（周更/体验版等非 V/OS/A 前缀版本跳过）',
+      severity: 'error',
+      violation:
+        "(type='HyperOS' AND bigver LIKE 'HyperOS %' AND version IS NOT NULL AND version LIKE 'OS%' " +
+        "AND version NOT LIKE CONCAT('OS', TRIM(SUBSTRING(bigver, 9)), '.%')) " +
+        "OR (type='MIUI' AND bigver LIKE 'MIUI %' AND version IS NOT NULL AND version LIKE 'V%' " +
+        "AND version NOT LIKE CONCAT('V', TRIM(SUBSTRING(bigver, 5)), '.%')) " +
+        "OR (type='STAN' AND bigver LIKE 'STAN %' AND version IS NOT NULL AND version LIKE 'A%' " +
+        "AND version NOT LIKE CONCAT(TRIM(SUBSTRING(bigver, 6)), '%'))",
+      sampleCols: ['bigver', 'version'],
+    },
+    {
+      id: 'android_version_letter',
+      name: 'android 与 version 安卓代号对应',
+      column: 'android/version',
+      description: '版本号末段首字母（安卓代号）需与 android 字段匹配：17→X、16→W、15→V、14→U、13→T、12→S、11→R、10→Q、9→P',
+      severity: 'warning',
+      violation:
+        "version IS NOT NULL AND android IS NOT NULL " +
+        "AND CHAR_LENGTH(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(version, '.', -1) LIKE '%-%' THEN SUBSTRING(version, 1, LENGTH(version)-LENGTH(SUBSTRING_INDEX(version, '.', -1))-1) ELSE version END, '.', -1)) >= 6 " +
+        "AND SUBSTRING(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(version, '.', -1) LIKE '%-%' THEN SUBSTRING(version, 1, LENGTH(version)-LENGTH(SUBSTRING_INDEX(version, '.', -1))-1) ELSE version END, '.', -1), 1, 1) <> " +
+        "CASE android " +
+        "WHEN '17.0' THEN 'X' WHEN '16.0' THEN 'W' WHEN '15.0' THEN 'V' " +
+        "WHEN '14.0' THEN 'U' WHEN '13.0' THEN 'T' WHEN '12.0' THEN 'S' " +
+        "WHEN '11.0' THEN 'R' WHEN '10.0' THEN 'Q' WHEN '9.0' THEN 'P' " +
+        "ELSE SUBSTRING(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(version, '.', -1) LIKE '%-%' THEN SUBSTRING(version, 1, LENGTH(version)-LENGTH(SUBSTRING_INDEX(version, '.', -1))-1) ELSE version END, '.', -1), 1, 1) END",
+      sampleCols: ['android', 'version'],
+    },
+    {
+      id: 'device_code',
+      name: 'device 与 code 对应',
+      column: 'device/code',
+      description: '设备代码 code 应以 device 为前缀（或互为前缀），如 warsaw→warsaw、warsaw_global',
+      severity: 'error',
+      violation:
+        "device IS NOT NULL AND code IS NOT NULL AND code <> '' " +
+        "AND code NOT LIKE CONCAT(device, '%') " +
+        "AND device NOT LIKE CONCAT(code, '%')",
+      sampleCols: ['device', 'code'],
+    },
+    {
+      id: 'region_zone',
+      name: 'region 与 zone 对应',
+      column: 'region/zone',
+      description: '区域与分区需匹配：cn→zone=1，其它区域→zone=2',
+      severity: 'error',
+      violation:
+        "(region='cn' AND zone<>1) " +
+        "OR (region IS NOT NULL AND region<>'' AND region<>'None' AND region<>'cn' AND zone<>2)",
+      sampleCols: ['region', 'zone'],
+    },
+    {
+      id: 'recovery_version',
+      name: 'recovery 包含 version',
+      column: 'recovery/version',
+      description: '卡刷包文件名应包含该记录的完整版本号',
+      severity: 'warning',
+      violation:
+        "recovery IS NOT NULL AND recovery <> '' AND version IS NOT NULL AND INSTR(recovery, version)=0",
+      sampleCols: ['recovery', 'version'],
+    },
+    {
+      id: 'recovery_code',
+      name: 'recovery 前缀与 code 对应',
+      column: 'recovery/code',
+      description: '现代卡刷包（含 -ota_full-）应以 code 开头，如 taiko-ota_full-...',
+      severity: 'warning',
+      violation:
+        "recovery IS NOT NULL AND recovery <> '' AND INSTR(recovery, '-ota_full-')>0 " +
+        "AND code IS NOT NULL AND code <> '' " +
+        "AND recovery NOT LIKE CONCAT(code, '-ota_full-%')",
+      sampleCols: ['recovery', 'code'],
+    },
+    {
+      id: 'recovery_android',
+      name: 'recovery 内 Android 版本与 android 对应',
+      column: 'recovery/android',
+      description: '卡刷包文件名中 -user- 后的 Android 版本号应与 android 字段一致',
+      severity: 'error',
+      violation:
+        "recovery IS NOT NULL AND INSTR(recovery, '-user-')>0 AND android IS NOT NULL " +
+        "AND SUBSTRING_INDEX(SUBSTRING_INDEX(recovery, '-user-', -1), '-', 1) <> android",
+      sampleCols: ['recovery', 'android'],
+    },
+    {
+      id: 'fastboot_version',
+      name: 'fastboot 包含 version',
+      column: 'fastboot/version',
+      description: '线刷包文件名应包含该记录的完整版本号',
+      severity: 'warning',
+      violation:
+        "fastboot IS NOT NULL AND fastboot <> '' AND version IS NOT NULL AND INSTR(fastboot, version)=0",
+      sampleCols: ['fastboot', 'version'],
+    },
+    {
+      id: 'fastboot_code',
+      name: 'fastboot 前缀与 code 对应',
+      column: 'fastboot/code',
+      description: '现代线刷包（含 _images_）应以 code_images_ 开头，如 taiko_images_...',
+      severity: 'warning',
+      violation:
+        "fastboot IS NOT NULL AND fastboot <> '' AND INSTR(fastboot, '_images_')>0 " +
+        "AND code IS NOT NULL AND code <> '' " +
+        "AND fastboot NOT LIKE CONCAT(code, '_images_%')",
+      sampleCols: ['fastboot', 'code'],
+    },
+    {
+      id: 'version_devtag',
+      name: 'version 内 devtag 与 devices.devtag 对应',
+      column: 'version/devtag',
+      description: '版本号末段中（安卓代号与标签之间）的设备标识应与 devices 表的 devtag 一致',
+      severity: 'warning',
+      violation:
+        "version IS NOT NULL AND CHAR_LENGTH(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(version, '.', -1) LIKE '%-%' THEN SUBSTRING(version, 1, LENGTH(version)-LENGTH(SUBSTRING_INDEX(version, '.', -1))-1) ELSE version END, '.', -1)) >= 6 " +
+        "AND EXISTS (SELECT 1 FROM devices d WHERE d.device=t.device AND d.code=t.code " +
+        "AND d.devtag IS NOT NULL AND d.devtag<>'' " +
+        "AND SUBSTRING(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(t.version, '.', -1) LIKE '%-%' THEN SUBSTRING(t.version, 1, LENGTH(t.version)-LENGTH(SUBSTRING_INDEX(t.version, '.', -1))-1) ELSE t.version END, '.', -1), 2, " +
+        "CHAR_LENGTH(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(t.version, '.', -1) LIKE '%-%' THEN SUBSTRING(t.version, 1, LENGTH(t.version)-LENGTH(SUBSTRING_INDEX(t.version, '.', -1))-1) ELSE t.version END, '.', -1))-5) <> d.devtag)",
+      sampleCols: ['version', 'device', 'code'],
+    },
   ],
 
   series: [
@@ -513,7 +651,7 @@ export async function runTableCheck(table: AllowedTable, summaryOnly = false): P
       }
 
       const [countRows] = await getPool().query<CountRow[]>(
-        `SELECT COUNT(*) AS total FROM \`${table}\` t WHERE ${rule.violation} ${dismissalClause}`,
+        `SELECT COUNT(*) AS total FROM \`${table}\` t WHERE (${rule.violation}) ${dismissalClause}`,
         [table, rule.id],
       )
       const total = Number(countRows[0]?.total || 0)
@@ -524,7 +662,7 @@ export async function runTableCheck(table: AllowedTable, summaryOnly = false): P
         const [rows] = await getPool().query<SampleRow[]>(
           `SELECT t.id, ${context.join(', ')}, ${sampleCols.join(', ')}
            FROM \`${table}\` t
-           WHERE ${rule.violation} ${dismissalClause}
+           WHERE (${rule.violation}) ${dismissalClause}
            ORDER BY t.id DESC
            LIMIT ${SAMPLE_LIMIT}`,
           [table, rule.id],

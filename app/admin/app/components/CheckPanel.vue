@@ -10,7 +10,7 @@
     >
       <div v-if="open" class="fixed inset-0 z-[80] overflow-y-auto" role="dialog" aria-modal="true" aria-label="数据自查">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="$emit('close')"></div>
-        <div class="relative mx-auto my-6 w-full max-w-5xl rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5 shadow-xl">
+        <div class="check-panel relative mx-auto my-6 w-full max-w-6xl rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5 shadow-xl sm:max-w-7xl 2xl:max-w-[95vw]">
           <!-- 标题 -->
           <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -236,6 +236,15 @@
                         </td>
                         <td class="table-td whitespace-nowrap text-right">
                           <div class="flex justify-end gap-1.5">
+                            <button
+                              v-if="canAutofix"
+                              type="button"
+                              class="btn-primary !px-2.5 !py-1 text-xs"
+                              :disabled="busy || autofixingId === row.id"
+                              @click="autofixRow(row)"
+                            >
+                              {{ autofixingId === row.id ? '修复中…' : '一键修复' }}
+                            </button>
                             <button type="button" class="btn-secondary !px-2.5 !py-1 text-xs" :disabled="busy" @click="dismissRow(rule, row)">
                               忽略
                             </button>
@@ -270,29 +279,54 @@
                 <p class="mt-0.5 text-xs text-[var(--color-text-tertiary)]">以下特殊情况已豁免，点击「取消忽略」可恢复检查</p>
               </div>
               <ul class="divide-y divide-[var(--color-border)]">
-                <li v-for="d in report.dismissals" :key="d.id" class="flex flex-wrap items-center gap-2 px-4 py-2.5">
-                  <span class="dot" :class="d.row_id === 0 ? 'bg-[var(--color-warn)]' : 'bg-[var(--color-info)]'" aria-hidden="true"></span>
-                  <span class="text-sm font-medium text-[var(--color-text)]">
-                    {{ ruleName(d.rule_id) }}
-                  </span>
-                  <span
-                    class="rounded bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-xs text-[var(--color-text-secondary)]"
-                  >
-                    {{ d.row_id === 0 ? '整条规则' : '记录 #' + d.row_id }}
-                  </span>
-                  <span v-if="d.reason" class="min-w-0 flex-1 truncate text-xs text-[var(--color-text-tertiary)]" :title="d.reason">
-                    {{ d.reason }}
-                  </span>
-                  <span v-else class="min-w-0 flex-1"></span>
-                  <span class="shrink-0 text-xs text-[var(--color-text-tertiary)]">{{ fmtTime(d.created_at) }}</span>
+                <li v-for="g in dismissalGroups" :key="g.ruleId" class="px-4 py-2">
                   <button
                     type="button"
-                    class="btn-secondary !px-2.5 !py-1 shrink-0 text-xs"
-                    :disabled="busy"
-                    @click="restore(d)"
+                    class="flex w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-[var(--color-bg-subtle)]"
+                    @click="toggleDismissalGroup(g.ruleId)"
                   >
-                    取消忽略
+                    <svg
+                      class="h-4 w-4 shrink-0 text-[var(--color-text-tertiary)] transition-transform"
+                      :class="dismissalExpanded.has(g.ruleId) ? 'rotate-90' : ''"
+                      viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+                    >
+                      <path fill-rule="evenodd" d="M7.21 5.23a.75.75 0 011.06.02L12.5 9.44V5.75a.75.75 0 011.5 0v6.5a.75.75 0 01-.75.75h-6.5a.75.75 0 010-1.5h3.69L6.23 8.29a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="dot" :class="g.items.some((d) => d.row_id === 0) ? 'bg-[var(--color-warn)]' : 'bg-[var(--color-info)]'" aria-hidden="true"></span>
+                    <span class="text-sm font-medium text-[var(--color-text)]">
+                      {{ ruleName(g.ruleId) }}
+                    </span>
+                    <span class="rounded-full bg-[var(--color-bg-subtle)] px-2 py-0.5 text-xs tabular-nums text-[var(--color-text-tertiary)]">
+                      {{ g.items.length }} 条
+                    </span>
+                    <span class="ml-auto text-xs text-[var(--color-text-tertiary)]">{{ fmtTime(g.items[0].created_at) }}</span>
                   </button>
+                  <div v-if="dismissalExpanded.has(g.ruleId)" class="mt-1 divide-y divide-[var(--color-border)] rounded border border-[var(--color-border)]">
+                    <div
+                      v-for="d in g.items"
+                      :key="d.id"
+                      class="flex flex-wrap items-center gap-2 px-3 py-2"
+                    >
+                      <span
+                        class="rounded bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-xs text-[var(--color-text-secondary)]"
+                      >
+                        {{ d.row_id === 0 ? '整条规则' : '记录 #' + d.row_id }}
+                      </span>
+                      <span v-if="d.reason" class="min-w-0 flex-1 truncate text-xs text-[var(--color-text-tertiary)]" :title="d.reason">
+                        {{ d.reason }}
+                      </span>
+                      <span v-else class="min-w-0 flex-1"></span>
+                      <span class="shrink-0 text-xs text-[var(--color-text-tertiary)]">{{ fmtTime(d.created_at) }}</span>
+                      <button
+                        type="button"
+                        class="btn-secondary !px-2.5 !py-1 shrink-0 text-xs"
+                        :disabled="busy"
+                        @click="restore(d)"
+                      >
+                        取消忽略
+                      </button>
+                    </div>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -312,7 +346,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'edit'])
 
-const { runCheck, dismissViolation, restoreViolation } = useAdminApi()
+const { runCheck, dismissViolation, restoreViolation, autofixRecord } = useAdminApi()
 const { push } = useToast()
 
 const loading = ref(false)
@@ -320,6 +354,10 @@ const refreshing = ref(false)
 const error = ref('')
 const report = ref(null)
 const expanded = ref(new Set())
+
+/** 一键修复：目前仅 roms 表支持（以 recovery/fastboot 文件名为准回填字段） */
+const canAutofix = computed(() => props.table === 'roms')
+const autofixingId = ref(null)
 
 /** 汇总筛选：all / error / warning */
 const activeFilter = ref('all')
@@ -348,6 +386,31 @@ const CONTEXT = {
 const rulesMap = computed(() => Object.fromEntries((report.value?.rules || []).map((r) => [r.id, r])))
 
 const ruleName = (ruleId) => rulesMap.value[ruleId]?.name || ruleId
+
+/** 已忽略记录按规则分组（同一类别合并显示） */
+const dismissalGroups = computed(() => {
+  const list = report.value?.dismissals || []
+  const map = new Map()
+  for (const d of list) {
+    if (!map.has(d.rule_id)) map.set(d.rule_id, [])
+    map.get(d.rule_id).push(d)
+  }
+  // 每组内按创建时间倒序
+  for (const arr of map.values()) arr.sort((a, b) => b.created_at - a.created_at)
+  // 分组按组内最新时间倒序
+  return [...map.entries()]
+    .map(([ruleId, items]) => ({ ruleId, items }))
+    .sort((a, b) => b.items[0].created_at - a.items[0].created_at)
+})
+
+const dismissalExpanded = ref(new Set())
+
+const toggleDismissalGroup = (ruleId) => {
+  const next = new Set(dismissalExpanded.value)
+  if (next.has(ruleId)) next.delete(ruleId)
+  else next.add(ruleId)
+  dismissalExpanded.value = next
+}
 
 const sampleColsOf = (rule) => ['id', ...(CONTEXT[props.table] || []), ...(rule.sampleCols || [rule.column])]
 
@@ -449,6 +512,28 @@ const dismissRow = async (rule, row) => {
   }
 }
 
+/** 一键修复：以 recovery/fastboot 文件名为准回填字段 */
+const autofixRow = async (row) => {
+  if (busy.value || autofixingId.value !== null) return
+  autofixingId.value = row.id
+  try {
+    const res = await autofixRecord(row.id)
+    const changed = res.changed || {}
+    const keys = Object.keys(changed)
+    if (keys.length === 0) {
+      push('info', res.message || '无需修复，字段已与文件名一致')
+    } else {
+      const detail = keys.map((k) => `${k}: ${String(changed[k].from)} → ${String(changed[k].to)}`).join('；')
+      push('success', `记录 #${String(row.id)} 已修复（${keys.length} 项）：${detail}`)
+    }
+    await load()
+  } catch (e) {
+    push('error', errorMessage(e))
+  } finally {
+    autofixingId.value = null
+  }
+}
+
 const restore = async (d) => {
   if (busy.value) return
   busy.value = true
@@ -473,3 +558,28 @@ const cellTitle = (v) => {
   return s.length > 80 ? s : ''
 }
 </script>
+
+<style scoped>
+/* 自查弹窗密度优化：4K / 大屏下更紧凑 */
+.check-panel {
+  padding: 1.25rem;
+}
+
+.check-panel :deep(.table-th),
+.check-panel :deep(.table-td) {
+  padding: 0.4rem 0.75rem;
+  line-height: 1.35;
+}
+
+/* 4K 及以上：进一步压缩，提升信息密度 */
+@media (min-width: 1920px) {
+  .check-panel {
+    padding: 1rem 1.5rem;
+  }
+  .check-panel :deep(.table-th),
+  .check-panel :deep(.table-td) {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8125rem;
+  }
+}
+</style>

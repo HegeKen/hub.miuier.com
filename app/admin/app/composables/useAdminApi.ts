@@ -144,6 +144,14 @@ export function useAdminApi() {
     return $fetch('/api/db/check/dismiss', { method: 'DELETE', body: { table, ruleId, rowId } })
   }
 
+  /** 一键修复 roms 记录：以 recovery/fastboot 文件名为准回填字段（仅 roms 表） */
+  const autofixRecord = async (id: number | string, fields?: string[]) => {
+    return $fetch<{ ok: boolean; id: number; changed: Record<string, { from: unknown; to: unknown }>; message?: string; filename?: string }>(
+      `/api/db/roms/${id}/autofix`,
+      { method: 'POST', body: fields ? { fields } : {} },
+    )
+  }
+
   /** 已忽略列表（可按表过滤） */
   const listDismissals = async (table?: string) => {
     return $fetch<{ dismissals: Dismissal[] }>('/api/db/check/dismissals', { params: table ? { table } : {} })
@@ -163,6 +171,7 @@ export function useAdminApi() {
     getCheckSummary,
     dismissViolation,
     restoreViolation,
+    autofixRecord,
     listDismissals,
   }
 }
