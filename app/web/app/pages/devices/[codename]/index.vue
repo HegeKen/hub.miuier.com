@@ -133,7 +133,7 @@
           :class="selectedRegion === region ? 'filter-pill-active' : ''"
           @click="selectedRegion = region"
         >
-          {{ regionLabel(region) }}
+          {{ regionLabel(region, locale) }}
         </button>
       </div>
 
@@ -502,6 +502,7 @@
 
 <script setup>
 import { validateCodename, sanitizeString } from '~/utils/validation'
+import { regionLabel, isChinaRegion } from '~/utils/region'
 
 const route = useRoute()
 const { locale } = useI18n()
@@ -623,40 +624,9 @@ const { data: device, error, pending } = await useAsyncData(
 // 机型切换后重置照片加载状态
 watch(() => device.value?.device, () => { brandFallback.value = false; deviceImageError.value = false })
 
-// region 值 → 显示名（zh/en），未保底值则回退到 region 大写
-const REGION_LABELS = {
-  cn: { zh: '中国大陆', en: 'China Mainland' },
-  tw: { zh: '中国台湾', en: 'Taiwan，China' },
-  global: { zh: '国际', en: 'Global' },
-  eea: { zh: '欧洲经济区', en: 'European Economic Area' },
-  ru: { zh: '俄罗斯', en: 'Russia' },
-  in: { zh: '印度', en: 'India' },
-  tr: { zh: '土耳其', en: 'Turkey' },
-  id: { zh: '印度尼西亚', en: 'Indonesia' },
-  jp: { zh: '日本', en: 'Japan' },
-  kr: { zh: '韩国', en: 'Korea' },
-  mx: { zh: '墨西哥', en: 'Mexico' },
-  lm: { zh: '拉美', en: 'Latin America' },
-  th: { zh: '泰国', en: 'Thailand' },
-  hk: { zh: '中国香港', en: 'Hong Kong，China' },
-  sg: { zh: '新加坡', en: 'Singapore' },
-  my: { zh: '马来西亚', en: 'Malaysia' },
-  cl: { zh: '智利', en: 'Chile' },
-  za: { zh: '南非', en: 'South Africa' },
-  gt: { zh: '危地马拉', en: 'Guatemala' },
-}
-
-const regionLabel = (region) => {
-  const labels = REGION_LABELS[region]
-  if (!labels) return String(region || '').toUpperCase()
-  return locale.value.startsWith('zh') ? labels.zh : labels.en
-}
-
 // 分支卡片上的区域标签：优先显示具体区域（如 中国台湾 / 欧洲经济区 / 俄罗斯），无 region 时回退到 zone 的 中国/国际
-const CHINA_REGIONS = ['cn', 'tw', 'hk', 'mo']
-const isChinaRegion = (region) => CHINA_REGIONS.includes(region)
 const branchRegionLabel = (b) => {
-  if (b?.region) return regionLabel(b.region)
+  if (b?.region) return regionLabel(b.region, locale.value)
   return b?.zone === '1' ? t('china') : t('global')
 }
 const branchDotColor = (b) => {

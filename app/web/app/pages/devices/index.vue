@@ -50,6 +50,52 @@
       </button>
     </div>
 
+    <!-- Region Filter -->
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+      <span class="text-xs font-medium text-[var(--color-text-secondary)]">{{ $t('region') }}:</span>
+      <button
+        type="button"
+        class="filter-pill-sm"
+        :class="selectedRegion === '' ? 'filter-pill-sm-active' : ''"
+        @click="selectedRegion = ''"
+      >
+        {{ $t('alldevices') }}
+      </button>
+      <button
+        v-for="r in availableRegions"
+        :key="r"
+        type="button"
+        class="filter-pill-sm"
+        :class="selectedRegion === r ? 'filter-pill-sm-active' : ''"
+        @click="selectedRegion = r"
+      >
+        {{ regionLabel(r, locale) }}
+      </button>
+    </div>
+
+    <!-- Carrier Filter -->
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+      <span class="text-xs font-medium text-[var(--color-text-secondary)]">{{ $t('carrier') }}:</span>
+      <button
+        type="button"
+        class="filter-pill-sm"
+        :class="selectedCarrier === '' ? 'filter-pill-sm-active' : ''"
+        @click="selectedCarrier = ''"
+      >
+        {{ $t('alldevices') }}
+      </button>
+      <button
+        v-for="c in availableCarriers"
+        :key="c"
+        type="button"
+        class="filter-pill-sm"
+        :class="selectedCarrier === c ? 'filter-pill-sm-active' : ''"
+        @click="selectedCarrier = c"
+      >
+        {{ carrierLabel(c, locale) }}
+      </button>
+    </div>
+
     <!-- Android Version Filter -->
     <div class="mb-4 flex flex-wrap items-center gap-2">
       <span class="text-xs font-medium text-[var(--color-text-secondary)]">{{ $t('android') }}:</span>
@@ -200,6 +246,9 @@
 </template>
 
 <script setup>
+import { regionLabel, sortRegions } from '~/utils/region'
+import { carrierLabel, sortCarriers } from '~/utils/carrier'
+
 const { locale } = useI18n()
 const { t } = useI18n()
 const { buildDevicesIndexUrl, buildDeviceImageUrl, buildBrandImageUrl } = useApi()
@@ -230,6 +279,8 @@ const router = useRouter()
 
 const searchQuery = ref('')
 const selectedBrand = ref('')
+const selectedRegion = ref('')
+const selectedCarrier = ref('')
 const selectedAndroid = ref('')
 const selectedOs = ref(typeof route.query.os === 'string' ? route.query.os : '')
 
@@ -277,11 +328,67 @@ const availableBrands = computed(() => {
     .map(([, v]) => v)
 })
 
+const availableRegions = computed(() => {
+  if (!devices.value) return []
+  let pool = devices.value
+  if (selectedOs.value) {
+    pool = pool.filter((d) => (d.supports || []).includes(selectedOs.value))
+  }
+  if (selectedAndroid.value) {
+    pool = pool.filter((d) => (d.android || []).includes(selectedAndroid.value))
+  }
+  if (selectedCarrier.value) {
+    pool = pool.filter((d) => (d.carriers || []).includes(selectedCarrier.value))
+  }
+  if (selectedBrand.value) {
+    const sel = selectedBrand.value.toLowerCase()
+    pool = pool.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
+  }
+  const regions = new Set()
+  for (const d of pool) {
+    for (const r of d.regions || []) {
+      regions.add(r)
+    }
+  }
+  return sortRegions(Array.from(regions))
+})
+
+const availableCarriers = computed(() => {
+  if (!devices.value) return []
+  let pool = devices.value
+  if (selectedOs.value) {
+    pool = pool.filter((d) => (d.supports || []).includes(selectedOs.value))
+  }
+  if (selectedAndroid.value) {
+    pool = pool.filter((d) => (d.android || []).includes(selectedAndroid.value))
+  }
+  if (selectedRegion.value) {
+    pool = pool.filter((d) => (d.regions || []).includes(selectedRegion.value))
+  }
+  if (selectedBrand.value) {
+    const sel = selectedBrand.value.toLowerCase()
+    pool = pool.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
+  }
+  const carriers = new Set()
+  for (const d of pool) {
+    for (const c of d.carriers || []) {
+      carriers.add(c)
+    }
+  }
+  return sortCarriers(Array.from(carriers))
+})
+
 const availableAndroids = computed(() => {
   if (!devices.value) return []
   let pool = devices.value
   if (selectedOs.value) {
     pool = pool.filter((d) => (d.supports || []).includes(selectedOs.value))
+  }
+  if (selectedRegion.value) {
+    pool = pool.filter((d) => (d.regions || []).includes(selectedRegion.value))
+  }
+  if (selectedCarrier.value) {
+    pool = pool.filter((d) => (d.carriers || []).includes(selectedCarrier.value))
   }
   if (selectedBrand.value) {
     const sel = selectedBrand.value.toLowerCase()
@@ -310,6 +417,12 @@ const availableOsVersions = computed(() => {
   if (selectedAndroid.value) {
     pool = pool.filter((d) => (d.android || []).includes(selectedAndroid.value))
   }
+  if (selectedRegion.value) {
+    pool = pool.filter((d) => (d.regions || []).includes(selectedRegion.value))
+  }
+  if (selectedCarrier.value) {
+    pool = pool.filter((d) => (d.carriers || []).includes(selectedCarrier.value))
+  }
   if (selectedBrand.value) {
     const sel = selectedBrand.value.toLowerCase()
     pool = pool.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
@@ -331,6 +444,16 @@ const availableOsVersions = computed(() => {
 })
 
 // Reset cross-filter selection when it becomes unavailable
+watch(availableRegions, (list) => {
+  if (selectedRegion.value && !list.includes(selectedRegion.value)) {
+    selectedRegion.value = ''
+  }
+})
+watch(availableCarriers, (list) => {
+  if (selectedCarrier.value && !list.includes(selectedCarrier.value)) {
+    selectedCarrier.value = ''
+  }
+})
 watch(availableAndroids, (list) => {
   if (selectedAndroid.value && !list.includes(selectedAndroid.value)) {
     selectedAndroid.value = ''
@@ -350,6 +473,14 @@ const filteredDevices = computed(() => {
   if (selectedBrand.value) {
     const sel = selectedBrand.value.toLowerCase()
     result = result.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
+  }
+
+  if (selectedRegion.value) {
+    result = result.filter((d) => (d.regions || []).includes(selectedRegion.value))
+  }
+
+  if (selectedCarrier.value) {
+    result = result.filter((d) => (d.carriers || []).includes(selectedCarrier.value))
   }
 
   if (selectedAndroid.value) {

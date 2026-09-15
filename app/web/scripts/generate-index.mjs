@@ -141,6 +141,22 @@ async function generateIndex() {
         const content = await readFile(join(DEVICES_DIR, file), 'utf-8')
         const data = JSON.parse(content)
 
+        // 该机型支持的区域与运营商：可见分支（show=1）的 region / carrier 去重，供机型列表筛选
+        // carrier 排除空值（空值表示无运营商定制，几乎所有分支都有）
+        const regions = []
+        const carriers = []
+        for (const branch of data.branches || []) {
+          if (branch.show !== '1') continue
+          if (branch.region && !regions.includes(branch.region)) {
+            regions.push(branch.region)
+          }
+          for (const c of branch.carrier || []) {
+            if (c && !carriers.includes(c)) {
+              carriers.push(c)
+            }
+          }
+        }
+
         // Extract only the fields needed for the index
         devices.push({
           device: data.device,
@@ -150,6 +166,8 @@ async function generateIndex() {
           code: data.code,
           android: data.android,
           supports: data.supports,
+          regions,
+          carriers,
           branchCount: data.branches?.length || 0,
           romCount: data.branches?.reduce((sum, b) => sum + (b.roms?.length || 0), 0) || 0,
         })
