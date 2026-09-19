@@ -5,11 +5,11 @@
       <p class="mt-2 text-sm text-[var(--color-text-secondary)]">{{ $t('devicesSub') }}</p>
     </header>
 
-    <!-- Search -->
-    <div class="mb-5 max-w-xl">
+    <!-- Search：与下方筛选行、机型卡片左右对齐（不设 max-w，与机型详情页的搜索框一致） -->
+    <div class="mb-5">
       <div class="relative">
         <svg
-          class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+          class="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-tertiary)]"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -23,7 +23,7 @@
           v-model="searchQuery"
           type="search"
           :placeholder="$t('searchPlaceholder')"
-          class="input-base pl-10"
+          class="input-base ps-11 pe-10"
         />
       </div>
     </div>
@@ -69,12 +69,12 @@
         :class="selectedRegion === r ? 'filter-pill-sm-active' : ''"
         @click="selectedRegion = r"
       >
-        {{ regionLabel(r, locale) }}
+        {{ regionName(r) }}
       </button>
     </div>
 
-    <!-- Carrier Filter -->
-    <div class="mb-4 flex flex-wrap items-center gap-2">
+    <!-- Carrier Filter：当前区域若没有运营商定制包，则不显示该行 -->
+    <div v-if="availableCarriers.length" class="mb-4 flex flex-wrap items-center gap-2">
       <span class="text-xs font-medium text-[var(--color-text-secondary)]">{{ $t('carrier') }}:</span>
       <button
         type="button"
@@ -92,7 +92,7 @@
         :class="selectedCarrier === c ? 'filter-pill-sm-active' : ''"
         @click="selectedCarrier = c"
       >
-        {{ carrierLabel(c, locale) }}
+        {{ carrierName(c) }}
       </button>
     </div>
 
@@ -178,7 +178,7 @@
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
                   <span class="font-mono text-sm font-medium text-[var(--color-text)]">{{ device.device }}</span>
-                  <div class="ml-auto flex shrink-0 items-center gap-2">
+                  <div class="ms-auto flex shrink-0 items-center gap-2">
                     <span
                       v-for="brand in device.brand || []"
                       :key="brand"
@@ -187,7 +187,7 @@
                       {{ formatBrand(brand) }}
                     </span>
                     <svg
-                      class="h-4 w-4 shrink-0 text-[var(--color-text-tertiary)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--color-text)]"
+                      class="dir-flip h-4 w-4 shrink-0 text-[var(--color-text-tertiary)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--color-text)]"
                       xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"
                     >
                       <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -227,7 +227,7 @@
                 {{ formatBrand(brand) }}
               </span>
               <svg
-                class="hidden h-4 w-4 text-[var(--color-text-tertiary)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--color-text)] sm:inline"
+                class="dir-flip hidden h-4 w-4 text-[var(--color-text-tertiary)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--color-text)] sm:inline"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -246,12 +246,16 @@
 </template>
 
 <script setup>
-import { regionLabel, sortRegions } from '~/utils/region'
-import { carrierLabel, sortCarriers } from '~/utils/carrier'
+import { sortRegions } from '~/utils/region'
+import { sortCarriers } from '~/utils/carrier'
 
 const { locale } = useI18n()
 const { t } = useI18n()
 const { buildDevicesIndexUrl, buildDeviceImageUrl, buildBrandImageUrl } = useApi()
+
+// 区域 / 运营商显示名统一取自 i18n 词条
+const regionName = useRegionName()
+const carrierName = useCarrierName()
 
 // 机型缩略图加载状态：0=机型图，1=品牌默认图，2=隐藏；无封面时按品牌显示默认图（Xiaomi→mi.svg 等）
 const deviceImageStage = reactive({})
@@ -328,6 +332,20 @@ const availableBrands = computed(() => {
     .map(([, v]) => v)
 })
 
+// 区域 ↔ 运营商的对应关系来自分支级数据（index.json 的 regionCarriers）：
+// 中国大陆分支只有中国电信 / 移动 / 联通定制包，欧洲经济区分支只有 Orange / Vodafone 等，
+// 因此两个筛选器互为条件，而不是各自独立地取机型级并集。
+// 旧版数据缺少 regionCarriers 时回退到机型级 carriers，保证接口未同步更新时仍可用。
+const deviceCarriersInRegion = (d, region) => {
+  const map = d.regionCarriers
+  if (!map) return d.carriers || []
+  return map[region] || []
+}
+const matchesRegion = (d, region) => !region || (d.regions || []).includes(region)
+const matchesCarrier = (d, carrier, region) =>
+  !carrier ||
+  (region ? deviceCarriersInRegion(d, region).includes(carrier) : (d.carriers || []).includes(carrier))
+
 const availableRegions = computed(() => {
   if (!devices.value) return []
   let pool = devices.value
@@ -337,9 +355,6 @@ const availableRegions = computed(() => {
   if (selectedAndroid.value) {
     pool = pool.filter((d) => (d.android || []).includes(selectedAndroid.value))
   }
-  if (selectedCarrier.value) {
-    pool = pool.filter((d) => (d.carriers || []).includes(selectedCarrier.value))
-  }
   if (selectedBrand.value) {
     const sel = selectedBrand.value.toLowerCase()
     pool = pool.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
@@ -347,6 +362,8 @@ const availableRegions = computed(() => {
   const regions = new Set()
   for (const d of pool) {
     for (const r of d.regions || []) {
+      // 已选运营商时，只保留该运营商真正覆盖的区域
+      if (selectedCarrier.value && !deviceCarriersInRegion(d, r).includes(selectedCarrier.value)) continue
       regions.add(r)
     }
   }
@@ -362,16 +379,15 @@ const availableCarriers = computed(() => {
   if (selectedAndroid.value) {
     pool = pool.filter((d) => (d.android || []).includes(selectedAndroid.value))
   }
-  if (selectedRegion.value) {
-    pool = pool.filter((d) => (d.regions || []).includes(selectedRegion.value))
-  }
   if (selectedBrand.value) {
     const sel = selectedBrand.value.toLowerCase()
     pool = pool.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
   }
   const carriers = new Set()
   for (const d of pool) {
-    for (const c of d.carriers || []) {
+    // 已选区域时，只列出该区域下真实存在的运营商
+    const list = selectedRegion.value ? deviceCarriersInRegion(d, selectedRegion.value) : d.carriers || []
+    for (const c of list) {
       carriers.add(c)
     }
   }
@@ -384,12 +400,10 @@ const availableAndroids = computed(() => {
   if (selectedOs.value) {
     pool = pool.filter((d) => (d.supports || []).includes(selectedOs.value))
   }
-  if (selectedRegion.value) {
-    pool = pool.filter((d) => (d.regions || []).includes(selectedRegion.value))
-  }
-  if (selectedCarrier.value) {
-    pool = pool.filter((d) => (d.carriers || []).includes(selectedCarrier.value))
-  }
+  // 区域与运营商互为条件：同时选中时要求同一分支同时满足
+  pool = pool.filter(
+    (d) => matchesRegion(d, selectedRegion.value) && matchesCarrier(d, selectedCarrier.value, selectedRegion.value)
+  )
   if (selectedBrand.value) {
     const sel = selectedBrand.value.toLowerCase()
     pool = pool.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
@@ -417,12 +431,10 @@ const availableOsVersions = computed(() => {
   if (selectedAndroid.value) {
     pool = pool.filter((d) => (d.android || []).includes(selectedAndroid.value))
   }
-  if (selectedRegion.value) {
-    pool = pool.filter((d) => (d.regions || []).includes(selectedRegion.value))
-  }
-  if (selectedCarrier.value) {
-    pool = pool.filter((d) => (d.carriers || []).includes(selectedCarrier.value))
-  }
+  // 区域与运营商互为条件：同时选中时要求同一分支同时满足
+  pool = pool.filter(
+    (d) => matchesRegion(d, selectedRegion.value) && matchesCarrier(d, selectedCarrier.value, selectedRegion.value)
+  )
   if (selectedBrand.value) {
     const sel = selectedBrand.value.toLowerCase()
     pool = pool.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
@@ -475,13 +487,10 @@ const filteredDevices = computed(() => {
     result = result.filter((d) => (d.brand || []).some((b) => b.toLowerCase() === sel))
   }
 
-  if (selectedRegion.value) {
-    result = result.filter((d) => (d.regions || []).includes(selectedRegion.value))
-  }
-
-  if (selectedCarrier.value) {
-    result = result.filter((d) => (d.carriers || []).includes(selectedCarrier.value))
-  }
+  // 区域与运营商互为条件：同时选中时要求同一分支同时满足
+  result = result.filter(
+    (d) => matchesRegion(d, selectedRegion.value) && matchesCarrier(d, selectedCarrier.value, selectedRegion.value)
+  )
 
   if (selectedAndroid.value) {
     result = result.filter((d) => (d.android || []).includes(selectedAndroid.value))

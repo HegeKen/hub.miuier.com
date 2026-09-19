@@ -49,9 +49,16 @@ pnpm index      # 仅重新生成数据索引（不启动服务）
 
 ## 多语言（i18n）
 
-- `@nuxtjs/i18n`，locales：`zh-cn` / `zh` / `en-us` / `en`，策略 `prefix`（路由带语言前缀），默认 `zh-cn`
-- 语言包在 `i18n.config.ts`，切换组件为 `app/components/LanguageSwitcher.vue`
-- 路由示例：`/zh-cn/devices`、`/en/devices/agate`
+- `@nuxtjs/i18n`，策略 `prefix`（路由带语言前缀，如 `/ja/devices`），默认 `zh-cn`
+- 语言包放在 `i18n/locales/<code>.ts`，由 `i18n.config.ts` 聚合
+- 已启用 18 种语言（按数据中的区域对应其官方语言）：`zh-cn` 简体中文、`zh-tw` 繁體中文、`en-us` English、`ja` 日本語、`ko` 한국어、`ru` Русский、`uk` Українська、`pl` Polski、`de` Deutsch、`fr` Français、`it` Italiano、`es` Español、`pt` Português、`tr` Türkçe、`id` Bahasa Indonesia、`vi` Tiếng Việt、`th` ไทย、`ar` العربية；另有 `zh` / `en` 两个隐藏别名仅为兼容旧链接
+- **区域 / 运营商译名也在语言包里**：`regions.<region>`（如 `regions.cn` = 中国大陆）与 `carriers.<carrier>`（如 `carriers.vf` = 沃达丰（Vodafone）），键即数据里的代号，未收录代号由 `useRegionName()` / `useCarrierName()` 回退为大写代号；筛选按钮顺序由 `app/utils/region.ts`、`app/utils/carrier.ts` 维护
+- 切换组件 `app/components/LanguageSwitcher.vue` 直接读取 `nuxt.config.ts` 的 `i18n.locales`（`name` 下拉展示、`short` 顶栏短标签、`hidden` 不进列表）
+- 新增语言：复制 `i18n/locales/en-us.ts` → 翻译 → 在 `i18n.config.ts` 中 import 并登记 → 在 `nuxt.config.ts` 的 `i18n.locales` 中登记
+- **根路径按浏览器语言跳转**：`/` 由 `@nuxtjs/i18n` 默认行为按 `Accept-Language` 服务端 302 到对应语言；只对根路径生效（`redirectOn: 'root'`），不带前缀的 `/devices` 等仍是 404；跳转时下发 `i18n_redirected` cookie（1 年），**cookie 优先于浏览器语言**，用户手选过的语言不会被覆盖。
+- **中文区域标签修正**（`server/plugins/i18n-zh-locale.ts`）：模块的 `findBrowserLocale` 第一轮按 `language` 完整串匹配、第二轮只按主语言子标签匹配并取列表里第一个命中的，而 `zh-cn` / `zh-tw` 的 `language` 是 `zh-Hans` / `zh-Hant`，浏览器发的却是区域形式（`zh-TW` / `zh-HK` / `zh-MO` / `zh-Hant-TW`）——两轮都落到 `zh`，于是繁中用户被跳到简体。该插件在 i18n 读取请求头之前，把请求头里的中文区域标签归一化成脚本形式（繁体类 → `zh-Hant`，简体类 → `zh-Hans`），让模块自己的精确匹配落到 `zh-tw` / `zh-cn`。**只改请求头、不自己发跳转**，所以 cookie 优先、`redirectOn`、查询串保留等行为仍由模块负责。
+- **RTL（从右到左）**：RTL 语言在 `nuxt.config.ts` 的 `i18n.locales` 里用 `dir: 'rtl'` 声明（`ar` 已声明），`app/components/MiRoms.vue` 据此写入 `<html lang dir>`。**`<MiRoms />` 必须留在 `app.vue` 的 `ClientOnly` 之外**——放进去就只在浏览器端执行，SSR 的 HTML 没有 `dir`，RTL 语言会先按 LTR 排版再翻转，出现方向闪烁。为让布局自动镜像，方向敏感的工具类一律使用**逻辑属性**而不是物理方向：`ps-*` / `pe-*`（内边距）、`ms-*` / `me-*`（外边距）、`start-*` / `end-*`（定位）、`text-start`、`border-e`。方向性图标（chevron / 箭头）加 `dir-flip` 类，由 `main.css` 的 `[dir='rtl'] .dir-flip { scale: -1 1 }` 水平镜像——镜像后元素自身的 `translate-x` 位移会视觉反向，因此悬停动效无需再写 RTL 版本
+- 自检：`pnpm --filter miroms check:i18n`（校验各语言包键集合、占位符与 `zh-cn` 完全一致，以及三方登记是否对得上）
 
 ## 技术栈
 
@@ -63,12 +70,15 @@ pnpm index      # 仅重新生成数据索引（不启动服务）
 
 ```
 app/web/
-├── nuxt.config.ts              # SSR、i18n、sitemap、apiBaseUrl
-├── i18n.config.ts              # 中英文语言包
+├── nuxt.config.ts              # SSR、i18n.locales、sitemap、apiBaseUrl
+├── i18n.config.ts              # 语言包聚合入口（各语言见 i18n/locales/*.ts）
+├── i18n/locales/<code>.ts      # 单语言词条（含 regions / carriers 译名）
 ├── tailwind.config.ts          # 与 app/admin 一致的 Tailwind 配置
-├── scripts/generate-index.mjs  # 数据索引生成（index / stats / roms / series）
+├── scripts/generate-index.mjs  # 数据索引生成（index / stats / roms / releases / series）
+├── scripts/check-locales.mjs   # i18n 词条自检（pnpm check:i18n）
+├── scripts/make-favicon.py     # 由方形 logo 源图生成 favicon / 应用图标（需 Pillow）
 ├── server/api/data/[...path].ts # 开发环境本地数据代理
-├── public/                     # favicon.svg / robots.txt
+├── public/                     # favicon.ico / favicon-*.png / apple-touch-icon.png / icon-*.png / site.webmanifest / robots.txt
 └── app/
     ├── app.vue / app.config.ts # 布局壳 + 站点元信息
     ├── assets/css/main.css     # 设计令牌（与 admin 同一套）

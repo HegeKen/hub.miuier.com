@@ -47,7 +47,7 @@
 
       <!-- Device Info -->
       <div class="mb-10 flex overflow-hidden rounded-xl border border-[var(--color-border)]">
-        <div class="flex w-28 shrink-0 items-center justify-center border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-3 sm:w-36">
+        <div class="flex w-28 shrink-0 items-center justify-center border-e border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-3 sm:w-36">
           <img
             v-if="!deviceImageError"
             :src="deviceImageSrc"
@@ -85,7 +85,7 @@
       <div class="mb-6">
         <div class="relative">
           <svg
-            class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+            class="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-tertiary)]"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -99,12 +99,12 @@
             v-model="searchQuery"
             type="text"
             :placeholder="$t('searchRomPlaceholder')"
-            class="input-base pl-11 pr-10"
+            class="input-base ps-11 pe-10"
           />
           <button
             v-if="searchQuery"
             type="button"
-            class="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text)]"
+            class="absolute end-3 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text)]"
             aria-label="Clear search"
             @click="searchQuery = ''"
           >
@@ -133,7 +133,7 @@
           :class="selectedRegion === region ? 'filter-pill-active' : ''"
           @click="selectedRegion = region"
         >
-          {{ regionLabel(region, locale) }}
+          {{ regionName(region) }}
         </button>
       </div>
 
@@ -153,7 +153,7 @@
           <!-- Branch Header -->
           <button
             type="button"
-            class="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors hover:bg-[var(--color-bg-subtle)] sm:px-5"
+            class="flex w-full items-center justify-between gap-4 px-4 py-4 text-start transition-colors hover:bg-[var(--color-bg-subtle)] sm:px-5"
             :aria-expanded="expandedBranches.includes(branchKey(branch))"
             @click="toggleBranch(branchKey(branch))"
           >
@@ -221,7 +221,7 @@
                   :key="rom.miui"
                   :id="'rom-' + rom.miui"
                   type="button"
-                  class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-bg-subtle)]"
+                  class="flex w-full items-center justify-between gap-3 px-4 py-3 text-start transition-colors hover:bg-[var(--color-bg-subtle)]"
                   @click="openRomModal(rom, branch)"
                 >
                   <div class="min-w-0">
@@ -231,7 +231,7 @@
                       <span v-if="rom.android" class="rounded border border-[var(--color-border)] px-1 py-0.5 text-[10px] uppercase">{{ rom.android }}</span>
                     </div>
                   </div>
-                  <svg class="h-4 w-4 shrink-0 text-[var(--color-text-tertiary)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <svg class="dir-flip h-4 w-4 shrink-0 text-[var(--color-text-tertiary)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                   </svg>
                 </button>
@@ -241,7 +241,7 @@
               <div class="hidden overflow-x-auto sm:block">
                 <table class="w-full text-sm">
                   <thead>
-                    <tr class="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-text-tertiary)]">
+                    <tr class="border-b border-[var(--color-border)] text-start text-xs text-[var(--color-text-tertiary)]">
                       <th class="px-4 py-2.5 font-medium sm:px-5">#</th>
                       <th class="px-4 py-2.5 font-medium">{{ $t('version') }}</th>
                       <th class="px-4 py-2.5 font-medium">{{ $t('android') }}</th>
@@ -502,12 +502,16 @@
 
 <script setup>
 import { validateCodename, sanitizeString } from '~/utils/validation'
-import { regionLabel, isChinaRegion } from '~/utils/region'
+import { isChinaRegion } from '~/utils/region'
+import { pickLogs } from '~/utils/logs'
 
 const route = useRoute()
 const { locale } = useI18n()
 const { t } = useI18n()
 const { buildDeviceUrl, buildDeviceImageUrl, buildBrandImageUrl, buildDownloadLink, buildChangelogUrl } = useApi()
+
+// 区域显示名统一取自 i18n 词条
+const regionName = useRegionName()
 
 const selectedRegion = ref('')
 const searchQuery = ref('')
@@ -626,7 +630,7 @@ watch(() => device.value?.device, () => { brandFallback.value = false; deviceIma
 
 // 分支卡片上的区域标签：优先显示具体区域（如 中国台湾 / 欧洲经济区 / 俄罗斯），无 region 时回退到 zone 的 中国/国际
 const branchRegionLabel = (b) => {
-  if (b?.region) return regionLabel(b.region, locale.value)
+  if (b?.region) return regionName(b.region)
   return b?.zone === '1' ? t('china') : t('global')
 }
 const branchDotColor = (b) => {
@@ -716,9 +720,8 @@ const openRomModal = async (rom, branch) => {
       }
     }
     const raw = data || {}
-    romModalLogs.value = locale.value.startsWith('en')
-      ? (raw.logs_en || raw.logs_zh || null)
-      : (raw.logs_zh || raw.logs_en || null)
+    // 按当前语言取日志，缺失时依次回落英文 / 简体中文
+    romModalLogs.value = pickLogs(raw, locale.value)
   } catch {
     romModalLogs.value = null
   } finally {

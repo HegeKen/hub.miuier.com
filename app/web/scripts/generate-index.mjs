@@ -9,7 +9,7 @@
  * can list every recovery/package of a given OS version via a single file.
  */
 
-import { readdir, readFile, writeFile, mkdir } from 'fs/promises'
+import { readdir, readFile, writeFile, mkdir, unlink } from 'fs/promises'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -20,6 +20,8 @@ const STATS_FILE = join(__dirname, '../../../data/api/v3/stats.json')
 const ROMS_DIR = join(__dirname, '../../../data/api/v3/roms')
 const ROMS_INDEX_FILE = join(ROMS_DIR, 'index.json')
 const SERIES_FILE = join(__dirname, '../../../data/api/v3/series.json')
+const RELEASES_DIR = join(__dirname, '../../../data/api/v3/releases')
+const RELEASES_INDEX_FILE = join(RELEASES_DIR, 'index.json')
 
 // 近 N 天窗口（ROM 版本按 release 日期统计）
 const RECENT_DAYS = 7
@@ -136,6 +138,10 @@ async function generateIndex() {
     const romsByOs = new Map()             // os -> rom array
     const osDeviceCount = new Map()        // os -> Set<device>
 
+    // 按年份拆分的发布日期索引：year -> Map<release, rom[]>
+    // 供首页「按日期查询」按需拉取某一年，避免一次加载全部 5 万+ ROM
+    const releasesByYear = new Map()
+
     for (const file of jsonFiles) {
       try {
         const content = await readFile(join(DEVICES_DIR, file), 'utf-8')
@@ -143,16 +149,26 @@ async function generateIndex() {
 
         // 该机型支持的区域与运营商：可见分支（show=1）的 region / carrier 去重，供机型列表筛选
         // carrier 排除空值（空值表示无运营商定制，几乎所有分支都有）
+        // regionCarriers 保留分支级对应关系（区域 -> 该区域下真实存在的运营商），
+        // 供列表页联动筛选：选中区域只显示该区域的运营商，选中运营商只显示其覆盖的区域
         const regions = []
         const carriers = []
+        const regionCarriers = {}
         for (const branch of data.branches || []) {
           if (branch.show !== '1') continue
           if (branch.region && !regions.includes(branch.region)) {
             regions.push(branch.region)
           }
           for (const c of branch.carrier || []) {
-            if (c && !carriers.includes(c)) {
+            if (!c) continue
+            if (!carriers.includes(c)) {
               carriers.push(c)
+            }
+            if (branch.region) {
+              if (!regionCarriers[branch.region]) regionCarriers[branch.region] = []
+              if (!regionCarriers[branch.region].includes(c)) {
+                regionCarriers[branch.region].push(c)
+              }
             }
           }
         }
@@ -168,6 +184,7 @@ async function generateIndex() {
           supports: data.supports,
           regions,
           carriers,
+          regionCarriers,
           branchCount: data.branches?.length || 0,
           romCount: data.branches?.reduce((sum, b) => sum + (b.roms?.length || 0), 0) || 0,
         })
@@ -216,6 +233,15 @@ async function generateIndex() {
                 region,
                 branchName,
               })
+            }
+
+            // 发布日期索引：只保留 YYYY-MM-DD 形式的合法日期（少量脏数据会带 0000-00-00）
+            if (/^\d{4}-\d{2}-\d{2}$/.test(release) && release >= '2000') {
+              const year = release.slice(0, 4)
+              if (!releasesByYear.has(year)) releasesByYear.set(year, new Map())
+              const byDate = releasesByYear.get(year)
+              if (!byDate.has(release)) byDate.set(release, [])
+              byDate.get(release).push({ device: data.device, version, region })
             }
           }
         }
@@ -269,6 +295,55 @@ async function generateIndex() {
       .map((os) => ({ os, count: romsByOs.get(os).length, deviceCount: osDeviceCount.get(os).size }))
     await writeFile(ROMS_INDEX_FILE, JSON.stringify(osIndex, null, 2), 'utf-8')
     console.log(`Generated ROM index (${osIndex.length} OS versions, ${osIndex.reduce((s, o) => s + o.count, 0)} ROMs) -> ${ROMS_INDEX_FILE}`)
+
+    // ---- 生成按年份拆分的发布日期索引（首页「按日期查询」按年按需加载）----
+    await mkdir(RELEASES_DIR, { recursive: true })
+
+    const years = []
+    let releaseRoms = 0
+    let minDate = ''
+    let maxDate = ''
+    for (const year of [...releasesByYear.keys()].sort()) {
+      const byDate = releasesByYear.get(year)
+      const dates = {}
+      let yearRoms = 0
+      for (const date of [...byDate.keys()].sort()) {
+        const list = byDate.get(date)
+        // 同一版本在多个机型/分支下重复出现时保持稳定顺序：机型代号 → 版本号
+        list.sort((a, b) =>
+          a.device !== b.device ? a.device.localeCompare(b.device) : a.version.localeCompare(b.version)
+        )
+        dates[date] = list
+        yearRoms += list.length
+        if (!minDate || date < minDate) minDate = date
+        if (!maxDate || date > maxDate) maxDate = date
+      }
+      // 单年文件不做缩进，避免为 5 万条记录引入大量空白
+      await writeFile(join(RELEASES_DIR, `${year}.json`), JSON.stringify({ year, dates }), 'utf-8')
+      years.push({ year, roms: yearRoms, dates: Object.keys(dates).length })
+      releaseRoms += yearRoms
+    }
+
+    // 清理已不存在的年份文件（例如数据回滚），避免残留旧分片
+    const keep = new Set(['index.json', ...years.map((y) => `${y.year}.json`)])
+    for (const file of await readdir(RELEASES_DIR)) {
+      if (file.endsWith('.json') && !keep.has(file)) {
+        await unlink(join(RELEASES_DIR, file))
+      }
+    }
+
+    await writeFile(
+      RELEASES_INDEX_FILE,
+      JSON.stringify({
+        generatedAt: now.toISOString(),
+        minDate,
+        maxDate,
+        totalRoms: releaseRoms,
+        years,
+      }, null, 2),
+      'utf-8'
+    )
+    console.log(`Generated release index (${years.length} years, ${releaseRoms} ROMs, ${minDate} ~ ${maxDate}) -> ${RELEASES_INDEX_FILE}`)
   } catch (e) {
     console.error('Failed to generate index:', e.message)
     process.exit(1)

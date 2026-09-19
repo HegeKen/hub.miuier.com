@@ -63,6 +63,16 @@
           </svg>
           {{ $t('feedbackEmail') }}
         </a>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-subtle)]"
+          @click="openDateQuery"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" />
+          </svg>
+          {{ $t('dateQuery') }}
+        </button>
       </div>
     </section>
 
@@ -108,7 +118,7 @@
           <!-- Desktop: full table -->
           <table class="hidden w-full text-sm sm:table">
             <thead>
-              <tr class="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-text-tertiary)]">
+              <tr class="border-b border-[var(--color-border)] text-start text-xs text-[var(--color-text-tertiary)]">
                 <th class="px-5 py-2.5 font-medium">{{ $t('device') }}</th>
                 <th class="px-5 py-2.5 font-medium">{{ $t('version') }}</th>
                 <th class="px-5 py-2.5 font-medium">{{ $t('region') }}</th>
@@ -148,6 +158,130 @@
           </table>
         </div>
       </div>
+
+    <!-- 按发布日期查询 ROM -->
+    <Teleport to="body">
+      <div v-if="dateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="closeDateQuery">
+        <div class="fixed inset-0 bg-black/50" @click="closeDateQuery"></div>
+        <div
+          class="relative z-10 flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] shadow-2xl"
+          role="dialog"
+          aria-modal="true"
+        >
+          <!-- Header -->
+          <div class="flex items-start justify-between gap-4 border-b border-[var(--color-border)] px-6 py-4">
+            <div class="min-w-0">
+              <h3 class="font-semibold text-[var(--color-text)]">{{ $t('dateQueryTitle') }}</h3>
+              <p class="mt-0.5 text-xs text-[var(--color-text-tertiary)]">{{ $t('dateQueryHint') }}</p>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 rounded-lg p-1.5 transition-colors hover:bg-[var(--color-bg-subtle)]"
+              :aria-label="$t('close')"
+              @click="closeDateQuery"
+            >
+              <svg class="h-5 w-5 text-[var(--color-text-tertiary)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Date picker -->
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--color-border)] px-6 py-4">
+            <input
+              v-model="queryDate"
+              type="date"
+              class="input-base w-auto"
+              :min="releaseRange.min"
+              :max="releaseRange.max"
+              :aria-label="$t('dateQuery')"
+            />
+            <span v-if="dateLoading" class="spinner" role="status"></span>
+            <span v-else-if="queryDate" class="text-xs tabular-nums text-[var(--color-text-secondary)]">
+              {{ dateEntries.length ? $t('dateQueryCount', { count: dateEntries.length }) : $t('dateQueryEmpty') }}
+            </span>
+            <span v-if="releaseRange.min" class="text-xs tabular-nums text-[var(--color-text-tertiary)]">
+              {{ $t('dateQueryRange', { min: releaseRange.min, max: releaseRange.max }) }}
+            </span>
+          </div>
+
+          <!-- Results -->
+          <div class="min-h-[10rem] overflow-y-auto">
+            <div v-if="dateLoading" class="flex justify-center py-12">
+              <span class="spinner" role="status"></span>
+            </div>
+            <p v-else-if="!queryDate" class="px-6 py-12 text-center text-sm text-[var(--color-text-tertiary)]">
+              {{ $t('dateQueryHint') }}
+            </p>
+            <p v-else-if="dateEntries.length === 0" class="px-6 py-12 text-center text-sm text-[var(--color-text-tertiary)]">
+              {{ $t('dateQueryEmpty') }}
+            </p>
+            <template v-else>
+              <!-- Mobile: compact list -->
+              <div class="divide-y divide-[var(--color-border)] sm:hidden">
+                <NuxtLink
+                  v-for="item in dateEntries"
+                  :key="item.device + ':' + item.version"
+                  :to="'/' + locale + '/devices/' + item.device + '#rom-' + item.version"
+                  class="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-[var(--color-bg-subtle)]"
+                >
+                  <div class="min-w-0">
+                    <div class="font-mono text-xs text-[var(--color-text)]">{{ item.version }}</div>
+                    <div class="mt-0.5 text-xs text-[var(--color-text-tertiary)]">
+                      {{ deviceLabel(item.device) }} ({{ item.device }})
+                    </div>
+                  </div>
+                  <span class="shrink-0 rounded border border-[var(--color-border)] px-1.5 py-0.5 text-xs font-medium uppercase text-[var(--color-text-secondary)]">
+                    {{ item.region || '—' }}
+                  </span>
+                </NuxtLink>
+              </div>
+
+              <!-- Desktop: full table -->
+              <table class="hidden w-full text-sm sm:table">
+                <thead>
+                  <tr class="border-b border-[var(--color-border)] text-start text-xs text-[var(--color-text-tertiary)]">
+                    <th class="px-6 py-2.5 font-medium">{{ $t('device') }}</th>
+                    <th class="px-6 py-2.5 font-medium">{{ $t('version') }}</th>
+                    <th class="px-6 py-2.5 font-medium">{{ $t('region') }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--color-border)]">
+                  <tr
+                    v-for="item in dateEntries"
+                    :key="item.device + ':' + item.version"
+                    class="transition-colors hover:bg-[var(--color-bg-subtle)]"
+                  >
+                    <td class="px-6 py-2.5">
+                      <NuxtLink :to="'/' + locale + '/devices/' + item.device" class="group block" @click="closeDateQuery">
+                        <span class="font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)]">
+                          {{ deviceLabel(item.device) }}
+                        </span>
+                        <span class="block font-mono text-xs text-[var(--color-text-tertiary)]">{{ item.device }}</span>
+                      </NuxtLink>
+                    </td>
+                    <td class="px-6 py-2.5 font-mono text-xs">
+                      <NuxtLink
+                        :to="'/' + locale + '/devices/' + item.device + '#rom-' + item.version"
+                        class="text-[var(--color-text)] hover:text-[var(--color-accent)] hover:underline"
+                        @click="closeDateQuery"
+                      >
+                        {{ item.version }}
+                      </NuxtLink>
+                    </td>
+                    <td class="px-6 py-2.5">
+                      <span class="rounded border border-[var(--color-border)] px-1.5 py-0.5 text-xs font-medium uppercase text-[var(--color-text-secondary)]">
+                        {{ item.region || '—' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -156,7 +290,10 @@ import logoUrl from '~/assets/images/words.svg'
 
 const { locale } = useI18n()
 const { t } = useI18n()
-const { buildStatsUrl, buildStatisticsUrl } = useApi()
+const { buildStatsUrl, buildStatisticsUrl, buildDevicesIndexUrl, buildReleasesIndexUrl, buildReleasesUrl } = useApi()
+
+// 数据里的多语言字段是 'zh' / 'en'，而 locale 是 'zh-cn' / 'en-us'
+const localeKey = computed(() => (locale.value.startsWith('zh') ? 'zh' : 'en'))
 
 // 近 7 日更新的 ROM 版本列表（由 generate-index.mjs 生成 v3/stats.json）
 // cache: 'no-store' 绕过浏览器对旧版 stats.json 的缓存
@@ -185,6 +322,95 @@ const generatedAtText = computed(() => {
   const pad = (n) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 })
+
+// ---- 按发布日期查询 ROM ----
+// 数据来自 v3/releases/：index.json 提供日期范围，<year>.json 提供该年按日期分组的 ROM。
+// 年份分片按需加载并在内存缓存，避免一次拉取全部 5 万+ ROM。
+const dateModal = ref(false)
+const queryDate = ref('')
+const dateLoading = ref(false)
+const dateEntries = ref([])
+const deviceNameMap = ref(null)          // 设备代号 -> { zh, en }
+const yearCache = new Map()              // '2026' -> { '2026-09-18': [{ device, version, region }] }
+let dateRequestId = 0
+
+const { data: releaseIndex } = await useAsyncData(
+  'releases-index',
+  () => $fetch(buildReleasesIndexUrl(), { cache: 'no-store' }).catch(() => null)
+)
+
+const releaseRange = computed(() => ({
+  min: releaseIndex.value?.minDate || '',
+  max: releaseIndex.value?.maxDate || '',
+}))
+
+// 设备名称（zh/en）按需从设备索引读取，避免在发布索引里重复存储名称
+const deviceLabel = (codename) => {
+  const name = deviceNameMap.value?.[codename]
+  return name?.[localeKey.value] || name?.en || name?.zh || codename
+}
+
+const loadDeviceNames = async () => {
+  if (deviceNameMap.value) return
+  const list = await $fetch(buildDevicesIndexUrl(), { cache: 'no-store' }).catch(() => null)
+  if (!Array.isArray(list)) return
+  const map = {}
+  for (const d of list) {
+    if (d?.device) map[d.device] = d.name || {}
+  }
+  deviceNameMap.value = map
+}
+
+const loadYear = async (year) => {
+  if (yearCache.has(year)) return yearCache.get(year)
+  const data = await $fetch(buildReleasesUrl(year), { cache: 'no-store' }).catch(() => null)
+  const dates = data?.dates || {}
+  yearCache.set(year, dates)
+  return dates
+}
+
+// 日期变化时加载对应年份分片；用请求序号丢弃过期响应，避免快速改日期时结果错位
+watch(queryDate, async (value) => {
+  const requestId = ++dateRequestId
+  if (!value) {
+    dateEntries.value = []
+    dateLoading.value = false
+    return
+  }
+  dateLoading.value = true
+  try {
+    const [dates] = await Promise.all([loadYear(value.slice(0, 4)), loadDeviceNames()])
+    if (requestId !== dateRequestId) return
+    dateEntries.value = dates[value] || []
+  } finally {
+    if (requestId === dateRequestId) dateLoading.value = false
+  }
+})
+
+const todayString = () => {
+  const now = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
+const openDateQuery = () => {
+  dateModal.value = true
+  if (queryDate.value) return
+  // 默认选中数据中最新的一天；若数据比今天更新则退回今天
+  const max = releaseRange.value.max
+  const today = todayString()
+  queryDate.value = max && max < today ? max : today
+}
+
+const closeDateQuery = () => {
+  dateModal.value = false
+}
+
+const onDateQueryKeydown = (e) => {
+  if (e.key === 'Escape' && dateModal.value) closeDateQuery()
+}
+onMounted(() => document.addEventListener('keydown', onDateQueryKeydown))
+onUnmounted(() => document.removeEventListener('keydown', onDateQueryKeydown))
 
 useHead({
   title: `${t('site')} - ${t('devicesSub')}`,

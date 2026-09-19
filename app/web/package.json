@@ -8,6 +8,7 @@
     "build": "node scripts/generate-index.mjs && nuxi build",
     "generate": "node scripts/generate-index.mjs && nuxi generate",
     "index": "node scripts/generate-index.mjs",
+    "check:i18n": "node scripts/check-locales.mjs",
     "start": "nuxi preview",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"

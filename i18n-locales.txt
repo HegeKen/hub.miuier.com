@@ -1,0 +1,113 @@
+i18n 语言清单（备用）
+====================================================================
+说明：这是站点多语言的候选清单。带 [已启用] 的已经接入 i18n 并可切换；
+其余为备用，按需再接入。接入一个语言的步骤见文件末尾。
+
+当前已启用（17 种语言 + 2 个兼容别名）
+--------------------------------------------------------------------
+zh-cn   简体中文      region: cn              语言包 app/web/i18n/locales/zh-cn.ts
+zh-tw   繁體中文      region: tw / hk / mo    语言包 app/web/i18n/locales/zh-tw.ts
+en-us   English       region: global          语言包 app/web/i18n/locales/en-us.ts
+ja      日本語        region: jp              语言包 app/web/i18n/locales/ja.ts
+ko      한국어        region: kr              语言包 app/web/i18n/locales/ko.ts
+ru      Русский       region: ru              语言包 app/web/i18n/locales/ru.ts
+uk      Українська    （EEA 东欧）            语言包 app/web/i18n/locales/uk.ts
+pl      Polski        （EEA）                 语言包 app/web/i18n/locales/pl.ts
+de      Deutsch       （EEA）                 语言包 app/web/i18n/locales/de.ts
+fr      Français      （EEA）                 语言包 app/web/i18n/locales/fr.ts
+it      Italiano      （EEA）                 语言包 app/web/i18n/locales/it.ts
+es      Español       region: mx / lm / cl / gt 语言包 app/web/i18n/locales/es.ts
+pt      Português     region: mo / (br)       语言包 app/web/i18n/locales/pt.ts
+tr      Türkçe        region: tr              语言包 app/web/i18n/locales/tr.ts
+id      Bahasa Indonesia region: id           语言包 app/web/i18n/locales/id.ts
+vi      Tiếng Việt    （东南亚）              语言包 app/web/i18n/locales/vi.ts
+th      ไทย           region: th              语言包 app/web/i18n/locales/th.ts
+
+兼容别名（不出现在语言切换器里，只为保留既有链接）
+--------------------------------------------------------------------
+zh  -> 词条同 zh-cn，对应 /zh/... 旧链接
+en  -> 词条同 en-us，对应 /en/... 旧链接
+
+备用清单（尚未接入）
+--------------------------------------------------------------------
+南亚 / 东南亚
+  en-IN        印度英语（region: in）
+  en-PK        巴基斯坦英语
+  en-MY        马来西亚英语（region: my）
+  en-SG        新加坡英语（region: sg）
+  en-PH        菲律宾英语
+  km-KH        高棉语（柬埔寨）
+  en-KH        柬埔寨英语
+
+东亚
+  ja-JP        日语（日本本地化标签，等价于已启用的 ja）
+  ko-KR        韩语（韩国本地化标签，等价于已启用的 ko）
+  zh-CN        简体中文（中国本地化标签，等价于已启用的 zh-cn）
+
+中东 / 阿拉伯语区
+  ar-IQ        阿拉伯语（伊拉克）
+  ar-EG        阿拉伯语（埃及）
+  ar-MA        阿拉伯语（摩洛哥）
+  ar-SA        阿拉伯语（沙特）
+  ar-AE        阿拉伯语（阿联酋）
+  en-QA        卡塔尔英语
+  en-OM        阿曼英语
+  en-SA        沙特英语
+  en-AE        阿联酋英语
+  注意：阿拉伯语系需要 dir: 'rtl'，接入时要在 nuxt.config 的该 locale 上补 dir 并在布局里适配
+
+非洲
+  en-KE        肯尼亚英语
+  en-NG        尼日利亚英语
+  en-ZA        南非英语（region: za）
+  en-AFRICA    非洲英语（通用）
+  fr-AFRICA    非洲法语（通用）
+  fr-MA        摩洛哥法语
+
+欧洲（EEA 各国本地化）
+  de-DE        德语（德国，等价于已启用的 de）
+  de-AT        德语（奥地利）
+  fr-FR        法语（法国，等价于已启用的 fr）
+  fr-BE        法语（比利时）
+  nl-NL        荷兰语（荷兰）
+  nl-BE        荷兰语（比利时）
+  es-ES        西班牙语（西班牙，等价于已启用的 es）
+  it-IT        意大利语（意大利，等价于已启用的 it）
+  pt-BR        葡萄牙语（巴西）
+  pl-PL        波兰语（波兰，等价于已启用的 pl）
+  cs-CZ        捷克语
+  el-GR        希腊语
+  bg-BG        保加利亚语
+  hr-HR        克罗地亚语
+  hu-HU        匈牙利语
+  ro-RO        罗马尼亚语
+  sr-RS        塞尔维亚语
+  sv-SE        瑞典语
+  en-GB        英国英语
+
+独联体 / 中亚
+  ru-RU        俄语（俄罗斯，等价于已启用的 ru）
+  ru-KZ        俄语（哈萨克斯坦）
+  kk-KZ        哈萨克语
+
+拉美
+  es-MX        西班牙语（墨西哥，region: mx）
+  es-CL        西班牙语（智利，region: cl）
+  es-CO        西班牙语（哥伦比亚）
+  es-PE        西班牙语（秘鲁）
+  es-AR        西班牙语（阿根廷）
+  es-LATIN     西班牙语（拉美通用，region: lm）
+
+北美 / 大洋洲
+  en-US        美式英语（等价于已启用的 en-us）
+  en-AU        澳大利亚英语
+
+接入一个新语言的步骤
+--------------------------------------------------------------------
+1. 复制 app/web/i18n/locales/en-us.ts 为 app/web/i18n/locales/<code>.ts，逐条翻译
+   （必须保留 {count} / {page} / {pages} / {min} / {max} 这些占位符原样）
+2. 在 app/web/i18n.config.ts 里 import 该语言包并登记到 messages
+3. 在 app/web/nuxt.config.ts 的 i18n.locales 里登记 { code, language, name, short }
+   （阿拉伯语等从右到左的语言再加 dir: 'rtl'）
+4. 校验：每个语言包的键必须与 zh-cn 完全一致（见 README「多语言（i18n）」一节的校验命令）
+5. 区域 / 运营商的译名在同一语言包的 regions / carriers 里，键为数据中的 region / carrier 代号

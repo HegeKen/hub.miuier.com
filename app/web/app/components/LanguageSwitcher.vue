@@ -21,16 +21,17 @@
     >
       <div
         v-if="open"
-        class="absolute right-0 top-full z-50 mt-1.5 w-36 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] py-1 shadow-lg shadow-black/5"
+        class="absolute end-0 top-full z-50 mt-1.5 max-h-[70vh] w-52 overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] py-1 shadow-lg shadow-black/5"
       >
         <NuxtLink
           v-for="loc in availableLocales"
           :key="loc.code"
           :to="switchLocalePath(loc.code)"
-          class="block px-3 py-2 text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]"
+          class="flex items-center justify-between gap-2 px-3 py-2 text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]"
           @click="open = false"
         >
-          {{ loc.name }}
+          <span>{{ loc.name || loc.code }}</span>
+          <span class="shrink-0 text-xs uppercase text-[var(--color-text-tertiary)]">{{ loc.code }}</span>
         </NuxtLink>
       </div>
     </Transition>
@@ -43,20 +44,19 @@ const switchLocalePath = useSwitchLocalePath()
 
 const open = ref(false)
 
-const shortLabel = computed(() =>
-  String(locale.value).startsWith('zh') ? '中文' : 'EN'
-)
-
 const currentLocale = computed(() =>
   locales.value.find((l) => l.code === locale.value)
 )
 
-const availableLocales = computed(() => {
-  const currentLen = locale.value.length
-  return locales.value.filter(
-    (l) => l.code !== locale.value && l.code.length === currentLen
-  )
-})
+// 顶栏按钮用短标签，回退顺序：short → name → 大写代码
+const shortLabel = computed(() =>
+  currentLocale.value?.short || currentLocale.value?.name || String(locale.value).toUpperCase()
+)
+
+// hidden 的语言（/zh/、/en/ 等兼容别名）不在切换器里重复出现
+const availableLocales = computed(() =>
+  locales.value.filter((l) => l.code !== locale.value && !l.hidden)
+)
 
 onMounted(() => {
   document.addEventListener('click', (e) => {

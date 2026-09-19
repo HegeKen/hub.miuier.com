@@ -26,7 +26,7 @@
         <div class="flex items-center justify-between gap-4">
           <span class="font-mono text-lg font-semibold text-[var(--color-text)]">{{ osLabel(item.os) }}</span>
           <svg
-            class="h-4 w-4 shrink-0 text-[var(--color-text-tertiary)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--color-text)]"
+            class="dir-flip h-4 w-4 shrink-0 text-[var(--color-text-tertiary)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--color-text)]"
             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"
           >
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />

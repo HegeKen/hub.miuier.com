@@ -80,6 +80,28 @@ const RULE_CODE_NAME = "code IS NOT NULL AND code NOT REGEXP '^[a-z0-9_]+$'"
 
 const RULE_CARRIER = "carrier IS NOT NULL AND NOT (LEFT(carrier,1)='[' AND RIGHT(carrier,1)=']')"
 
+// roms 表的多语言更新日志列（与 data/scripts/miroms/constants.py 的 CHANGELOG_LOCALES 保持一致）
+const CHANGELOG_LOG_COLUMNS: [string, string][] = [
+  ['logs_zh', '简体中文'],
+  ['logs_zh_tw', '繁体中文'],
+  ['logs_en', '英文'],
+  ['logs_ja', '日文'],
+  ['logs_ko', '韩文'],
+  ['logs_ru', '俄文'],
+  ['logs_uk', '乌克兰文'],
+  ['logs_pl', '波兰文'],
+  ['logs_de', '德文'],
+  ['logs_fr', '法文'],
+  ['logs_it', '意大利文'],
+  ['logs_es', '西班牙文'],
+  ['logs_pt', '葡萄牙文'],
+  ['logs_tr', '土耳其文'],
+  ['logs_id', '印尼文'],
+  ['logs_vi', '越南文'],
+  ['logs_th', '泰文'],
+  ['logs_ar', '阿拉伯文'],
+]
+
 const JSON_RULE = (col: string, desc: string): CheckRule => ({
   id: `json_${col}`,
   name: `${col} 应为合法 JSON`,
@@ -359,8 +381,9 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
         "region='' OR fastboot='' OR recovery='' OR ctelecom='' OR cmobile='' OR cunicom='' OR others=''",
       sampleCols: ['region', 'fastboot', 'recovery', 'ctelecom', 'cmobile', 'cunicom', 'others'],
     },
-    JSON_RULE('logs_zh', '中文更新日志应为合法 JSON 对象'),
-    JSON_RULE('logs_en', '英文更新日志应为合法 JSON 对象'),
+    ...CHANGELOG_LOG_COLUMNS.map(([col, label]) =>
+      JSON_RULE(col, `${label}更新日志应为合法 JSON 对象`)
+    ),
     {
       id: 'package_filename',
       name: '包文件名',

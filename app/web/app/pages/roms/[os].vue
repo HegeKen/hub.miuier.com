@@ -60,11 +60,11 @@
         </NuxtLink>
       </div>
 
-      <!-- Search -->
-      <div class="mb-5 max-w-xl">
+      <!-- Search：与下方区域筛选行、ROM 表格卡片左右对齐（不设 max-w，和其他列表页 / 详情页统一） -->
+      <div class="mb-5">
         <div class="relative">
           <svg
-            class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+            class="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-tertiary)]"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -74,21 +74,30 @@
           >
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
-          <input v-model="searchQuery" type="search" :placeholder="$t('searchPlaceholder')" class="input-base pl-10" />
+          <input v-model="searchQuery" type="search" :placeholder="$t('searchPlaceholder')" class="input-base ps-11 pe-10" />
         </div>
       </div>
 
-      <!-- Zone Filter -->
+      <!-- Region Filter -->
       <div class="mb-8 flex flex-wrap items-center gap-2">
         <span class="text-xs font-medium text-[var(--color-text-secondary)]">{{ $t('region') }}:</span>
-        <button type="button" class="filter-pill-sm" :class="selectedZone === '' ? 'filter-pill-sm-active' : ''" @click="selectedZone = ''">
+        <button
+          type="button"
+          class="filter-pill-sm"
+          :class="selectedRegion === '' ? 'filter-pill-sm-active' : ''"
+          @click="selectedRegion = ''"
+        >
           {{ $t('allRoms') }}
         </button>
-        <button type="button" class="filter-pill-sm" :class="selectedZone === '1' ? 'filter-pill-sm-active' : ''" @click="selectedZone = '1'">
-          {{ $t('china') }}
-        </button>
-        <button type="button" class="filter-pill-sm" :class="selectedZone === '2' ? 'filter-pill-sm-active' : ''" @click="selectedZone = '2'">
-          {{ $t('global') }}
+        <button
+          v-for="r in availableRegions"
+          :key="r"
+          type="button"
+          class="filter-pill-sm"
+          :class="selectedRegion === r ? 'filter-pill-sm-active' : ''"
+          @click="selectedRegion = r"
+        >
+          {{ regionName(r) }}
         </button>
       </div>
 
@@ -146,7 +155,7 @@
           <div class="hidden overflow-x-auto sm:block">
             <table class="w-full text-sm">
               <thead>
-                <tr class="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-text-tertiary)]">
+                <tr class="border-b border-[var(--color-border)] text-start text-xs text-[var(--color-text-tertiary)]">
                   <th class="px-4 py-2.5 font-medium sm:px-5">#</th>
                   <th class="px-4 py-2.5 font-medium">{{ $t('version') }}</th>
                   <th class="px-4 py-2.5 font-medium">{{ $t('android') }}</th>
@@ -318,13 +327,19 @@
 </template>
 
 <script setup>
+import { sortRegions } from '~/utils/region'
+import { pickLogs } from '~/utils/logs'
+
 const route = useRoute()
 const { locale } = useI18n()
 const { t } = useI18n()
 const { buildRomsUrl, buildRomsIndexUrl, buildDownloadLink, buildChangelogUrl } = useApi()
 
+// 区域显示名统一取自 i18n 词条
+const regionName = useRegionName()
+
 const searchQuery = ref('')
-const selectedZone = ref('')
+const selectedRegion = ref('')
 
 // ROM 详情模态框（含更新日志）
 const romModal = ref(null)
@@ -345,9 +360,8 @@ const openRomModal = async (rom) => {
       }
     }
     const raw = data || {}
-    romModalLogs.value = locale.value.startsWith('en')
-      ? (raw.logs_en || raw.logs_zh || null)
-      : (raw.logs_zh || raw.logs_en || null)
+    // 按当前语言取日志，缺失时依次回落英文 / 简体中文
+    romModalLogs.value = pickLogs(raw, locale.value)
   } catch {
     romModalLogs.value = null
   } finally {
@@ -408,6 +422,7 @@ const zoneLabel = (rom) =>
   rom.branchName?.[localeKey.value] ||
   rom.branchName?.en ||
   rom.branchName?.zh ||
+  (rom.region ? regionName(rom.region) : '') ||
   (rom.zone === '1' ? t('china') : rom.zone === '2' ? t('global') : '')
 
 // ROM 排序：版本号为主（降序），release_date 为辅（降序、空值置后）
@@ -450,16 +465,33 @@ const { data: roms, pending, error, refresh } = await useAsyncData(
   { watch: [os], default: () => [] }
 )
 
+// 当前大版本实际收录的区域（按 rom.region 动态生成），去重并保持稳定顺序
+const availableRegions = computed(() => {
+  if (!roms.value || !Array.isArray(roms.value)) return []
+  const regions = new Set()
+  for (const rom of roms.value) {
+    if (rom.region) regions.add(rom.region)
+  }
+  return sortRegions(Array.from(regions))
+})
+
+// 切换大版本后，若已选区域在新数据中不存在则回退到全部
+watch(availableRegions, (regions) => {
+  if (selectedRegion.value && !regions.includes(selectedRegion.value)) {
+    selectedRegion.value = ''
+  }
+})
+
 // 当 OS / 搜索 / 区域 / 数据变化时，重置所有设备的当前页回第 1 页
-watch([os, searchQuery, selectedZone, roms], () => {
+watch([os, searchQuery, selectedRegion, roms], () => {
   currentPage.value = {}
 })
 
 const deviceGroups = computed(() => {
   if (!roms.value || !Array.isArray(roms.value)) return []
   let pool = roms.value
-  if (selectedZone.value) {
-    pool = pool.filter((r) => r.zone === selectedZone.value)
+  if (selectedRegion.value) {
+    pool = pool.filter((r) => r.region === selectedRegion.value)
   }
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()

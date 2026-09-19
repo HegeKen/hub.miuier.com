@@ -58,6 +58,15 @@ export function useApi() {
     return buildUrl(`/v3/roms/${os}.json`)
   }
 
+  // 发布日期索引：index.json 提供日期范围，<year>.json 提供该年按日期分组的 ROM
+  const buildReleasesIndexUrl = (): string => {
+    return buildUrl('/v3/releases/index.json')
+  }
+
+  const buildReleasesUrl = (year: string): string => {
+    return buildUrl(`/v3/releases/${year}.json`)
+  }
+
   const buildDownloadLink = (version: string, filename: string): string => {
     return `https://bkt-sgp-miui-ota-update-alisgp.oss-ap-southeast-1.aliyuncs.com/${version}/${filename}`
   }
@@ -79,6 +88,8 @@ export function useApi() {
     buildStatisticsUrl,
     buildRomsIndexUrl,
     buildRomsUrl,
+    buildReleasesIndexUrl,
+    buildReleasesUrl,
     buildDownloadLink,
     buildChangelogUrl,
   }

@@ -21,6 +21,19 @@ export default defineNuxtConfig({
 
   app: {
     pageTransition: false,
+    // 图标链接放在这里而非组件内 useHead：内容区是 ClientOnly，放这里才能进入 SSR 的 HTML，
+    // 浏览器无需等 JS 执行就开始拉取 favicon
+    head: {
+      link: [
+        // 标签页 / 书签栏：16~48px 用去掉字标的图形版（字标在该尺寸下无法辨认）
+        { rel: 'icon', href: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
+        // 主屏 / 安装图标：完整 logo；iOS 不支持透明应用图标，apple-touch-icon 已压白底
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/site.webmanifest' },
+      ],
+    },
   },
 
   modules: [
@@ -31,11 +44,30 @@ export default defineNuxtConfig({
   ],
 
   i18n: {
+    // name = 语言自称（下拉展示），short = 顶栏按钮上的短标签，language = SEO / 浏览器语言匹配用的 BCP47 标签
     locales: [
-      { code: 'zh-cn', name: '中文' },
-      { code: 'zh', name: '中文' },
-      { code: 'en-us', name: 'English' },
-      { code: 'en', name: 'English' },
+      { code: 'zh-cn', language: 'zh-Hans', name: '简体中文', short: '简中' },
+      { code: 'zh-tw', language: 'zh-Hant', name: '繁體中文', short: '繁中' },
+      { code: 'en-us', language: 'en', name: 'English', short: 'EN' },
+      { code: 'ja', language: 'ja', name: '日本語', short: '日本語' },
+      { code: 'ko', language: 'ko', name: '한국어', short: '한국어' },
+      { code: 'ru', language: 'ru', name: 'Русский', short: 'Рус' },
+      { code: 'uk', language: 'uk', name: 'Українська', short: 'УКР' },
+      { code: 'pl', language: 'pl', name: 'Polski', short: 'PL' },
+      { code: 'de', language: 'de', name: 'Deutsch', short: 'DE' },
+      { code: 'fr', language: 'fr', name: 'Français', short: 'FR' },
+      { code: 'it', language: 'it', name: 'Italiano', short: 'IT' },
+      { code: 'es', language: 'es', name: 'Español', short: 'ES' },
+      { code: 'pt', language: 'pt', name: 'Português', short: 'PT' },
+      { code: 'tr', language: 'tr', name: 'Türkçe', short: 'TR' },
+      { code: 'id', language: 'id', name: 'Bahasa Indonesia', short: 'ID' },
+      { code: 'vi', language: 'vi', name: 'Tiếng Việt', short: 'VI' },
+      { code: 'th', language: 'th', name: 'ไทย', short: 'ไทย' },
+      // dir: 'rtl' 是 RTL 的唯一声明处，MiRoms.vue 据此写 <html dir>
+      { code: 'ar', language: 'ar', name: 'العربية', short: 'ع', dir: 'rtl' },
+      // 兼容既有链接（/zh/、/en/）：hidden 的语言不出现在切换器里
+      { code: 'zh', language: 'zh-Hans', name: '中文', hidden: true },
+      { code: 'en', language: 'en', name: 'English', hidden: true },
     ],
     strategy: 'prefix',
     defaultLocale: 'zh-cn',

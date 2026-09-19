@@ -64,7 +64,7 @@
 
 @layer components {
   .skip-link {
-    @apply absolute left-4 top-4 z-50 -translate-y-24 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white shadow-md transition-transform duration-150;
+    @apply absolute start-4 top-4 z-50 -translate-y-24 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white shadow-md transition-transform duration-150;
     &:focus {
       @apply translate-y-0;
     }
@@ -114,6 +114,14 @@
 }
 
 @layer utilities {
+  /* RTL：方向性图标（chevron / 箭头）在阿拉伯语等从右到左的语言下水平镜像。
+     用独立的 scale 属性而不是 transform，避免与 Tailwind 的 transform 变量管线互相覆盖。
+     镜像后元素自身原有的 translate-x 位移在视觉上会自动反向，
+     因此 group-hover:translate-x-0.5 无需再为 RTL 单独写一份。 */
+  [dir='rtl'] .dir-flip {
+    scale: -1 1;
+  }
+
   .sr-only {
     @apply absolute h-px w-px overflow-hidden whitespace-nowrap border-0 p-0;
     clip: rect(0, 0, 0, 0);
