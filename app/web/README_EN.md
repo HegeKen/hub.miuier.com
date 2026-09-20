@@ -97,3 +97,22 @@ app/web/
 | This frontend site | [README.md](README.md) | [README_EN.md](README_EN.md) |
 | Admin panel | [../admin/README.md](../admin/README.md) | [../admin/README_EN.md](../admin/README_EN.md) |
 | Data repo | [../../data/README.md](../../data/README.md) | [../../data/README_EN.md](../../data/README_EN.md) |
+
+## Credits
+
+This site is built on the following open-source projects and resources. Thanks to their authors and communities.
+
+| Name | Purpose | License |
+| --- | --- | --- |
+| [Nuxt 4](https://nuxt.com/) | App framework (SSR + Nitro server routes, build output `.output/`) | MIT |
+| [Vue 3](https://vuejs.org/) | View layer (pages / components / composables) | MIT |
+| [TypeScript](https://www.typescriptlang.org/) | Type system | Apache-2.0 |
+| [Tailwind CSS](https://tailwindcss.com/) with [@nuxtjs/tailwindcss](https://tailwindcss.nuxtjs.org/) | Styling system and design tokens (`app/assets/css/main.css`) | MIT |
+| [@nuxtjs/i18n](https://i18n.nuxtjs.org/) | 18-locale prefixed routing, message aggregation, RTL and root redirect | MIT |
+| [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) | `sitemap.xml` generation (`site.url`) | MIT |
+| [@nuxtjs/device](https://github.com/nuxt-modules/device) | Device type detection | MIT |
+| [Pillow](https://python-pillow.org/) | `scripts/make-favicon.py` generates the favicon / app icons | MIT-CMU |
+| [Cloudflare Pages](https://pages.cloudflare.com/) | Hosting and deployment (`hub.miuier.com`) | Cloudflare Terms of Service |
+| [data submodule](../../data/README.md) | All ROM data and device images (`https://api.miuier.com/api`) | Apache-2.0 |
+
+> ROM data, changelogs and device images shown on the site come from Xiaomi's official APIs; the trademarks involved belong to Xiaomi, and this project is not affiliated with Xiaomi.

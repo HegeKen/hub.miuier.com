@@ -128,3 +128,19 @@ app/admin/
 | 前端站点 | [../web/README.md](../web/README.md) | [../web/README_EN.md](../web/README_EN.md) |
 | 本后台 | [README.md](README.md) | [README_EN.md](README_EN.md) |
 | 数据仓库 | [../../data/README.md](../../data/README.md) | [../../data/README_EN.md](../../data/README_EN.md) |
+
+## Credits
+
+后台的构建与运行依赖以下开源项目，谨向各作者与社区致谢。
+
+| 名称 | 用途 | 许可 |
+| --- | --- | --- |
+| [Nuxt 4](https://nuxt.com/) | 应用框架（SPA `ssr: false`、构建产物 `.output/`） | MIT |
+| [Vue 3](https://vuejs.org/) | 视图层（页面 / 组件 / 组合式函数） | MIT |
+| [Nitro](https://nitro.build/) | `server/api/**` 服务端路由与运行时 | MIT |
+| [TypeScript](https://www.typescriptlang.org/) | 类型系统 | Apache-2.0 |
+| [Tailwind CSS](https://tailwindcss.com/) 与 [@nuxtjs/tailwindcss](https://tailwindcss.nuxtjs.org/) | 样式体系与设计令牌（与 `app/web` 同一套） | MIT |
+| [mysql2](https://github.com/sidorares/node-mysql2) | MySQL 连接池、参数化查询与预处理语句 | MIT |
+| [MySQL](https://www.mysql.com/) | 数据存储（`miroms` 库：`devices` / `roms` / `branches` / `series`） | GPL-2.0 / 商业许可 |
+
+> 管理的数据内容与相关商标归小米科技所有；本项目与小米科技无隶属关系。

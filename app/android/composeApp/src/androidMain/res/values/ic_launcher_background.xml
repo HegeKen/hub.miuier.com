@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自适应图标背景色。logo 本身是「橙色 + 蓝色」的图形，没有单色能同时贴合它的四角，
+     所以用白色做底（网页端的 apple-touch-icon.png 也是压白底）。 -->
+<resources>
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>

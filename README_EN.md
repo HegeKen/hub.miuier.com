@@ -120,6 +120,31 @@ The fetch tasks can also be run via VS Code Tasks (`Ctrl+Shift+B`, see `.vscode/
 | Admin panel | [app/admin/README.md](app/admin/README.md) | [app/admin/README_EN.md](app/admin/README_EN.md) |
 | Data repo | [data/README.md](data/README.md) | [data/README_EN.md](data/README_EN.md) |
 
+## Credits
+
+This repository is built on the open-source projects, platforms and data sources below. Thanks to their authors and communities.
+
+| Name | Role in this repo | License |
+| --- | --- | --- |
+| [Nuxt](https://nuxt.com/) | App framework for `app/web` / `app/admin` (SSR / SPA + Nitro server) | MIT |
+| [Vue 3](https://vuejs.org/) | View layer of both Nuxt apps | MIT |
+| [TypeScript](https://www.typescriptlang.org/) | Type system across the repo | Apache-2.0 |
+| [Tailwind CSS](https://tailwindcss.com/) | Styling system of the site and the admin panel (shared design tokens) | MIT |
+| [@nuxtjs/i18n](https://i18n.nuxtjs.org/) | 18-locale routing, messages and RTL for the frontend | MIT |
+| [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) / [@nuxtjs/device](https://github.com/nuxt-modules/device) | Frontend SEO and device detection | MIT |
+| [mysql2](https://github.com/sidorares/node-mysql2) | MySQL driver used directly by the admin panel | MIT |
+| [concurrently](https://github.com/open-cli-tools/concurrently) | Starts web / admin in parallel from the root script | MIT |
+| [pnpm](https://pnpm.io/) | Monorepo workspace and dependency management | MIT |
+| [Node.js](https://nodejs.org/) | Runtime of the build toolchain (`generate-index.mjs` et al.) | MIT |
+| [Python 3](https://www.python.org/) | Fetch / export / deploy scripts in `data/scripts` (stdlib only) | PSF-2.0 |
+| [Kotlin](https://kotlinlang.org/) / [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/) / [MIUIX](https://github.com/compose-miuix-ui/miuix) | `app/android` client | Apache-2.0 |
+| [MySQL](https://www.mysql.com/) | ROM data storage (`miroms` database) | GPL-2.0 / commercial |
+| [Cloudflare Pages](https://pages.cloudflare.com/) | Hosting and deployment of the site and the data API | Cloudflare Terms of Service |
+| [GitHub](https://github.com/) | Code hosting, `data` submodule, Raw / Release distribution | GitHub Terms of Service |
+| Xiaomi update servers (`update.miui.com`) / Mi Community | Raw data: ROM builds, download URLs, changelogs | Owned by Xiaomi |
+
+> MIUI, HyperOS, Xiaomi, Redmi and POCO are trademarks of Xiaomi or its affiliates; this project is not affiliated with Xiaomi.
+
 ## License
 
 [Apache License 2.0](LICENSE)

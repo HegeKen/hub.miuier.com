@@ -120,6 +120,31 @@ python3 data/scripts/deploy.py                 # 仅触发部署（deploy hook�
 | 管理后台 | [app/admin/README.md](app/admin/README.md) | [app/admin/README_EN.md](app/admin/README_EN.md) |
 | 数据仓库 | [data/README.md](data/README.md) | [data/README_EN.md](data/README_EN.md) |
 
+## Credits
+
+本仓库建立在以下开源项目、平台与数据源之上，谨向各作者与社区致谢。
+
+| 名称 | 在本仓库的角色 | 许可 |
+| --- | --- | --- |
+| [Nuxt](https://nuxt.com/) | `app/web` / `app/admin` 的应用框架（SSR / SPA + Nitro 服务端） | MIT |
+| [Vue 3](https://vuejs.org/) | 两个 Nuxt 应用的视图层 | MIT |
+| [TypeScript](https://www.typescriptlang.org/) | 全仓库类型系统 | Apache-2.0 |
+| [Tailwind CSS](https://tailwindcss.com/) | 站点与后台的样式体系（共用设计令牌） | MIT |
+| [@nuxtjs/i18n](https://i18n.nuxtjs.org/) | 前端 18 语言路由、词条与 RTL | MIT |
+| [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) / [@nuxtjs/device](https://github.com/nuxt-modules/device) | 前端 SEO 与设备识别 | MIT |
+| [mysql2](https://github.com/sidorares/node-mysql2) | 管理后台直连 MySQL 的驱动 | MIT |
+| [concurrently](https://github.com/open-cli-tools/concurrently) | 根脚本并行启动 web / admin | MIT |
+| [pnpm](https://pnpm.io/) | monorepo 工作区与依赖管理 | MIT |
+| [Node.js](https://nodejs.org/) | 构建工具链运行时（`generate-index.mjs` 等） | MIT |
+| [Python 3](https://www.python.org/) | `data/scripts` 抓取 / 导出 / 部署（仅标准库） | PSF-2.0 |
+| [Kotlin](https://kotlinlang.org/) / [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/) / [MIUIX](https://github.com/compose-miuix-ui/miuix) | `app/android` 客户端 | Apache-2.0 |
+| [MySQL](https://www.mysql.com/) | ROM 数据存储（`miroms` 库） | GPL-2.0 / 商业许可 |
+| [Cloudflare Pages](https://pages.cloudflare.com/) | 站点与数据 API 的托管、部署 | Cloudflare 服务条款 |
+| [GitHub](https://github.com/) | 代码托管、`data` 子模块、Raw / Release 分发 | GitHub 服务条款 |
+| 小米更新服务器（`update.miui.com`）/ 小米社区 | ROM 版本、下载地址、更新日志等原始数据 | 归小米科技所有 |
+
+> MIUI、HyperOS、Xiaomi、Redmi、POCO 等为小米科技或其关联公司的商标；本项目与小米科技无隶属关系。
+
 ## License
 
 [Apache License 2.0](LICENSE)

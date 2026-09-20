@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 只用平台主题，不引入 AppCompat / Material：
+     界面全部由 Compose + MIUIX 绘制，这里只负责「冷启动那一帧」的窗口底色，
+     避免从白屏闪到深色界面。 -->
+<resources>
+    <style name="Theme.MiRomsHub" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FAFAFA</item>
+        <item name="android:navigationBarColor">#FAFAFA</item>
+        <item name="android:statusBarColor">#FAFAFA</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

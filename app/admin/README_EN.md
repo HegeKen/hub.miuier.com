@@ -134,3 +134,19 @@ app/admin/
 | Frontend site | [../web/README.md](../web/README.md) | [../web/README_EN.md](../web/README_EN.md) |
 | This admin panel | [README.md](README.md) | [README_EN.md](README_EN.md) |
 | Data repo | [../../data/README.md](../../data/README.md) | [../../data/README_EN.md](../../data/README_EN.md) |
+
+## Credits
+
+The admin panel is built and runs on the following open-source projects. Thanks to their authors and communities.
+
+| Name | Purpose | License |
+| --- | --- | --- |
+| [Nuxt 4](https://nuxt.com/) | App framework (SPA `ssr: false`, build output `.output/`) | MIT |
+| [Vue 3](https://vuejs.org/) | View layer (pages / components / composables) | MIT |
+| [Nitro](https://nitro.build/) | `server/api/**` server routes and runtime | MIT |
+| [TypeScript](https://www.typescriptlang.org/) | Type system | Apache-2.0 |
+| [Tailwind CSS](https://tailwindcss.com/) with [@nuxtjs/tailwindcss](https://tailwindcss.nuxtjs.org/) | Styling system and design tokens (same set as `app/web`) | MIT |
+| [mysql2](https://github.com/sidorares/node-mysql2) | MySQL connection pool, parameterized and prepared queries | MIT |
+| [MySQL](https://www.mysql.com/) | Data storage (`miroms` database: `devices` / `roms` / `branches` / `series`) | GPL-2.0 / commercial |
+
+> The managed data and the trademarks involved belong to Xiaomi; this project is not affiliated with Xiaomi.

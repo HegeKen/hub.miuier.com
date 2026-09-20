@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 数据来自 https://api.miuier.com/api/v3（与 web 端同一个接口） -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Android 10 以下，往公共下载目录写文件需要这个权限（10 起改用分区存储，不再需要） -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <application
+        android:label="MiROMS HUB"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MiRomsHub">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|density|fontScale"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.MiRomsHub">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

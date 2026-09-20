@@ -1,0 +1,54 @@
+[versions]
+# ---- 工具链：这四行是一组，改一个要一起验证 ----
+agp = "9.4.1"
+kotlin = "2.4.20"
+composeMultiplatform = "1.12.0"
+# MIUIX（小米 HyperOS 设计语言的 Compose Multiplatform 实现）
+# 0.9.4 的 POM 明确要求 Kotlin 2.4.20 + Compose Multiplatform 1.12.0
+miuix = "0.9.4"
+
+# ---- Android ----
+# MIUIX 0.9.4 的 Android 制品要求 compileSdk >= 37（AAR metadata 强制校验）
+androidCompileSdk = "37"
+androidMinSdk = "26"
+androidTargetSdk = "36"
+activityCompose = "1.13.0"
+
+# ---- 网络与序列化 ----
+ktor = "3.6.0"
+# 图片加载（机型照片）。coil-network-ktor3 / coil-svg 都通过
+# META-INF/services/coil3.util.*ServiceLoaderTarget 自动注册，不用手写初始化。
+coil = "3.6.3"
+kotlinxSerialization = "1.11.0"
+
+[libraries]
+# miuix-ui 只带 7 个基础图标（MiuixIcons.Basic.*：Search / Close / ArrowRight …）；
+# 底栏和卡片用到的 ChevronForward / Home / Phone / Folder / Settings 等都在
+# 独立的 miuix-icons 里（MiuixIcons.Demibold.* 共 780 个），必须单独声明。
+miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui", version.ref = "miuix" }
+miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons", version.ref = "miuix" }
+# OverlayDropdownMenu（语言选择器）在 miuix-preference 里，不在 miuix-ui
+miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.ref = "miuix" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+# Android 引擎
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+# 桌面（JVM）引擎——桌面端只为本地预览/截图，方便不开模拟器也能看到 UI
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

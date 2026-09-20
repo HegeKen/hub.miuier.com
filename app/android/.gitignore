@@ -1,0 +1,16 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 本机专属：SDK 路径，不入库（由 Android Studio / gradle 自动生成）
+local.properties
+
+# IDE
+.idea/
+*.iml
+.kotlin/
+
+# macOS
+.DS_Store

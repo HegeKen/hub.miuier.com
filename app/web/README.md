@@ -101,3 +101,22 @@ app/web/
 | 本站点 | [README.md](README.md) | [README_EN.md](README_EN.md) |
 | 管理后台 | [../admin/README.md](../admin/README.md) | [../admin/README_EN.md](../admin/README_EN.md) |
 | 数据仓库（API 格式 / 表结构 / 脚本） | [../../data/README.md](../../data/README.md) | [../../data/README_EN.md](../../data/README_EN.md) |
+
+## Credits
+
+本站的构建依赖以下开源项目与资源，谨向各作者与社区致谢。
+
+| 名称 | 用途 | 许可 |
+| --- | --- | --- |
+| [Nuxt 4](https://nuxt.com/) | 应用框架（SSR + Nitro 服务端路由、构建产物 `.output/`） | MIT |
+| [Vue 3](https://vuejs.org/) | 视图层（页面 / 组件 / 组合式函数） | MIT |
+| [TypeScript](https://www.typescriptlang.org/) | 类型系统 | Apache-2.0 |
+| [Tailwind CSS](https://tailwindcss.com/) 与 [@nuxtjs/tailwindcss](https://tailwindcss.nuxtjs.org/) | 样式体系与设计令牌（`app/assets/css/main.css`） | MIT |
+| [@nuxtjs/i18n](https://i18n.nuxtjs.org/) | 18 语言前缀路由、词条聚合、RTL 与根路径跳转 | MIT |
+| [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) | `sitemap.xml` 生成（`site.url`） | MIT |
+| [@nuxtjs/device](https://github.com/nuxt-modules/device) | 设备类型识别 | MIT |
+| [Pillow](https://python-pillow.org/) | `scripts/make-favicon.py` 生成 favicon / 应用图标 | MIT-CMU |
+| [Cloudflare Pages](https://pages.cloudflare.com/) | 站点托管与部署（`hub.miuier.com`） | Cloudflare 服务条款 |
+| [data 子模块](../../data/README.md) | 全部 ROM 数据与机型图片（`https://api.miuier.com/api`） | Apache-2.0 |
+
+> 页面展示的 ROM 数据、更新日志与机型图片来自小米官方接口，相关商标归小米科技所有；本项目与小米科技无隶属关系。
