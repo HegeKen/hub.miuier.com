@@ -164,7 +164,7 @@
       <div v-if="dateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="closeDateQuery">
         <div class="fixed inset-0 bg-black/50" @click="closeDateQuery"></div>
         <div
-          class="relative z-10 flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] shadow-2xl"
+          class="relative z-10 flex max-h-[85vh] min-h-[min(30rem,85vh)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] shadow-2xl"
           role="dialog"
           aria-modal="true"
         >
@@ -188,13 +188,15 @@
 
           <!-- Date picker -->
           <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--color-border)] px-6 py-4">
-            <input
+            <ReleaseCalendar
               v-model="queryDate"
-              type="date"
-              class="input-base w-auto"
               :min="releaseRange.min"
               :max="releaseRange.max"
-              :aria-label="$t('dateQuery')"
+              :valid-dates="calendarDates"
+              :valid-year="calendarYear"
+              :loading="calendarLoading"
+              @year-change="onCalendarYearChange"
+              @today="selectToday"
             />
             <span v-if="dateLoading" class="spinner" role="status"></span>
             <span v-else-if="queryDate" class="text-xs tabular-nums text-[var(--color-text-secondary)]">
@@ -369,6 +371,37 @@ const loadYear = async (year) => {
   return dates
 }
 
+// 日历中禁用「当日无更新」的日期：按可见年份取该年有效日期集合，年份分片复用上面的 yearCache
+const calendarDates = ref(null)          // 当前可见年份的有效日期 Set<string>，null 表示尚未就绪
+const calendarYear = ref('')             // calendarDates 对应的年份
+const calendarLoading = ref(false)
+const calendarDateSets = new Map()       // '2026' -> Set<string>
+let calendarRequestId = 0
+
+const onCalendarYearChange = async (year) => {
+  const cached = calendarDateSets.get(year)
+  if (cached) {
+    calendarRequestId++                  // 让仍在飞行中的其它年份请求失效
+    calendarYear.value = year
+    calendarDates.value = cached
+    return
+  }
+  const requestId = ++calendarRequestId
+  // 先清空，避免用上一年的集合误禁用新一年
+  calendarDates.value = null
+  calendarLoading.value = true
+  try {
+    const dates = await loadYear(year)
+    if (requestId !== calendarRequestId) return
+    const set = new Set(Object.keys(dates))
+    calendarDateSets.set(year, set)
+    calendarYear.value = year
+    calendarDates.value = set
+  } finally {
+    if (requestId === calendarRequestId) calendarLoading.value = false
+  }
+}
+
 // 日期变化时加载对应年份分片；用请求序号丢弃过期响应，避免快速改日期时结果错位
 watch(queryDate, async (value) => {
   const requestId = ++dateRequestId
@@ -393,13 +426,21 @@ const todayString = () => {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
+// 今天可能超出数据范围（或当天无更新），统一回退到不晚于今天的最新数据日期
+const defaultQueryDate = () => {
+  const max = releaseRange.value.max
+  const today = todayString()
+  return max && max < today ? max : today
+}
+
 const openDateQuery = () => {
   dateModal.value = true
   if (queryDate.value) return
-  // 默认选中数据中最新的一天；若数据比今天更新则退回今天
-  const max = releaseRange.value.max
-  const today = todayString()
-  queryDate.value = max && max < today ? max : today
+  queryDate.value = defaultQueryDate()
+}
+
+const selectToday = () => {
+  queryDate.value = defaultQueryDate()
 }
 
 const closeDateQuery = () => {
