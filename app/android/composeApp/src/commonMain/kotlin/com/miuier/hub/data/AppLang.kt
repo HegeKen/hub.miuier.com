@@ -23,14 +23,17 @@ enum class AppLang(val code: String, val label: String) {
     VI("vi", "Tiếng Việt"),
     TH("th", "ไทย"),
     AR("ar", "العربية"),
+    HI("hi", "हिन्दी"),
+    UG("ug", "ئۇيغۇرچە"),
+    BO("bo", "བོད་ཡིག"),
     ;
 
-    /** 阿拉伯语要从右往左排版 */
-    val isRtl: Boolean get() = this == AR
+    /** 阿拉伯语、维吾尔语要从右往左排版 */
+    val isRtl: Boolean get() = this == AR || this == UG
 
     /**
      * v3 数据里的多语言字段**只有 `{zh, en}` 两套**（机型名、分支名），
-     * 所以除了简体/繁体中文取中文，其余 16 种语言一律取英文。
+     * 所以除了简体/繁体中文取中文，其余 19 种语言一律取英文。
      */
     val dataCode: String get() = if (this == ZH_HANS || this == ZH_HANT) "zh" else "en"
 

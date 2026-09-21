@@ -100,6 +100,9 @@ const CHANGELOG_LOG_COLUMNS: [string, string][] = [
   ['logs_vi', '越南文'],
   ['logs_th', '泰文'],
   ['logs_ar', '阿拉伯文'],
+  ['logs_in', '印地文'],
+  ['logs_uy', '维吾尔文'],
+  ['logs_bo', '藏文'],
 ]
 
 const JSON_RULE = (col: string, desc: string): CheckRule => ({

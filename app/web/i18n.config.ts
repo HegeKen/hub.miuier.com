@@ -18,6 +18,9 @@ import id from './i18n/locales/id'
 import vi from './i18n/locales/vi'
 import th from './i18n/locales/th'
 import ar from './i18n/locales/ar'
+import hi from './i18n/locales/hi'
+import ug from './i18n/locales/ug'
+import bo from './i18n/locales/bo'
 
 export default defineI18nConfig(() => ({
   legacy: false,
@@ -43,6 +46,9 @@ export default defineI18nConfig(() => ({
     vi,
     th,
     ar,
+    hi,
+    ug,
+    bo,
     // 兼容既有链接（/zh/、/en/），实际词条与 zh-cn / en-us 相同，不在语言切换器中显示
     zh: zhCn,
     en: enUs,

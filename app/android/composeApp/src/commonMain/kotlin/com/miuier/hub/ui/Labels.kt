@@ -7,7 +7,7 @@ import com.miuier.hub.ui.i18n.Strings
 /**
  * 区域 / 运营商显示名。
  *
- * 词条不写在这里：全部 18 种语言的区域名与运营商名都由 `scripts/make_locales.py`
+ * 词条不写在这里：全部 21 种语言的区域名与运营商名都由 `scripts/make_locales.py`
  * 从网页端语言包（app/web/i18n/locales 下的 ts 文件）取来，生成到 `ui/i18n/Locales.kt`，
  * 与网页端的译法保持一致。
  * 未收录的代号按网页端的做法回退：区域回退为大写代号，运营商回退为原代号。

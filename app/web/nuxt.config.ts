@@ -65,6 +65,9 @@ export default defineNuxtConfig({
       { code: 'th', language: 'th', name: 'ไทย', short: 'ไทย' },
       // dir: 'rtl' 是 RTL 的唯一声明处，MiRoms.vue 据此写 <html dir>
       { code: 'ar', language: 'ar', name: 'العربية', short: 'ع', dir: 'rtl' },
+      { code: 'hi', language: 'hi', name: 'हिन्दी', short: 'हि' },
+      { code: 'ug', language: 'ug', name: 'ئۇيغۇرچە', short: 'ئۇ', dir: 'rtl' },
+      { code: 'bo', language: 'bo', name: 'བོད་ཡིག', short: 'བོ' },
       // 兼容既有链接（/zh/、/en/）：hidden 的语言不出现在切换器里
       { code: 'zh', language: 'zh-Hans', name: '中文', hidden: true },
       { code: 'en', language: 'en', name: 'English', hidden: true },

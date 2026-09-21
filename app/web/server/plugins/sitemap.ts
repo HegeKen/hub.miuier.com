@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { defineNitroPlugin } from 'nitropack/runtime'
 
 // sitemap 支持的语言（multi-sitemap 下每个 locale 独立一个 sitemap）
-const SITEMAP_LOCALES = ['zh-cn', 'zh', 'en-us', 'en']
+const SITEMAP_LOCALES = ['zh-cn', 'zh', 'en-us', 'en', 'hi', 'ug', 'bo']
 
 // 运行时按 locale 注入设备/ROM 详情页的真实 URL，使 sitemap 收录详情页。
 // 注意：`sitemap:sources` 是 Nitro 运行时钩子，必须通过 defineNitroPlugin 注册，

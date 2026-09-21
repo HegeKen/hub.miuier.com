@@ -130,7 +130,7 @@ python3 data/scripts/deploy.py                 # 仅触发部署（deploy hook�
 | [Vue 3](https://vuejs.org/) | 两个 Nuxt 应用的视图层 | MIT |
 | [TypeScript](https://www.typescriptlang.org/) | 全仓库类型系统 | Apache-2.0 |
 | [Tailwind CSS](https://tailwindcss.com/) | 站点与后台的样式体系（共用设计令牌） | MIT |
-| [@nuxtjs/i18n](https://i18n.nuxtjs.org/) | 前端 18 语言路由、词条与 RTL | MIT |
+| [@nuxtjs/i18n](https://i18n.nuxtjs.org/) | 前端 21 语言路由、词条与 RTL | MIT |
 | [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) / [@nuxtjs/device](https://github.com/nuxt-modules/device) | 前端 SEO 与设备识别 | MIT |
 | [mysql2](https://github.com/sidorares/node-mysql2) | 管理后台直连 MySQL 的驱动 | MIT |
 | [concurrently](https://github.com/open-cli-tools/concurrently) | 根脚本并行启动 web / admin | MIT |

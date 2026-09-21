@@ -23,13 +23,16 @@ const LOG_KEYS: Record<string, string> = {
   vi: 'logs_vi',
   th: 'logs_th',
   ar: 'logs_ar',
+  hi: 'logs_in',
+  ug: 'logs_uy',
+  bo: 'logs_bo',
 }
 
 // 站点 locale → 日志键；未知 locale 取主语言标签，仍未知则回落英文
 export const logKeyFor = (locale: string): string => {
   const code = String(locale || '').toLowerCase()
   if (LOG_KEYS[code]) return LOG_KEYS[code]
-  return LOG_KEYS[code.split('-')[0]] || 'logs_en'
+  return LOG_KEYS[code.split('-')[0] ?? ''] || 'logs_en'
 }
 
 // 读取顺序：当前语言 → 英文 → 简体中文（早期数据只有 logs_zh / logs_en）

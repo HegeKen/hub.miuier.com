@@ -3,7 +3,7 @@ i18n 语言清单（备用）
 说明：这是站点多语言的候选清单。带 [已启用] 的已经接入 i18n 并可切换；
 其余为备用，按需再接入。接入一个语言的步骤见文件末尾。
 
-当前已启用（17 种语言 + 2 个兼容别名）
+当前已启用（21 种语言 + 2 个兼容别名）
 --------------------------------------------------------------------
 zh-cn   简体中文      region: cn              语言包 app/web/i18n/locales/zh-cn.ts
 zh-tw   繁體中文      region: tw / hk / mo    语言包 app/web/i18n/locales/zh-tw.ts
@@ -22,6 +22,10 @@ tr      Türkçe        region: tr              语言包 app/web/i18n/locales/t
 id      Bahasa Indonesia region: id           语言包 app/web/i18n/locales/id.ts
 vi      Tiếng Việt    （东南亚）              语言包 app/web/i18n/locales/vi.ts
 th      ไทย           region: th              语言包 app/web/i18n/locales/th.ts
+ar      العربية       region: eg / sa / ma    语言包 app/web/i18n/locales/ar.ts（RTL，dir: 'rtl'）
+hi      हिन्दी         region: in              语言包 app/web/i18n/locales/hi.ts
+ug      ئۇيغۇرچە      region: cn              语言包 app/web/i18n/locales/ug.ts（RTL，dir: 'rtl'）
+bo      བོད་ཡིག        region: cn              语言包 app/web/i18n/locales/bo.ts
 
 兼容别名（不出现在语言切换器里，只为保留既有链接）
 --------------------------------------------------------------------

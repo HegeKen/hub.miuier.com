@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * v3 数据里的多语言字段。
  *
- * 注意：站点（app/web）有 18 种语言，但**数据本身只提供中英两套**
+ * 注意：站点（app/web）有 21 种语言，但**数据本身只提供中英两套**
  * （机型名、分支名都是 `{zh, en}`），所以 App 只做中/英切换。
  */
 @Serializable

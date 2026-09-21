@@ -49,7 +49,7 @@ app/android/
 │       └── desktopMain/                  # 桌面入口 + 无头截图（仅用于本机预览）
 ├── scripts/make_icons.py                 # 从 scripts/favion.png 生成启动图标
 ├── scripts/favion.png                    # Android 侧的 logo 源图（原始分辨率）
-├── scripts/make_locales.py               # 从网页端语言包生成 18 种语言的资源
+├── scripts/make_locales.py               # 从网页端语言包生成 21 种语言的资源
 ├── gradle/libs.versions.toml             # 版本目录（版本矩阵集中在这里）
 └── gradlew / gradle/wrapper/
 ```
@@ -141,7 +141,7 @@ MIUIX 能渲染」整条链路是通的。注意 `ImageComposeScene` 的宽高�
 | 底部导航 | `FloatingNavigationBar` | 悬浮胶囊样式。注意 0.9.4 的 `FloatingNavigationBarItem` **只画图标**，`label` 仅作为 `contentDescription`（经典 `NavigationBar` 才画文字）。常规四项（首页 / 机型 / 刷机包 / 设置），匹配到本机机型时中间插入「本机信息」变成五项 |
 | 顶部标题 | `TopAppBar` + `MiuixScrollBehavior` | 大标题：展开时是大字，往上滚收进栏里、小标题淡入（`collapsedFraction ≥ 1/3` 时出现） |
 | 回到顶部 | `FloatingActionButton` | 挂在 `Scaffold` 的 `floatingActionButton`，向下滑时滑出屏幕、向上滑回来、已经在顶部时不显示 |
-| 语言选择 | `OverlayDropdownMenu` | 18 种语言做成下拉弹层，当前项打勾 |
+| 语言选择 | `OverlayDropdownMenu` | 21 种语言做成下拉弹层，当前项打勾 |
 | 下拉刷新 | `PullToRefresh` | 包在 `AsyncContent` 的成功态外面，所以**凡是走三态加载的页面都有**，不用各页自己包 |
 | 主操作 | `ActionButton`（`ui/components/Widgets.kt`） | 整行填充的主色 `TextButton`，如「获取高速下载链接」 |
 | 状态提示 | `StatusCard` | 图标 + 标题 + 说明的整块底色卡片（`primaryContainer`），「本机信息」页用它提示已识别到本机机型 |
@@ -180,7 +180,7 @@ AsyncContent(holder, contentPadding, l10n.strings, scrollBehavior) { stats -> �
   于是「换机型 / 又拉了一次」导致协程被取消时，旧那轮会把状态写成 `Failed`、把新一轮的结果盖掉。
   现在是显式 catch，`CancellationException` 原样抛出。这个坑原来的代码就有，顺手一起修了。
 - **刷新文案要本地化**。MIUIX 默认给的是英文四条（"Pull down to refresh" …），
-  这里换成 `Strings` 里的四条（18 种语言），否则一个 18 语言的 App 会在这处露怯。
+  这里换成 `Strings` 里的四条（21 种语言），否则一个 21 语言的 App 会在这处露怯。
 - **设置页没有下拉刷新**：它不加载任何接口数据，加上去只会是个没有反馈的假动作。
 
 验证方式是**合成真实触摸手势**（`16-pull-refreshed.png` / `15-pull-to-refresh.png`）：
@@ -379,16 +379,17 @@ python3 scripts/make_icons.py          # 需要 Pillow
 - **不再沿用 web 的品牌主色**：配色改为 MIUIX 自带色板（见上面的「主题与配色」），
   与 Updater-KMP 保持一致。
 
-## 多语言（18 种，与网页端一致）
+## 多语言（21 种，与网页端一致）
 
 语言列表对齐网页端 `nuxt.config.ts` 的 `i18n.locales`：简中 / 繁中 / English / 日本語 /
 한국어 / Русский / Українська / Polski / Deutsch / Français / Italiano / Español /
-Português / Türkçe / Bahasa Indonesia / Tiếng Việt / ไทย / العربية。
+Português / Türkçe / Bahasa Indonesia / Tiếng Việt / ไทย / العربية / हिन्दी /
+ئۇيغۇرچە（维吾尔文） / བོད་ཡིག（藏文）。
 
 资源由 `scripts/make_locales.py` 生成到 `ui/i18n/Locales.kt`：
 
 - **能对上的词条直接复用网页端语言包**（下载 / 更新日志 / 品牌 / 支持系统 / 关于 /
-  免责声明 / 作者主页 / 搜索框 …），以及**全部区域名与运营商名**（20 + 19 条 × 18 语言），
+  免责声明 / 作者主页 / 搜索框 …），以及**全部区域名与运营商名**（20 + 19 条 × 21 语言），
   不重复翻译；网页端加了新语言，重跑脚本即可同步。
 - 只在本 App 出现的词条在生成脚本里维护。
 
@@ -396,12 +397,13 @@ Português / Türkçe / Bahasa Indonesia / Tiếng Việt / ไทย / العر
 漏翻译某个词条会直接编译不过，而不是等到界面上出现一串裸 key。
 带占位符的词条写成 `{count}` / `{time}` / `{latest}`，用 `fill()` 替换。
 
-**阿拉伯语是 RTL**：`AppLang.isRtl` 为真时在根节点套一层
+**阿拉伯语与维吾尔语是 RTL**：`AppLang.isRtl` 为真时在根节点套一层
 `LocalLayoutDirection = LayoutDirection.Rtl`，Compose 会自动镜像水平布局
 （底栏顺序、卡片右箭头、文本对齐都会跟着翻）——截图 `08-devices-ar.png` 里可以看到。
+藏文（`bo`）是 LTR，不参与镜像。
 
 > v3 数据里的多语言字段**只有 `{zh, en}` 两套**（机型名、分支名），
-> 所以除简繁中文取中文外，其余 16 种语言的机型名一律取英文（`AppLang.dataCode`）。
+> 所以除简繁中文取中文外，其余 19 种语言的机型名一律取英文（`AppLang.dataCode`）。
 
 ## 设置页
 
@@ -411,7 +413,7 @@ Português / Türkçe / Bahasa Indonesia / Tiếng Việt / ไทย / العر
 | 分组 | 内容 |
 | --- | --- |
 | 外观 | 下拉行：跟随系统 / 浅色 / 深色 |
-| 语言 | 下拉行：18 种语言，当前项打勾 |
+| 语言 | 下拉行：21 种语言，当前项打勾 |
 | 关于 | 应用名、数据来源、接口地址、免责声明 |
 | 项目 | GitHub 仓库、问题反馈（Issues）、作者主页，与网页端 `Footer.vue` 同一批链接 |
 | 技术栈 | Compose Multiplatform / MIUIX / Kotlin 版本与版权 |

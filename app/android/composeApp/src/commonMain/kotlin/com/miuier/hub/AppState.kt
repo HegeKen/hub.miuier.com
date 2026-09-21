@@ -61,7 +61,7 @@ class HubAppState(
     var lang by mutableStateOf(AppLang.Default)
     var themeMode by mutableStateOf(ThemeMode.System)
 
-    /** 当前语言的全部本地化数据（18 种语言，见 ui/i18n/Locales.kt） */
+    /** 当前语言的全部本地化数据（21 种语言，见 ui/i18n/Locales.kt） */
     val locale: LocaleData get() = Locales.getValue(lang)
 
     val strings: Strings get() = locale.strings
