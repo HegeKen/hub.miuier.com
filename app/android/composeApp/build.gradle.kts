@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -7,6 +8,58 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
 }
+
+// ── 版本号 ────────────────────────────────────────────────────────────────
+// 状态只有一个：app/android/version.properties 里的 versionCode。
+// versionName 按约定拼成 0.1.<versionCode>，所以自增 versionCode 时两个一起走。
+// CI 上手动填了 version_code / version_name 时用 -P 覆盖（见 .github/workflows/android-build.yml）。
+val versionPropsFile = rootProject.file("version.properties")
+val versionProps = Properties().apply {
+    versionPropsFile.inputStream().use { stream -> load(stream) }
+}
+val fileVersionCode = versionProps.getProperty("versionCode")
+    ?.trim()
+    ?.toIntOrNull()
+    ?: error("${versionPropsFile.path} 里的 versionCode 缺失或不是整数")
+
+val effectiveVersionCode = providers.gradleProperty("versionCode").orNull?.trim()?.toIntOrNull()
+    ?: fileVersionCode
+val effectiveVersionName = providers.gradleProperty("versionName").orNull?.trim()
+    ?.takeIf { it.isNotEmpty() }
+    ?: "0.1.$effectiveVersionCode"
+
+// 自增 versionCode。刻意不做成每次构建自动 +1 —— 那样本地随便编一次也会把号吃掉，
+// 而且 CI 与本地会各涨一份，数字就乱了。发版前显式跑一次、连同代码一起提交。
+tasks.register("bumpVersion") {
+    group = "versioning"
+    description = "把 version.properties 里的 versionCode 自增 1（versionName 随之变成 0.1.<新值>）"
+    doLast {
+        val next = fileVersionCode + 1
+        val text = versionPropsFile.readText()
+        val bumped = text.replace(
+            Regex("(?m)^versionCode\\s*=.*$"),
+            "versionCode=$next",
+        )
+        check(bumped != text) { "${versionPropsFile.name} 里没找到 versionCode 那一行" }
+        versionPropsFile.writeText(bumped)
+        println("versionCode $fileVersionCode → $next，versionName 变成 0.1.$next（记得提交 ${versionPropsFile.name}）")
+    }
+}
+
+// 把最终生效的版本号落盘，供 CI 命名产物 / 打 tag。
+// 由构建自己产出，workflow 里就不用再抄一遍「0.1.<versionCode>」这条规则。
+val writeResolvedVersion = tasks.register("writeResolvedVersion") {
+    val outFile = layout.buildDirectory.file("resolved-version.txt")
+    // 版本来自这两个地方：文件里的 versionCode + 命令行覆盖值。
+    // 不声明成输入的话，改完 version.properties 再构建会命中「已是最新」而被跳过。
+    inputs.file(versionPropsFile)
+    inputs.property("versionName", effectiveVersionName)
+    inputs.property("versionCode", effectiveVersionCode)
+    outputs.file(outFile)
+    doLast { outFile.get().asFile.writeText("$effectiveVersionName\n$effectiveVersionCode\n") }
+}
+tasks.matching { it.name == "assembleDebug" || it.name == "assembleRelease" }
+    .configureEach { dependsOn(writeResolvedVersion) }
 
 kotlin {
     androidTarget {
@@ -72,8 +125,9 @@ android {
         applicationId = "com.miuier.hub"
         minSdk = libs.versions.androidMinSdk.get().toInt()
         targetSdk = libs.versions.androidTargetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        // 自增版本号，来源见文件顶部：version.properties 的 versionCode + 约定前缀 0.1
+        versionCode = effectiveVersionCode
+        versionName = effectiveVersionName
     }
 
     buildTypes {

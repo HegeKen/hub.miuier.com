@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,13 +15,24 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 
 /**
+ * 这一页现在是不是「正在显示的那一页」。
+ *
+ * Pager 会预先组合左右相邻页备用，那些页面也在组合、也会调 [rememberScreenListState]，
+ * 不区分的话「回到顶部」悬浮按钮会认错列表（跟着邻页的状态走）。
+ * 默认 true：非 Pager 的场景（二级页、桌面预览）无需关心。
+ */
+val LocalPageActive = compositionLocalOf { true }
+
+/**
  * 页面列表状态：除了自己用，还注册到 [com.miuier.hub.HubAppState.listState]，
  * 让外层 Scaffold 里的「回到顶部」悬浮按钮能读到它。
+ * 只有活跃页（见 [LocalPageActive]）才注册，预加载的邻页不抢。
  */
 @Composable
 fun rememberScreenListState(app: com.miuier.hub.HubAppState): LazyListState {
     val state = rememberLazyListState()
-    LaunchedEffect(state) { app.listState = state }
+    val active = LocalPageActive.current
+    LaunchedEffect(state, active) { if (active) app.listState = state }
     DisposableEffect(state) {
         onDispose { if (app.listState === state) app.listState = null }
     }

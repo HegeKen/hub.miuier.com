@@ -67,6 +67,12 @@ data class Strings(
     val otaUnsigned: String,
     val otaNotFound: String,
 
+    // —— 分支线刷包查询 ——
+    val getFastboot: String,
+    val fastbootNotFound: String,
+    /** 分支未指定运营商时那条 `n=` 留空的包 */
+    val generic: String,
+
     // —— 首页 ——
     val recentUpdates: String,
     val updatedInDays: String,

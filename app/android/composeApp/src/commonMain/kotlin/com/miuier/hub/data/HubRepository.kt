@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.withLock
 class HubRepository(
     private val api: HubApi = HubApi(),
     private val ota: OtaApi = OtaApi(),
+    private val fastbootApi: FastbootApi = FastbootApi(),
 ) {
 
     private var devicesCache: List<DeviceSummary>? = null
@@ -68,6 +69,17 @@ class HubRepository(
      * 缓存下来过一会儿就失效了，必须每次实打实去问一次。
      */
     suspend fun highSpeed(request: OtaRequest): HighSpeedResult = ota.highSpeed(request)
+
+    /**
+     * 分支的线刷包，按运营商逐条去问（[FastbootApi.query] 的语义）。
+     * 同样**故意不缓存**：拿的是「此刻最新的包」，缓存住反而会给出过期结果。
+     */
+    suspend fun fastboot(
+        branchId: String,
+        branchTag: String,
+        region: String,
+        carriers: List<String>,
+    ): FastbootResult = fastbootApi.query(branchId, branchTag, region, carriers)
 
     /**
      * 下拉刷新用：清掉全部内存缓存，下一次读取重新打接口。

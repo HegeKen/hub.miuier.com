@@ -1,19 +1,24 @@
 package com.miuier.hub
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,6 +29,7 @@ import com.miuier.hub.data.AppLang
 import com.miuier.hub.platform.LocalDevice
 import com.miuier.hub.platform.PlatformBackHandler
 import com.miuier.hub.platform.currentLocalDevice
+import com.miuier.hub.ui.components.LocalPageActive
 import com.miuier.hub.ui.screens.DeviceDetailScreen
 import com.miuier.hub.ui.screens.DevicesScreen
 import com.miuier.hub.ui.screens.HomeScreen
@@ -41,6 +47,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
@@ -160,17 +167,109 @@ fun App(
                 floatingActionButtonPosition = FabPosition.End,
                 modifier = Modifier.fillMaxSize(),
             ) { padding ->
-                when (val screen = app.current) {
-                    Screen.Home -> HomeScreen(app, padding, scrollBehavior)
-                    Screen.Devices -> DevicesScreen(app, padding, scrollBehavior)
-                    Screen.Roms -> RomsScreen(app, padding, scrollBehavior)
-                    Screen.Settings -> SettingsScreen(app, padding, scrollBehavior)
-                    Screen.MyDevice -> MyDeviceScreen(app, padding, scrollBehavior)
-                    is Screen.DeviceDetail -> DeviceDetailScreen(app, screen.code, padding, scrollBehavior)
-                    is Screen.OsRoms -> OsRomsScreen(app, screen.os, padding, scrollBehavior)
+                val screens = app.rootScreens
+                // 当前页在底栏里的位置；-1 表示它不是根页面（详情页，或本机机型还没落进名单）
+                val rootIndex = screens.indexOf(app.current)
+
+                // 详情页这类非根页面横滑没有明确目标，误滑反而会丢掉当前页，所以单独铺满。
+                // 判断依据是「当前页在不在底栏里」而不是 canGoBack：冷启动直接落在详情页时
+                // 栈里只有一页、canGoBack 是 false，但照样不该挂 Pager。
+                if (app.canGoBack || rootIndex < 0) {
+                    when (val screen = app.current) {
+                        is Screen.DeviceDetail ->
+                            DeviceDetailScreen(app, screen.code, padding, scrollBehavior)
+
+                        is Screen.OsRoms -> OsRomsScreen(app, screen.os, padding, scrollBehavior)
+                        else -> RootScreenContent(screen, app, padding, scrollBehavior)
+                    }
+                } else {
+                    // 根页面之间用 Pager：左右滑动跟手、来回都带过渡动画，
+                    // 并且顺手把左右相邻各一页预先组合好（beyondViewportPageCount），
+                    // 滑过去的时候数据和布局都已经就位，不会先白一下再填。
+                    val pagerState = rememberPagerState(initialPage = rootIndex) { screens.size }
+
+                    // 正在往哪一页滚（-1 = 没有程序触发的滚动在跑）。
+                    // 手点底栏点得快时，上一个动画还没落定就被取消，途中会经过中间页；
+                    // 那些中间页不能回写 activeRoot，否则它会跟新目标互相打架，
+                    // 表现就是「连点两下，最后停在半路或者弹回原来的页」。
+                    var pendingPage by remember { mutableIntStateOf(-1) }
+
+                    // 点底栏 → 带动画滚到对应页
+                    LaunchedEffect(rootIndex) {
+                        if (pagerState.currentPage == rootIndex) return@LaunchedEffect
+                        pendingPage = rootIndex
+                        try {
+                            pagerState.animateScrollToPage(rootIndex)
+                        } finally {
+                            // 被下一次点击取消时也会走到这里；只有目标还是自己设的那个才清，
+                            // 否则会把新一次点击刚设下的目标一起抹掉，闸门就白设了
+                            if (pendingPage == rootIndex) pendingPage = -1
+                        }
+                    }
+                    // 滑动的结果 → 回写导航状态，底栏高亮 / 标题 / 悬浮按钮都跟着走。
+                    // 这里没用 snapshotFlow：无头渲染时它会跨线程读快照，
+                    // Compose 会抛 multithreaded access to SnapshotStateObserver（见 ScrollToTop.kt）。
+                    LaunchedEffect(pagerState.currentPage, pendingPage) {
+                        if (pendingPage >= 0) return@LaunchedEffect
+                        val screen = app.rootScreens.getOrNull(pagerState.currentPage)
+                            ?: return@LaunchedEffect
+                        if (screen != app.activeRoot) app.selectRoot(screen)
+                    }
+
+                    HorizontalPager(
+                        state = pagerState,
+                        beyondViewportPageCount = 1,
+                        // 用页面自己的 key：本机机型是名单拉回来之后才插进底栏的，
+                        // 有了 key，插进来之后 Pager 还认得出当前页是哪一个，不会整体错位。
+                        // 注意必须是能存进 Bundle 的类型 —— 直接给 Screen 会崩在
+                        // SaveableStateProvider（Android 侧只收基本类型/String/Parcelable）。
+                        key = { page -> screens.getOrNull(page)?.pagerKey() ?: "page-$page" },
+                        modifier = Modifier.fillMaxSize(),
+                    ) { page ->
+                        val screen = screens.getOrNull(page) ?: return@HorizontalPager
+                        // 只有正在显示的那一页才去注册列表状态：
+                        // 预加载的邻页也在组合、也在注册，不区分的话「回到顶部」会认错列表
+                        CompositionLocalProvider(
+                            LocalPageActive provides (page == pagerState.currentPage),
+                        ) {
+                            RootScreenContent(screen, app, padding, scrollBehavior)
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+/**
+ * Pager 每页的 key。必须是能存进 Bundle 的类型（Android 侧 SaveableStateProvider 的限制），
+ * 用稳定字符串而不是页码：本机机型插进底栏会顶掉后面所有页码。
+ */
+private fun Screen.pagerKey(): String = when (this) {
+    Screen.Home -> "home"
+    Screen.Devices -> "devices"
+    Screen.MyDevice -> "my-device"
+    Screen.Roms -> "roms"
+    Screen.Settings -> "settings"
+    is Screen.DeviceDetail -> "device:$code"
+    is Screen.OsRoms -> "os:$os"
+}
+
+/** 根页面（底栏那几项）的内容。Pager 里按页渲染，兜底单页渲染也走它，避免两处 when 走偏 */
+@Composable
+private fun RootScreenContent(
+    screen: Screen,
+    app: HubAppState,
+    contentPadding: PaddingValues,
+    scrollBehavior: ScrollBehavior,
+) {
+    when (screen) {
+        Screen.Home -> HomeScreen(app, contentPadding, scrollBehavior)
+        Screen.Devices -> DevicesScreen(app, contentPadding, scrollBehavior)
+        Screen.Roms -> RomsScreen(app, contentPadding, scrollBehavior)
+        Screen.Settings -> SettingsScreen(app, contentPadding, scrollBehavior)
+        Screen.MyDevice -> MyDeviceScreen(app, contentPadding, scrollBehavior)
+        else -> Unit
     }
 }
 

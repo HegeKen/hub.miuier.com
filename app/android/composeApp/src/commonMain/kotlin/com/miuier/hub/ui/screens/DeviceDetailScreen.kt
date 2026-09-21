@@ -37,6 +37,7 @@ import com.miuier.hub.HubAppState
 import com.miuier.hub.data.Branch
 import com.miuier.hub.data.ChangelogModule
 import com.miuier.hub.data.DeviceDetail
+import com.miuier.hub.data.FastbootResult
 import com.miuier.hub.data.HubRepository
 import com.miuier.hub.data.HighSpeedLink
 import com.miuier.hub.data.HighSpeedResult
@@ -151,6 +152,7 @@ internal fun DeviceDetailList(
                         romCount = entry.branch.roms.size,
                         expanded = expandedBranches.contains(entry.index),
                         l10n = l10n,
+                        repo = app.repo,
                         onToggle = {
                             if (expandedBranches.contains(entry.index)) expandedBranches.remove(entry.index)
                             else expandedBranches.add(entry.index)
@@ -231,44 +233,120 @@ private fun BranchHeader(
     romCount: Int,
     expanded: Boolean,
     l10n: UiText,
+    repo: HubRepository,
     onToggle: () -> Unit,
 ) {
+    // 线刷包是按**分支**发货的（不是每个版本一份），所以按钮放在分支标题卡里：
+    // 点一次就拿这个分支当前最新的线刷包
+    var loading by remember(branch.id) { mutableStateOf(false) }
+    var result by remember(branch.id) { mutableStateOf<FastbootResult?>(null) }
+    val scope = rememberCoroutineScope()
+
+    Column(Modifier.fillMaxWidth()) {
+        Card(
+            onClick = onToggle,
+            insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(Modifier.fillMaxWidth()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = branch.name.pick(l10n.dataLang),
+                        style = MiuixTheme.textStyles.title4,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "$romCount",
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                    Spacer(Modifier.size(6.dp))
+                    ExpandChevron(expanded = expanded, contentDescription = null)
+                }
+                Spacer(Modifier.height(6.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Tag(regionLabel(branch.region, l10n.locale))
+                    Tag(branchKindLabel(branch.tags, l10n.strings))
+                    if (branch.ep == "1") Tag(l10n.strings.enterprise)
+                }
+                val carriers = branch.carrier.filter { it.isNotBlank() }
+                if (carriers.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = carriers.joinToString(" · ") { carrierLabel(it, l10n.locale) },
+                        style = MiuixTheme.textStyles.footnote2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                // 把分支支持的运营商整份交下去：接口是按运营商发货的，
+                // 每个运营商各问一次，有几家就出来几条（含 n= 留空的通用包）
+                ActionButton(
+                    text = if (loading) l10n.strings.fetching else l10n.strings.getFastboot,
+                    onClick = {
+                        loading = true
+                        scope.launch {
+                            result = repo.fastboot(
+                                branchId = branch.id,
+                                branchTag = branch.tags.branchtag.ifBlank { branch.tags.btag },
+                                region = branch.region,
+                                carriers = branch.carrier,
+                            )
+                            loading = false
+                        }
+                    },
+                    enabled = !loading,
+                )
+            }
+        }
+
+        // 结果放在卡片外：标题卡是「点哪都折叠」的，条目落在里面会被误点收起
+        result?.let { res ->
+            Spacer(Modifier.height(8.dp))
+            FastbootResultCard(res, l10n)
+        }
+    }
+}
+
+/**
+ * 线刷包查询结果。
+ *
+ * 接口是按运营商发货的，所以结果本身就是「一个运营商一条」；
+ * `carrier` 为空串的那条是 `n=` 留空问到的通用包。
+ */
+@Composable
+private fun FastbootResultCard(result: FastbootResult, l10n: UiText) {
+    val download = rememberDownloader()
+    val clipboard = LocalClipboard.current
+
     Card(
-        onClick = onToggle,
+        onClick = null,
         insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.fillMaxWidth()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = branch.name.pick(l10n.dataLang),
-                    style = MiuixTheme.textStyles.title4,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = "$romCount",
-                    style = MiuixTheme.textStyles.footnote1,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
-                Spacer(Modifier.size(6.dp))
-                ExpandChevron(expanded = expanded, contentDescription = null)
-            }
-            Spacer(Modifier.height(6.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Tag(regionLabel(branch.region, l10n.locale))
-                Tag(branchKindLabel(branch.tags, l10n.strings))
-                if (branch.ep == "1") Tag(l10n.strings.enterprise)
-            }
-            val carriers = branch.carrier.filter { it.isNotBlank() }
-            if (carriers.isNotEmpty()) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = carriers.joinToString(" · ") { carrierLabel(it, l10n.locale) },
-                    style = MiuixTheme.textStyles.footnote2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            SectionLabel(l10n.strings.fastboot)
+            Spacer(Modifier.height(4.dp))
+            when (result) {
+                is FastbootResult.Available -> result.packages.forEach { pkg ->
+                    DownloadRow(
+                        label = if (pkg.carrier.isBlank()) l10n.strings.generic
+                        else carrierLabel(pkg.carrier, l10n.locale),
+                        url = pkg.url,
+                        l10n = l10n,
+                        download = download,
+                        clipboard = clipboard,
+                    )
+                }
+
+                FastbootResult.NotFound -> Hint(l10n.strings.fastbootNotFound)
+
+                is FastbootResult.Failed -> Hint(
+                    text = l10n.strings.requestFailed + result.message,
+                    error = true,
                 )
             }
         }
