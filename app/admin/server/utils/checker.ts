@@ -101,7 +101,7 @@ const CHANGELOG_LOG_COLUMNS: [string, string][] = [
   ['logs_th', '泰文'],
   ['logs_ar', '阿拉伯文'],
   ['logs_in', '印地文'],
-  ['logs_uy', '维吾尔文'],
+  ['logs_ug', '维吾尔文'],
   ['logs_bo', '藏文'],
 ]
 

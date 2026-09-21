@@ -24,7 +24,7 @@ const LOG_KEYS: Record<string, string> = {
   th: 'logs_th',
   ar: 'logs_ar',
   hi: 'logs_in',
-  ug: 'logs_uy',
+  ug: 'logs_ug',
   bo: 'logs_bo',
 }
 
