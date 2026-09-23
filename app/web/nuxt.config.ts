@@ -35,6 +35,19 @@ export default defineNuxtConfig({
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
       ],
+      // Cloudflare 托管下自动注入的 Web Analytics 不生效，改为手动引入 beacon；
+      // 仅生产环境注入，避免本地开发访问污染统计
+      ...(process.env.NODE_ENV === 'production'
+        ? {
+            script: [
+              {
+                src: 'https://static.cloudflareinsights.com/beacon.min.js',
+                type: 'module',
+                'data-cf-beacon': '{"token": "6560216b6d80474a8f96bf3169961cc7"}',
+              },
+            ],
+          }
+        : {}),
     },
   },
 
