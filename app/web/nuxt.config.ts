@@ -25,6 +25,8 @@ export default defineNuxtConfig({
     // 浏览器无需等 JS 执行就开始拉取 favicon
     head: {
       link: [
+        // 现代浏览器优先使用矢量 favicon（任意尺寸都清晰）；其下方的 ico/png 为回退
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         // 标签页 / 书签栏：16~48px 用去掉字标的图形版（字标在该尺寸下无法辨认）
         { rel: 'icon', href: '/favicon.ico', sizes: '16x16 32x32 48x48' },
         { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
