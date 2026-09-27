@@ -2,6 +2,29 @@ interface FetchOptions {
   timeout?: number
 }
 
+/** 高速下载请求所需的机型/分支/版本信息 */
+export interface HighSpeedParams {
+  /** 分支代号（branch.id） */
+  code: string
+  /** 机型代号 */
+  device: string
+  /** 分支标记 F / X */
+  branchTag: string
+  region: string
+  zone: number
+  /** Android 大版本，如 14 */
+  android: string
+  version: string
+}
+
+/** /api/ota/highspeed 的响应：available 成功，其余为各种如实反馈的失败状态 */
+export type HighSpeedResult =
+  | { status: 'available'; version: string; links: { mirror: string; url: string }[] }
+  | { status: 'outdated'; latestVersion: string }
+  | { status: 'unsigned' }
+  | { status: 'notfound' }
+  | { status: 'failed'; message: string }
+
 export function useApi() {
   const config = useRuntimeConfig()
   const isDev = import.meta.dev
@@ -78,6 +101,15 @@ export function useApi() {
     return buildUrl(`/v3/logs/${device}/${version}.json`)
   }
 
+  // 高速下载：始终同源走 Nitro（开发为 Node 路由，生产为 Cloudflare Pages Function），
+  // 由服务端代理小米 OTA 接口。签名直链有实效性，不能缓存。
+  const fetchHighSpeed = async (params: HighSpeedParams): Promise<HighSpeedResult> => {
+    return await $fetch<HighSpeedResult>('/api/ota/highspeed', {
+      method: 'POST',
+      body: params,
+    })
+  }
+
   return {
     buildUrl,
     buildDeviceUrl,
@@ -92,5 +124,6 @@ export function useApi() {
     buildReleasesUrl,
     buildDownloadLink,
     buildChangelogUrl,
+    fetchHighSpeed,
   }
 }

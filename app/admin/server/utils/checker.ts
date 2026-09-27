@@ -22,6 +22,8 @@ export interface CheckRule {
   violation: string
   /** 样本查询额外展示的列（默认取 column） */
   sampleCols?: string[]
+  /** 样本查询额外展示的计算列：别名 → SQL 表达式（主表别名为 t） */
+  sampleExprs?: Record<string, string>
 }
 
 export interface CheckResult extends CheckRule {
@@ -81,6 +83,7 @@ const RULE_CODE_NAME = "code IS NOT NULL AND code NOT REGEXP '^[a-z0-9_]+$'"
 const RULE_CARRIER = "carrier IS NOT NULL AND NOT (LEFT(carrier,1)='[' AND RIGHT(carrier,1)=']')"
 
 // roms 表的多语言更新日志列（与 data/scripts/miroms/constants.py 的 CHANGELOG_LOCALES 保持一致）
+// 列内容为 logs 表 ID 引用结构：[[模块ID,[条目ID,...]], ...]（见 data/db_structure/logs.sql）
 const CHANGELOG_LOG_COLUMNS: [string, string][] = [
   ['logs_zh', '简体中文'],
   ['logs_zh_tw', '繁体中文'],
@@ -113,6 +116,23 @@ const JSON_RULE = (col: string, desc: string): CheckRule => ({
   severity: 'error',
   violation: `${col} IS NOT NULL AND ${col} <> '' AND JSON_VALID(${col})=0`,
 })
+
+/** logs_* 列：须为合法 JSON 且顶层为 ID 引用结构数组 */
+const LOGS_ID_RULE = (col: string, label: string): CheckRule => ({
+  id: `logs_ids_${col}`,
+  name: `${col} 应为日志 ID 引用结构`,
+  column: col,
+  description: `${label}更新日志应为 logs 表 ID 引用结构数组 [[模块ID,[条目ID,...]]]（原文经迁移脚本字典化到 logs 表）`,
+  severity: 'error',
+  violation: `${col} IS NOT NULL AND ${col} <> '' AND (JSON_VALID(${col})=0 OR JSON_TYPE(${col}) <> 'ARRAY')`,
+})
+
+/** 版本号末段（去 -后缀）：如 OS2.0.205.0.VOVCNXM → VOVCNXM */
+const versionTail = (v: string) =>
+  `SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(${v}, '.', -1) LIKE '%-%' THEN SUBSTRING(${v}, 1, LENGTH(${v})-LENGTH(SUBSTRING_INDEX(${v}, '.', -1))-1) ELSE ${v} END, '.', -1)`
+
+/** 从版本号末段提取设备标识 devtag（去掉首字符安卓代号与末 4 位区域标签）：VOVCNXM → OV */
+const versionDevtagExpr = (v: string) => `SUBSTRING(${versionTail(v)}, 2, CHAR_LENGTH(${versionTail(v)})-5)`
 
 export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
   devices: [
@@ -203,6 +223,17 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       description: '设备图片应为路径（/ 开头或 http(s):// 开头），不宜为空字符串',
       severity: 'warning',
       violation: "image IS NOT NULL AND (image='' OR image NOT REGEXP '^(/|https?://)')",
+    },
+    {
+      id: 'region_mismatch_with_branches',
+      name: 'region 与 branches 表冲突',
+      column: 'region',
+      description:
+        'devices.region 填了具体区域但与同 tag 的 branches.region 不一致（如印度 _in_global 误标为 id；region 为 global 的运营商定制分支除外）',
+      severity: 'error',
+      violation:
+        "tag IS NOT NULL AND tag <> '' AND region IS NOT NULL AND region <> '' AND region <> 'global' AND EXISTS (SELECT 1 FROM branches b WHERE b.tag = t.tag AND b.region IS NOT NULL AND b.region <> '' AND b.region <> t.region)",
+      sampleCols: ['tag', 'region'],
     },
   ],
 
@@ -349,6 +380,17 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       violation: RULE_REGION,
     },
     {
+      id: 'region_mismatch_with_devices',
+      name: 'region 与 devices 表冲突',
+      column: 'region',
+      description:
+        'roms.region 填了具体区域但与同 code 的 devices.region 不一致（如印度 _in_global 误标为 id；运营商定制区域 lm/cl/mx 等差异建议人工确认）',
+      severity: 'warning',
+      violation:
+        "code IS NOT NULL AND code <> '' AND tag IS NOT NULL AND tag <> '' AND region IS NOT NULL AND region <> '' AND region NOT IN ('global','None') AND EXISTS (SELECT 1 FROM devices d WHERE d.code = t.code AND d.tag = t.tag AND d.region IS NOT NULL AND d.region <> '' AND d.region <> 'global' AND d.region <> t.region)",
+      sampleCols: ['code', 'tag', 'region'],
+    },
+    {
       id: 'tag_format',
       name: 'tag 格式',
       column: 'tag',
@@ -385,7 +427,7 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       sampleCols: ['region', 'fastboot', 'recovery', 'ctelecom', 'cmobile', 'cunicom', 'others'],
     },
     ...CHANGELOG_LOG_COLUMNS.map(([col, label]) =>
-      JSON_RULE(col, `${label}更新日志应为合法 JSON 对象`)
+      LOGS_ID_RULE(col, label)
     ),
     {
       id: 'package_filename',
@@ -536,12 +578,16 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       description: '版本号末段中（安卓代号与标签之间）的设备标识应与 devices 表的 devtag 一致',
       severity: 'warning',
       violation:
-        "version IS NOT NULL AND CHAR_LENGTH(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(version, '.', -1) LIKE '%-%' THEN SUBSTRING(version, 1, LENGTH(version)-LENGTH(SUBSTRING_INDEX(version, '.', -1))-1) ELSE version END, '.', -1)) >= 6 " +
+        `version IS NOT NULL AND CHAR_LENGTH(${versionTail('version')}) >= 6 ` +
         "AND EXISTS (SELECT 1 FROM devices d WHERE d.device=t.device AND d.code=t.code " +
         "AND d.devtag IS NOT NULL AND d.devtag<>'' " +
-        "AND SUBSTRING(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(t.version, '.', -1) LIKE '%-%' THEN SUBSTRING(t.version, 1, LENGTH(t.version)-LENGTH(SUBSTRING_INDEX(t.version, '.', -1))-1) ELSE t.version END, '.', -1), 2, " +
-        "CHAR_LENGTH(SUBSTRING_INDEX(CASE WHEN SUBSTRING_INDEX(t.version, '.', -1) LIKE '%-%' THEN SUBSTRING(t.version, 1, LENGTH(t.version)-LENGTH(SUBSTRING_INDEX(t.version, '.', -1))-1) ELSE t.version END, '.', -1))-5) <> d.devtag)",
-      sampleCols: ['version', 'device', 'code'],
+        `AND ${versionDevtagExpr('t.version')} <> d.devtag)`,
+      sampleCols: ['code'],
+      sampleExprs: {
+        version_devtag: versionDevtagExpr('t.version'),
+        devices_devtag:
+          "(SELECT GROUP_CONCAT(DISTINCT d.devtag) FROM devices d WHERE d.device=t.device AND d.code=t.code AND d.devtag IS NOT NULL AND d.devtag<>'')",
+      },
     },
   ],
 
@@ -685,8 +731,11 @@ export async function runTableCheck(table: AllowedTable, summaryOnly = false): P
       let samples: Array<Record<string, unknown>> = []
       if (!summaryOnly && total > 0) {
         const sampleCols = (rule.sampleCols || [rule.column]).map((c) => `\`${c}\``)
+        const exprCols = Object.entries(rule.sampleExprs || {}).map(
+          ([alias, expr]) => `${expr} AS \`${alias}\``,
+        )
         const [rows] = await getPool().query<SampleRow[]>(
-          `SELECT t.id, ${context.join(', ')}, ${sampleCols.join(', ')}
+          `SELECT t.id, ${context.join(', ')}, ${[...sampleCols, ...exprCols].join(', ')}
            FROM \`${table}\` t
            WHERE (${rule.violation}) ${dismissalClause}
            ORDER BY t.id DESC

@@ -412,7 +412,12 @@ const toggleDismissalGroup = (ruleId) => {
   dismissalExpanded.value = next
 }
 
-const sampleColsOf = (rule) => ['id', ...(CONTEXT[props.table] || []), ...(rule.sampleCols || [rule.column])]
+const sampleColsOf = (rule) => [
+  'id',
+  ...(CONTEXT[props.table] || []),
+  ...(rule.sampleCols || [rule.column]),
+  ...Object.keys(rule.sampleExprs || {}),
+]
 
 const toggleExpand = (id) => {
   const next = new Set(expanded.value)

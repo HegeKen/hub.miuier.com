@@ -337,6 +337,7 @@ const { buildRomsUrl, buildRomsIndexUrl, buildDownloadLink, buildChangelogUrl } 
 
 // 区域显示名统一取自 i18n 词条
 const regionName = useRegionName()
+const branchName = useBranchName()
 
 const searchQuery = ref('')
 const selectedRegion = ref('')
@@ -419,10 +420,7 @@ const deviceName = (group) =>
   group.name?.zh ||
   group.device
 const zoneLabel = (rom) =>
-  rom.branchName?.[localeKey.value] ||
-  rom.branchName?.en ||
-  rom.branchName?.zh ||
-  (rom.region ? regionName(rom.region) : '') ||
+  branchName({ name: rom.branchName, region: rom.region }) ||
   (rom.zone === '1' ? t('china') : rom.zone === '2' ? t('global') : '')
 
 // ROM 排序：版本号为主（降序），release_date 为辅（降序、空值置后）

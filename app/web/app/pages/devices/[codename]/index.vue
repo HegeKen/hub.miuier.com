@@ -363,7 +363,7 @@
           <!-- Header -->
           <div class="sticky top-0 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg-surface)] px-6 py-4">
             <div>
-              <h3 class="font-semibold text-[var(--color-text)]">{{ romModalBranch?.name?.[localeKey] || romModalBranch?.name?.en || '' }}</h3>
+              <h3 class="font-semibold text-[var(--color-text)]">{{ branchName(romModalBranch) }}</h3>
               <p class="mt-0.5 font-mono text-xs text-[var(--color-text-tertiary)]">{{ romModal?.miui }}</p>
             </div>
             <button type="button" class="rounded-lg p-1.5 transition-colors hover:bg-[var(--color-bg-subtle)]" @click="romModal = null">
@@ -477,6 +477,73 @@
               </div>
             </div>
 
+            <!-- High-speed Download -->
+            <div>
+              <h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">{{ $t('highSpeed') }}</h4>
+              <button
+                type="button"
+                class="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                :disabled="highSpeedLoading"
+                @click="onFetchHighSpeed"
+              >
+                <span v-if="highSpeedLoading" class="spinner" role="status"></span>
+                <svg v-else class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+                {{ highSpeedLoading ? $t('fetching') : $t('getHighSpeed') }}
+              </button>
+
+              <div v-if="highSpeedResult" class="mt-2 space-y-1.5">
+                <template v-if="highSpeedResult.status === 'available'">
+                  <div
+                    v-for="link in highSpeedResult.links"
+                    :key="link.url"
+                    class="flex gap-1.5"
+                  >
+                    <a
+                      :href="link.url"
+                      class="flex-1 inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                      <span class="truncate">{{ mirrorLabel(link.mirror) }}</span>
+                    </a>
+                    <button
+                      type="button"
+                      :aria-label="$t('copy')"
+                      class="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] px-2.5 text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-subtle)]"
+                      @click="copyLink(link.url)"
+                    >
+                      <svg v-if="copiedUrl === link.url" class="h-4 w-4 text-[var(--color-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                      <svg v-else class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z" /></svg>
+                    </button>
+                  </div>
+                </template>
+                <p
+                  v-else-if="highSpeedResult.status === 'outdated'"
+                  class="text-xs leading-relaxed text-[var(--color-text-secondary)]"
+                >
+                  {{ $t('otaOutdated', { latest: highSpeedResult.latestVersion }) }}
+                </p>
+                <p
+                  v-else-if="highSpeedResult.status === 'unsigned'"
+                  class="text-xs leading-relaxed text-[var(--color-text-secondary)]"
+                >
+                  {{ $t('otaUnsigned') }}
+                </p>
+                <p
+                  v-else-if="highSpeedResult.status === 'notfound'"
+                  class="text-xs leading-relaxed text-[var(--color-text-secondary)]"
+                >
+                  {{ $t('otaNotFound') }}
+                </p>
+                <p v-else class="text-xs leading-relaxed text-[var(--color-warn)]">
+                  {{ $t('requestFailed') }}{{ highSpeedResult.message }}
+                </p>
+              </div>
+            </div>
+
             <!-- Changelog -->
             <div v-if="romModalLoading" class="flex justify-center py-4">
               <span class="spinner" role="status"></span>
@@ -508,7 +575,7 @@ import { pickLogs } from '~/utils/logs'
 const route = useRoute()
 const { locale } = useI18n()
 const { t } = useI18n()
-const { buildDeviceUrl, buildDeviceImageUrl, buildBrandImageUrl, buildDownloadLink, buildChangelogUrl } = useApi()
+const { buildDeviceUrl, buildDeviceImageUrl, buildBrandImageUrl, buildDownloadLink, buildChangelogUrl, fetchHighSpeed } = useApi()
 
 // 区域显示名统一取自 i18n 词条
 const regionName = useRegionName()
@@ -543,6 +610,10 @@ const romModalLogs = ref(null)    // 更新日志
 const romModalLoading = ref(false)
 const localeKey = computed(() => (locale.value.startsWith('zh') ? 'zh' : 'en'))
 
+// 高速下载：结果带时效签名，状态跟随当前 ROM，切换 ROM 时重置
+const highSpeedLoading = ref(false)
+const highSpeedResult = ref(null)
+
 // 复制下载链接到剪贴板
 const copiedUrl = ref('')
 const copyLink = async (url) => {
@@ -574,11 +645,7 @@ const deviceName = (d) =>
 
 const branchKey = (b) => `${b.id}-${b.tags?.branch || ''}`
 
-const branchName = (b) =>
-  b?.name?.[locale.value.startsWith('zh') ? 'zh' : 'en'] ||
-  b?.name?.en ||
-  b?.name?.zh ||
-  b?.id
+const branchName = useBranchName()
 
 // ROM 排序：版本族（HyperOS/OS 优先于 MIUI/V）为主，同族内版本号降序，release_date 为辅
 const romVersionParts = (version) => {
@@ -709,6 +776,8 @@ const openRomModal = async (rom, branch) => {
   romModalBranch.value = branch
   romModalLogs.value = null
   romModalLoading.value = true
+  highSpeedResult.value = null
+  highSpeedLoading.value = false
   try {
     let data = null
     const url = buildChangelogUrl(device.value.device, branch.region, rom.miui)
@@ -726,6 +795,38 @@ const openRomModal = async (rom, branch) => {
     romModalLogs.value = null
   } finally {
     romModalLoading.value = false
+  }
+}
+
+// 按需请求高速下载链接（由同源 Nitro 路由代理小米 OTA 接口）
+const onFetchHighSpeed = async () => {
+  if (!romModal.value || !romModalBranch.value || highSpeedLoading.value) return
+  const branch = romModalBranch.value
+  highSpeedLoading.value = true
+  try {
+    highSpeedResult.value = await fetchHighSpeed({
+      // d 必须是分支代号（branch.id），只给机型代号接口不返回任何 ROM
+      code: branch.id,
+      device: device.value.device,
+      branchTag: branch.tags?.branchtag || branch.tags?.btag || 'F',
+      region: branch.region || '',
+      zone: parseInt(branch.zone, 10) || 1,
+      android: romModal.value.android || '',
+      version: romModal.value.miui,
+    })
+  } catch (e) {
+    highSpeedResult.value = { status: 'failed', message: e?.message || 'request failed' }
+  } finally {
+    highSpeedLoading.value = false
+  }
+}
+
+// 链接行展示镜像主机名，比完整域名简洁
+const mirrorLabel = (mirror) => {
+  try {
+    return new URL(mirror).hostname
+  } catch {
+    return mirror
   }
 }
 
