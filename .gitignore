@@ -21,3 +21,4 @@ app/admin/dist
 # pnpm local store
 .pnpm-store/
 graphify-out
+app/web/.wrangler

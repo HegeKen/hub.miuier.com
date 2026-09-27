@@ -19,6 +19,18 @@ export default defineNuxtConfig({
   components: true,
   devtools: { enabled: false },
 
+  // 部署目标固定为 Cloudflare Pages：显式声明预设（而非依赖 CF_PAGES 环境变量自动探测），
+  // server/api/** 才会被 Nitro 编译为 Pages Function（.output/public/_worker.js）。
+  // 注意：不能再用 nuxt generate 的纯静态产物部署，否则 POST 接口会被静态托管回 405。
+  nitro: {
+    preset: 'cloudflare_pages',
+    prerender: {
+      // 保留「全站页面构建时预渲染」的既有形态（等价于 nuxt generate 的爬取范围），
+      // 页面依旧以静态资源分发，只有 /api/** 等非预渲染路由在请求时由 Function 处理。
+      crawlLinks: true,
+    },
+  },
+
   app: {
     pageTransition: false,
     // 图标链接放在这里而非组件内 useHead：内容区是 ClientOnly，放这里才能进入 SSR 的 HTML，
