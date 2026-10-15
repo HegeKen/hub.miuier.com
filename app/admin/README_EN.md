@@ -2,8 +2,8 @@
 
 > 🌐 **简体中文:** [README.md](README.md) · **English:** [README_EN.md](README_EN.md)
 
-The admin panel **connects directly to a MySQL database** (`miroms`) and performs CRUD on four tables:
-`devices` / `branches` / `roms` / `series`, matching the schemas in `data/db_structure/*.sql`.
+The admin panel **connects directly to a MySQL database** (`miroms`) and performs CRUD on six tables:
+`devices` / `branches` / `roms` / `series` / `logs` / `dev`, matching the schemas in `data/db_structure/*.sql`.
 The UI follows the same design language as `app/web` (shared CSS variables, Tailwind, dark mode, orange theme).
 
 ## Quick Start
@@ -56,6 +56,9 @@ The panel supports two connection modes (selected/verified on the login page `/l
 - **ROMs** `/roms` — CRUD on the `roms` table (50k+ rows; server-side pagination / search / sort)
 - **Series** `/series-manager` — CRUD on the `series` table (brand, zh/en names, `device_ids` device membership),
   pick/order devices by brand; writes go through the generic CRUD (`/api/db/series`)
+- **Log entry** `/logs` — enter changelog text by hand: each line becomes one log row in the shared
+  `logs` table (all language versions of a log share a row); "parse & compare" previews whether a line is new or
+  matches an existing group, and saving back-fills other languages from the data already in the database
 - **SQL console** `/sql` — read-only queries (SELECT / SHOW / DESCRIBE / EXPLAIN / WITH), auto-appends `LIMIT 1000`
 - **Data self-check** — "Check" button in each module toolbar + "Run check" on the dashboard: based on the column
   comments & examples in `data/db_structure/*.sql`, flags illogical field values (enum values, format regexes, JSON
@@ -91,10 +94,12 @@ and delete confirmation.
 | POST   | `/api/db/check/dismiss`           | Dismiss violation `{table, ruleId, rowId?, reason?}` (rowId=0 or omitted = whole rule) |
 | DELETE | `/api/db/check/dismiss`           | Undismiss `{table, ruleId, rowId?}`   |
 | GET    | `/api/db/check/dismissals`        | Dismissed list (`?table=` optional)   |
+| POST   | `/api/logs/manual`                | Manual log entry `{text, type?, lang?, preview?}`: split lines → compare with `logs` → write / back-fill other languages |
+| GET    | `/api/logs/list`                  | Log group list (`page/pageSize/search/type/missing`) with per-language coverage |
 | GET    | `/api/devices-manager`            | Model-manager data (device list + per-model branch details + all branch defs) |
 | GET    | `/api/series-manager`             | Series-manager data (all series + device base rows + brand labels) |
 
-Security: table whitelist (`devices|branches|roms|series`), column whitelist validation, parameterized queries
+Security: table whitelist (`devices|branches|roms|series|logs|dev`), column whitelist validation, parameterized queries
 everywhere, read-only SQL console with row limits, server-side JSON re-validation, and empty-string → NULL conversion.
 
 ## Tech Stack
@@ -123,7 +128,7 @@ app/admin/
     ├── composables/          # useAdminApi / useDarkMode / useDbConfig / useToast
     ├── components/           # TableManager / RecordModal / CheckPanel / Pagination / ConfirmDialog / DbStatus / Toast / DarkModeToggle / InfoItem / SeriesModal
     ├── plugins/              # db-config.client.ts (auto-attaches x-db-config header)
-    └── pages/                # index(dashboard) / login / devices / devices-manager / branches / roms / series-manager / sql
+    └── pages/                # index(dashboard) / login / devices / devices-manager / branches / roms / series-manager / logs / sql
 ```
 
 ## Related Docs

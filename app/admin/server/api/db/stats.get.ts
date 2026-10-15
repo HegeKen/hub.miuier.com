@@ -11,16 +11,19 @@ async function count(table: string): Promise<number> {
 }
 
 export default defineEventHandler(async () => {
-  const [ping, roms, devices, branches, tables] = await Promise.all([
+  const placeholders = ALLOWED_TABLES.map(() => '?').join(', ')
+  const [ping, roms, devices, branches, logs, dev, tables] = await Promise.all([
     pingDatabase(),
     count('roms'),
     count('devices'),
     count('branches'),
+    count('logs'),
+    count('dev'),
     getPool().query<Array<{ TABLE_NAME: string; TABLE_ROWS: string; DATA_LENGTH: string }>>(
       `SELECT TABLE_NAME, TABLE_ROWS, DATA_LENGTH
        FROM information_schema.TABLES
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN (?, ?, ?)`,
-      ALLOWED_TABLES,
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN (${placeholders})`,
+      [...ALLOWED_TABLES],
     ),
   ])
 
@@ -47,7 +50,7 @@ export default defineEventHandler(async () => {
 
   return {
     ping,
-    counts: { roms, devices, branches },
+    counts: { roms, devices, branches, logs, dev },
     sizes,
     recent: {
       roms: await recent('roms'),

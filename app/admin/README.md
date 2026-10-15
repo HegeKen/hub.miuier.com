@@ -2,7 +2,7 @@
 
 > 🌐 **简体中文:** [README.md](README.md) · **English:** [README_EN.md](README_EN.md)
 
-管理后台：**直连 MySQL 数据库**（`miroms` 库），直接对 `devices` / `branches` / `roms` / `series` 四张表进行增删改查，
+管理后台：**直连 MySQL 数据库**（`miroms` 库），直接对 `devices` / `branches` / `roms` / `series` / `logs` / `dev` 六张表进行增删改查，
 表结构与 `data/db_structure/*.sql` 保持一致。UI 设计风格与 `app/web` 统一（同一套 CSS 变量、Tailwind、深色模式、橙色主题）。
 
 ## 快速开始
@@ -52,6 +52,10 @@ pnpm preview    # 预览生产构建
 - **ROM 管理** `/roms` — `roms` 表 CRUD（5 万+ 行，服务端分页 / 搜索 / 排序）
 - **系列管理** `/series-manager` — `series` 表 CRUD（品牌、中英文名、`device_ids` 设备归属），
   按品牌选择/排序设备，写入走通用 CRUD（`/api/db/series`）
+- **日志录入** `/logs` — 手动录入更新日志：多行文本按换行符拆成多条，写入 `logs` 表
+  （同一日志的各语言版本共用一行）；录入前可「解析比对」预览每行是新增还是命中已有分组，
+  保存时会用库中已有数据反推补齐其他语言（把兼容的重复分组的语言文本合并到一起）。
+  右侧可检索库中日志、按「缺少某语言」筛选，查看每种语言的分组数
 - **SQL 控制台** `/sql` — 只读查询（SELECT / SHOW / DESCRIBE / EXPLAIN / WITH），自动追加 `LIMIT 1000`
 - **数据自查** — 每个模块工具栏的「自查」按钮 + 仪表盘「运行自查」：依据 `data/db_structure/*.sql`
   中每列的注释与示例，主动筛选不符合逻辑的字段（枚举值、格式正则、JSON 合法性、空字符串、包文件名等），
@@ -85,10 +89,12 @@ pnpm preview    # 预览生产构建
 | POST   | `/api/db/check/dismiss`            | 忽略违规 `{table, ruleId, rowId?, reason?}`（rowId=0 或缺省 = 整条规则） |
 | DELETE | `/api/db/check/dismiss`            | 取消忽略 `{table, ruleId, rowId?}`        |
 | GET    | `/api/db/check/dismissals`         | 已忽略列表（`?table=` 可选）          |
+| POST   | `/api/logs/manual`                 | 手动录入日志 `{text, type?, lang?, preview?}`：按换行拆行 → 比对 `logs` 表 → 写库 / 补齐其他语言 |
+| GET    | `/api/logs/list`                   | 日志分组列表（`page/pageSize/search/type/missing`），含各语言覆盖数 |
 | GET    | `/api/devices-manager`             | 机型管理数据（设备列表 + 单机型分支详情 + 全部分支定义） |
 | GET    | `/api/series-manager`              | 系列管理数据（全部 series + 设备基准行 + 品牌归属） |
 
-安全措施：表名白名单（`devices|branches|roms|series`）、列名白名单校验、全程参数化查询、
+安全措施：表名白名单（`devices|branches|roms|series|logs|dev`）、列名白名单校验、全程参数化查询、
 SQL 控制台仅允许只读语句且自动限制行数、JSON 字段服务端二次校验、空串自动转 NULL。
 
 ## 技术栈
@@ -117,7 +123,7 @@ app/admin/
     ├── composables/          # useAdminApi / useDarkMode / useDbConfig / useToast
     ├── components/           # TableManager / RecordModal / CheckPanel / Pagination / ConfirmDialog / DbStatus / Toast / DarkModeToggle / InfoItem / SeriesModal
     ├── plugins/              # db-config.client.ts（自动附加 x-db-config 请求头）
-    └── pages/                # index(仪表盘) / login / devices / devices-manager / branches / roms / series-manager / sql
+    └── pages/                # index(仪表盘) / login / devices / devices-manager / branches / roms / series-manager / logs / sql
 ```
 
 ## 相关文档
