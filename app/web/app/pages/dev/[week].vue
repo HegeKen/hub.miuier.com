@@ -33,8 +33,8 @@
           </span>
         </div>
         <p class="mt-2 text-sm text-[var(--color-text)]">{{ localized(week.title) }}</p>
-        <p class="mt-1 font-mono text-xs text-[var(--color-text-tertiary)]">
-          {{ week.versions || '—' }}<template v-if="week.release"> · {{ week.release }}</template>
+        <p class="mt-1 font-mono text-xs text-[var(--color-text-tertiary)]" :title="week.versions">
+          {{ versionsLabel }}<template v-if="week.release"> · {{ week.release }}</template>
         </p>
 
         <!-- 国际版 / 大陆版切换 -->
@@ -180,6 +180,16 @@ const description = computed(() => week.value?.description || [])
 const logs = computed(() => pickLogs(week.value?.logs || null, locale.value))
 
 // 点击机型卡片直接弹出该 ROM 的详情（日志用本周的多语言日志）
+// NuxtMR 等来源的 versions 是「逐机型版本号」的逗号 / 分号拼接串，
+// 直接铺在标题下太长，这里只显示首个版本号，完整串放 title 提示
+const versionsLabel = computed(() => {
+  const raw = String(week.value?.versions || '').trim()
+  if (!raw) return '—'
+  const parts = raw.split(/[,;，；]/).map((item) => item.trim()).filter(Boolean)
+  if (parts.length <= 1) return parts[0] || raw
+  return `${parts[0]} +${parts.length - 1}`
+})
+
 const activeRom = ref(null)
 const activeTitle = ref('')
 const openRom = (item) => {
@@ -201,7 +211,7 @@ const deviceCards = computed(() => {
       return {
         device: item.device,
         name: item.name || {},
-        version: rom.version || week.value?.versions || '',
+        version: rom.version || String(week.value?.versions || '').split(/[,;，；]/)[0]?.trim() || '',
         release: rom.release || week.value?.release || '',
       }
     })
