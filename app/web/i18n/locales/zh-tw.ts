@@ -167,4 +167,5 @@ export default {
   devNoLogs: '本週暫無更新日誌',
   devAttention: '升級說明',
   devDescription: '公告內容',
+  devUnknownBigver: '未標註大版本',
 }

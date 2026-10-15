@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'Diese Woche kein Änderungsprotokoll',
   devAttention: 'Update-Hinweise',
   devDescription: 'Ankündigung',
+  devUnknownBigver: 'Version nicht zugeordnet',
 }

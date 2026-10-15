@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'بۇ ھەپتە ئۆزگىرىش خاتىرىسى يوق',
   devAttention: 'يېڭىلاش ئەسكەرتىشى',
   devDescription: 'ئېلان',
+  devUnknownBigver: 'نەشرى بەلگىلەنمىگەن',
 }

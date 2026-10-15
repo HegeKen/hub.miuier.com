@@ -169,4 +169,5 @@ export default {
   devNoLogs: '本周暂无更新日志',
   devAttention: '升级说明',
   devDescription: '公告正文',
+  devUnknownBigver: '未标注大版本',
 }

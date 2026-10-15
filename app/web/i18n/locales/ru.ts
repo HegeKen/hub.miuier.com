@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'На этой неделе журнала изменений нет',
   devAttention: 'Инструкция по обновлению',
   devDescription: 'Анонс',
+  devUnknownBigver: 'Версия не указана',
 }

@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'Brak dziennika zmian w tym tygodniu',
   devAttention: 'Instrukcja aktualizacji',
   devDescription: 'Ogłoszenie',
+  devUnknownBigver: 'Nieprzypisana wersja',
 }

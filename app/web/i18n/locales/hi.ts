@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'इस सप्ताह कोई चेंजलॉग नहीं',
   devAttention: 'अपडेट नोट्स',
   devDescription: 'घोषणा',
+  devUnknownBigver: 'संस्करण असाइन नहीं',
 }

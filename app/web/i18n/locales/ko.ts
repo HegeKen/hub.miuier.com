@@ -167,4 +167,5 @@ export default {
   devNoLogs: '이번 주 업데이트 로그가 없습니다',
   devAttention: '업데이트 안내',
   devDescription: '공지 내용',
+  devUnknownBigver: '버전 미지정',
 }

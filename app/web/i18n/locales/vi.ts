@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'Tuần này không có nhật ký thay đổi',
   devAttention: 'Ghi chú cập nhật',
   devDescription: 'Thông báo',
+  devUnknownBigver: 'Chưa gán phiên bản',
 }

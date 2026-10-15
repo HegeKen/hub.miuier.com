@@ -167,4 +167,5 @@ export default {
   devNoLogs: '今週の更新ログはありません',
   devAttention: 'アップデート手順',
   devDescription: 'アナウンス',
+  devUnknownBigver: 'バージョン未設定',
 }

@@ -31,7 +31,9 @@
     <template v-else>
       <!-- 按大版本分组 -->
       <section v-for="group in groupedWeeks" :key="group.key" class="mb-8">
-        <h2 class="mb-3 text-sm font-semibold text-[var(--color-text)]">{{ group.key || $t('dev') }}</h2>
+        <h2 class="mb-3 text-sm font-semibold text-[var(--color-text)]">
+          {{ group.key || $t('devUnknownBigver') }}
+        </h2>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <NuxtLink
             v-for="item in group.items"
@@ -93,7 +95,10 @@ const groupedWeeks = computed(() => {
     if (!map.has(key)) map.set(key, [])
     map.get(key).push(item)
   }
-  return [...map.entries()].map(([key, items]) => ({ key, items }))
+  // 未标注大版本的周次统一排到最后（其余保持接口顺序：按周数降序）
+  return [...map.entries()]
+    .map(([key, items]) => ({ key, items }))
+    .sort((a, b) => (a.key ? 0 : 1) - (b.key ? 0 : 1))
 })
 
 useHead({

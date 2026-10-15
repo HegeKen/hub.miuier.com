@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'བདུན་ཕྲག་འདིར་གསར་བཅོས་ཟིན་ཐོ་མེད།',
   devAttention: 'གསར་བཅོས་དྲན་འཛིན།',
   devDescription: 'གསལ་བསྒྲགས།',
+  devUnknownBigver: 'ཐོན་རིམ་མི་གསལ།',
 }

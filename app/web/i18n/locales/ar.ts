@@ -171,4 +171,5 @@ export default {
   devNoLogs: 'لا يوجد سجل تغييرات هذا الأسبوع',
   devAttention: 'ملاحظات التحديث',
   devDescription: 'الإعلان',
+  devUnknownBigver: 'إصدار غير محدد',
 }

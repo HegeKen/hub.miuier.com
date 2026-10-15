@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'Bu hafta değişiklik günlüğü yok',
   devAttention: 'Güncelleme notları',
   devDescription: 'Duyuru',
+  devUnknownBigver: 'Sürüm atanmamış',
 }

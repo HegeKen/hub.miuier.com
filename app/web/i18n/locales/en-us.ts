@@ -169,4 +169,5 @@ export default {
   devNoLogs: 'No changelog for this week',
   devAttention: 'Update notes',
   devDescription: 'Announcement',
+  devUnknownBigver: 'Unassigned version',
 }

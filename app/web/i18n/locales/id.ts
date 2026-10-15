@@ -167,4 +167,5 @@ export default {
   devNoLogs: 'Tidak ada log perubahan minggu ini',
   devAttention: 'Catatan pembaruan',
   devDescription: 'Pengumuman',
+  devUnknownBigver: 'Versi belum ditetapkan',
 }
