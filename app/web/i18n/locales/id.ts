@@ -158,4 +158,13 @@ export default {
   devPreview: 'Pratinjau pengembang',
   stockAndroid: 'Android stok',
   mi1LiteSuggested: 'Edisi rekomendasi untuk Mi 1 Lite',
+  devTitle: 'Developer',
+  devSub: 'Pengumuman dan log perubahan Developer (Beta / DEV) mingguan',
+  devWeek: 'Developer minggu {week}',
+  devRegionCn: 'Tiongkok',
+  devRegionGlobal: 'Global',
+  devDevices: '{count} perangkat',
+  devNoLogs: 'Tidak ada log perubahan minggu ini',
+  devAttention: 'Catatan pembaruan',
+  devDescription: 'Pengumuman',
 }

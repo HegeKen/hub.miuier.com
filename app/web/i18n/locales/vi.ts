@@ -158,4 +158,13 @@ export default {
   devPreview: 'Bản xem trước nhà phát triển',
   stockAndroid: 'Android gốc',
   mi1LiteSuggested: 'Phiên bản đề xuất cho Mi 1 Lite',
+  devTitle: 'Developer',
+  devSub: 'Thông báo và nhật ký thay đổi Developer (Beta / DEV) theo tuần',
+  devWeek: 'Developer tuần {week}',
+  devRegionCn: 'Trung Quốc',
+  devRegionGlobal: 'Toàn cầu',
+  devDevices: '{count} thiết bị',
+  devNoLogs: 'Tuần này không có nhật ký thay đổi',
+  devAttention: 'Ghi chú cập nhật',
+  devDescription: 'Thông báo',
 }

@@ -158,4 +158,13 @@ export default {
   devPreview: 'ئاچقۇچىلار كۆرۈپ بېقىش نەشرى',
   stockAndroid: 'ساپ Android',
   mi1LiteSuggested: 'Mi 1 Lite تەۋسىيە نەشرى',
+  devTitle: 'Developer',
+  devSub: 'ھەپتىلىك Developer (Beta / DEV) ئېلانلىرى ۋە ئۆزگىرىش خاتىرىسى',
+  devWeek: '{week}-ھەپتە Developer',
+  devRegionCn: 'جۇڭگو',
+  devRegionGlobal: 'خەلقئارا',
+  devDevices: '{count} ئۈسكۈنە',
+  devNoLogs: 'بۇ ھەپتە ئۆزگىرىش خاتىرىسى يوق',
+  devAttention: 'يېڭىلاش ئەسكەرتىشى',
+  devDescription: 'ئېلان',
 }

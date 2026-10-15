@@ -158,4 +158,13 @@ export default {
   devPreview: 'Geliştirici önizlemesi',
   stockAndroid: 'Stok Android',
   mi1LiteSuggested: 'Mi 1 Lite için önerilen sürüm',
+  devTitle: 'Geliştirici',
+  devSub: 'Haftalık Geliştirici (Beta / DEV) duyuruları ve değişiklik günlükleri',
+  devWeek: '{week}. hafta Geliştirici',
+  devRegionCn: 'Çin',
+  devRegionGlobal: 'Global',
+  devDevices: '{count} cihaz',
+  devNoLogs: 'Bu hafta değişiklik günlüğü yok',
+  devAttention: 'Güncelleme notları',
+  devDescription: 'Duyuru',
 }

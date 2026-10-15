@@ -158,4 +158,13 @@ export default {
   devPreview: '開發者預覽版',
   stockAndroid: '原生安卓',
   mi1LiteSuggested: '標準青春版推薦版',
+  devTitle: '開發版',
+  devSub: '依週查看開發版（Beta / DEV）公告與更新日誌',
+  devWeek: '第 {week} 週開發版',
+  devRegionCn: '大陸版',
+  devRegionGlobal: '國際版',
+  devDevices: '{count} 款機型',
+  devNoLogs: '本週暫無更新日誌',
+  devAttention: '升級說明',
+  devDescription: '公告內容',
 }

@@ -101,6 +101,15 @@ export function useApi() {
     return buildUrl(`/v3/logs/${device}/${version}.json`)
   }
 
+  // 开发版（周更）：v3/dev/index.json 为周次索引，v3/dev/<region>/<week>.json 为单周详情
+  const buildDevIndexUrl = (): string => {
+    return buildUrl('/v3/dev/index.json')
+  }
+
+  const buildDevWeekUrl = (region: string, week: string | number): string => {
+    return buildUrl(`/v3/dev/${region || 'cn'}/${week}.json`)
+  }
+
   // 高速下载：始终同源走 Nitro（开发为 Node 路由，生产为 Cloudflare Pages Function），
   // 由服务端代理小米 OTA 接口。签名直链有实效性，不能缓存。
   const fetchHighSpeed = async (params: HighSpeedParams): Promise<HighSpeedResult> => {
@@ -124,6 +133,8 @@ export function useApi() {
     buildReleasesUrl,
     buildDownloadLink,
     buildChangelogUrl,
+    buildDevIndexUrl,
+    buildDevWeekUrl,
     fetchHighSpeed,
   }
 }

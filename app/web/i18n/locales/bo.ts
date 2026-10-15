@@ -158,4 +158,13 @@ export default {
   devPreview: 'གསར་འགོད་པ་སྔོན་ལྟ་པར་གཞི།',
   stockAndroid: 'Stock Android',
   mi1LiteSuggested: 'Mi 1 Lite འོས་སྦྱོར་པར་གཞི།',
+  devTitle: 'Developer',
+  devSub: 'བདུན་ཕྲག་རེའི་ Developer (Beta / DEV) གསལ་བསྒྲགས་དང་གསར་བཅོས་ཟིན་ཐོ།',
+  devWeek: 'བདུན་ཕྲག {week} གི་ Developer',
+  devRegionCn: 'རྒྱ་ནག',
+  devRegionGlobal: 'རྒྱལ་སྤྱི།',
+  devDevices: '{count} ཐབས་འཁོར།',
+  devNoLogs: 'བདུན་ཕྲག་འདིར་གསར་བཅོས་ཟིན་ཐོ་མེད།',
+  devAttention: 'གསར་བཅོས་དྲན་འཛིན།',
+  devDescription: 'གསལ་བསྒྲགས།',
 }

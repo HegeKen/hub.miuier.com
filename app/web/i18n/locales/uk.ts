@@ -158,4 +158,13 @@ export default {
   devPreview: 'Версія для розробників',
   stockAndroid: 'Чистий Android',
   mi1LiteSuggested: 'Рекомендована для Mi 1 Lite',
+  devTitle: 'Developer',
+  devSub: 'Щотижневі анонси та журнали змін Developer (Beta / DEV)',
+  devWeek: 'Developer, тиждень {week}',
+  devRegionCn: 'Китай',
+  devRegionGlobal: 'Глобальна',
+  devDevices: '{count} пристроїв',
+  devNoLogs: 'Цього тижня журналу змін немає',
+  devAttention: 'Інструкція з оновлення',
+  devDescription: 'Анонс',
 }

@@ -158,4 +158,13 @@ export default {
   devPreview: 'Developer Preview',
   stockAndroid: 'Android Stock',
   mi1LiteSuggested: 'Édition recommandée pour Mi 1 Lite',
+  devTitle: 'Developer',
+  devSub: 'Annonces et journaux des modifications Developer (Beta / DEV) par semaine',
+  devWeek: 'Developer, semaine {week}',
+  devRegionCn: 'Chine',
+  devRegionGlobal: 'Global',
+  devDevices: '{count} appareils',
+  devNoLogs: 'Aucun journal des modifications cette semaine',
+  devAttention: 'Notes de mise à jour',
+  devDescription: 'Annonce',
 }

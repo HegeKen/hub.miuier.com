@@ -158,4 +158,13 @@ export default {
   devPreview: '開発者プレビュー',
   stockAndroid: 'ピュア Android',
   mi1LiteSuggested: 'Mi 1 Lite おすすめ版',
+  devTitle: '開発版',
+  devSub: '開発版（Beta / DEV）の週次アナウンスと更新ログを週ごとに閲覧',
+  devWeek: '第{week}週 開発版',
+  devRegionCn: '中国版',
+  devRegionGlobal: 'グローバル版',
+  devDevices: '{count} 機種',
+  devNoLogs: '今週の更新ログはありません',
+  devAttention: 'アップデート手順',
+  devDescription: 'アナウンス',
 }

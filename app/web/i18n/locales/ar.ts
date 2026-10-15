@@ -162,4 +162,13 @@ export default {
   devPreview: 'معاينة المطوّر',
   stockAndroid: 'أندرويد خام',
   mi1LiteSuggested: 'إصدار موصى به لهاتف Mi 1 Lite',
+  devTitle: 'Developer',
+  devSub: 'إعلانات وسجلات تغييرات Developer (Beta / DEV) الأسبوعية',
+  devWeek: 'Developer الأسبوع {week}',
+  devRegionCn: 'الصين',
+  devRegionGlobal: 'العالمي',
+  devDevices: '{count} جهاز',
+  devNoLogs: 'لا يوجد سجل تغييرات هذا الأسبوع',
+  devAttention: 'ملاحظات التحديث',
+  devDescription: 'الإعلان',
 }

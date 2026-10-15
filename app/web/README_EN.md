@@ -34,6 +34,8 @@ pnpm index      # rebuild data indexes only (no server)
 | `/devices/:codename` | Device detail | Device info (codename / brand / Android / supported systems), ROM branch list, per-version changelogs, recovery / fastboot download links |
 | `/roms` | ROM packages | Browse all ROM packages grouped by major OS version (OS1 / OS2 / OS3 / V14 / V13 …) |
 | `/roms/:os` | ROMs of one OS | Full ROM package list for a given major OS version |
+| `/dev` | Developer weekly | Browse Developer (Beta / DEV) announcements by week: grouped by major version, week cards with version / release date / device count; China and Global builds are kept separate |
+| `/dev/:week` | One developer week | Announcement title and body, update notes, multilingual changelog (current locale, falling back to English / Chinese), device and ROM lists |
 
 - Download links point to Xiaomi's OSS CDN (`bkt-sgp-miui-ota-update-alisgp.oss-ap-southeast-1.aliyuncs.com`)
 - The site includes a disclaimer (not affiliated with Xiaomi), a dark-mode toggle, and zh/en language switching
