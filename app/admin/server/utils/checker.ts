@@ -630,6 +630,14 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       violation: "content_hash IS NULL OR CHAR_LENGTH(content_hash) <> 32 OR content_hash NOT REGEXP '^[0-9a-f]{32}$'",
     },
     {
+      id: 'content_zh_mismatch',
+      name: '主内容与中文列不一致',
+      column: 'content/logs_zh',
+      description: 'content 应为中文优先的主内容，存在中文译文时应与 logs_zh 相同',
+      severity: 'error',
+      violation: "logs_zh IS NOT NULL AND logs_zh <> '' AND content <> logs_zh",
+    },
+    {
       id: 'content_whitespace',
       name: '主内容首尾空白',
       column: 'content',
