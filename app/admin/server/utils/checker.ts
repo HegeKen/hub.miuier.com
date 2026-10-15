@@ -67,6 +67,8 @@ const CONTEXT_COLS: Record<AllowedTable, string[]> = {
   branches: ['branch', 'name_zh'],
   roms: ['device', 'version'],
   series: ['brand', 'name_zh'],
+  logs: ['type', 'content'],
+  dev: ['week', 'region', 'versions'],
 }
 
 /* ---------------- 规则定义 ---------------- */
@@ -82,31 +84,6 @@ const RULE_CODE_NAME = "code IS NOT NULL AND code NOT REGEXP '^[a-z0-9_]+$'"
 
 const RULE_CARRIER = "carrier IS NOT NULL AND NOT (LEFT(carrier,1)='[' AND RIGHT(carrier,1)=']')"
 
-// roms 表的多语言更新日志列（与 data/scripts/miroms/constants.py 的 CHANGELOG_LOCALES 保持一致）
-// 列内容为 logs 表 ID 引用结构：[[模块ID,[条目ID,...]], ...]（见 data/db_structure/logs.sql）
-const CHANGELOG_LOG_COLUMNS: [string, string][] = [
-  ['logs_zh', '简体中文'],
-  ['logs_zh_tw', '繁体中文'],
-  ['logs_en', '英文'],
-  ['logs_ja', '日文'],
-  ['logs_ko', '韩文'],
-  ['logs_ru', '俄文'],
-  ['logs_uk', '乌克兰文'],
-  ['logs_pl', '波兰文'],
-  ['logs_de', '德文'],
-  ['logs_fr', '法文'],
-  ['logs_it', '意大利文'],
-  ['logs_es', '西班牙文'],
-  ['logs_pt', '葡萄牙文'],
-  ['logs_tr', '土耳其文'],
-  ['logs_id', '印尼文'],
-  ['logs_vi', '越南文'],
-  ['logs_th', '泰文'],
-  ['logs_ar', '阿拉伯文'],
-  ['logs_in', '印地文'],
-  ['logs_ug', '维吾尔文'],
-  ['logs_bo', '藏文'],
-]
 
 const JSON_RULE = (col: string, desc: string): CheckRule => ({
   id: `json_${col}`,
@@ -117,15 +94,6 @@ const JSON_RULE = (col: string, desc: string): CheckRule => ({
   violation: `${col} IS NOT NULL AND ${col} <> '' AND JSON_VALID(${col})=0`,
 })
 
-/** logs_* 列：须为合法 JSON 且顶层为 ID 引用结构数组 */
-const LOGS_ID_RULE = (col: string, label: string): CheckRule => ({
-  id: `logs_ids_${col}`,
-  name: `${col} 应为日志 ID 引用结构`,
-  column: col,
-  description: `${label}更新日志应为 logs 表 ID 引用结构数组 [[模块ID,[条目ID,...]]]（原文经迁移脚本字典化到 logs 表）`,
-  severity: 'error',
-  violation: `${col} IS NOT NULL AND ${col} <> '' AND (JSON_VALID(${col})=0 OR JSON_TYPE(${col}) <> 'ARRAY')`,
-})
 
 /** 版本号末段（去 -后缀）：如 OS2.0.205.0.VOVCNXM → VOVCNXM */
 const versionTail = (v: string) =>
@@ -426,9 +394,24 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
         "region='' OR fastboot='' OR recovery='' OR ctelecom='' OR cmobile='' OR cunicom='' OR others=''",
       sampleCols: ['region', 'fastboot', 'recovery', 'ctelecom', 'cmobile', 'cunicom', 'others'],
     },
-    ...CHANGELOG_LOG_COLUMNS.map(([col, label]) =>
-      LOGS_ID_RULE(col, label)
-    ),
+    {
+      id: 'logs_ids',
+      name: 'logs 应为日志 ID 引用结构',
+      column: 'logs',
+      description:
+        '更新日志为 logs 表 ID 引用结构 [[模块ID,[条目ID,...],语言掩码],...]（各语言原文集中在 logs 表，见 data/db_structure/logs.sql）',
+      severity: 'error',
+      violation:
+        "logs IS NOT NULL AND logs <> '' AND (JSON_VALID(logs)=0 OR JSON_TYPE(logs) <> 'ARRAY')",
+    },
+    {
+      id: 'dev_week_scope',
+      name: 'dev_week 仅开发版',
+      column: 'dev_week',
+      description: 'dev_week 只应出现在开发版（branch=X）记录上',
+      severity: 'warning',
+      violation: "dev_week IS NOT NULL AND (branch IS NULL OR branch <> 'X')",
+    },
     {
       id: 'package_filename',
       name: '包文件名',
@@ -619,6 +602,79 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       violation: "device_ids IS NOT NULL AND TRIM(device_ids) = '[]'",
     },
   ],
+
+  // logs 表：同一日志的多语言版本共用一行（content 中文主内容 + 21 个语言列）
+  logs: [
+    {
+      id: 'type_enum',
+      name: 'type 枚举',
+      column: 'type',
+      description: '日志类型：module=模块名 / log=日志条目',
+      severity: 'error',
+      violation: "type IS NULL OR type NOT IN ('module','log')",
+    },
+    {
+      id: 'content_empty',
+      name: '主内容为空',
+      column: 'content',
+      description: 'content 是同一日志去重与回退的依据，不应为空字符串',
+      severity: 'error',
+      violation: "content IS NULL OR TRIM(content) = ''",
+    },
+    {
+      id: 'content_hash_format',
+      name: 'content_hash 格式',
+      column: 'content_hash',
+      description: 'content_hash 应为 content 的 MD5（32 位小写 hex；MySQL 9 已移除 MD5()，此处只校验格式）',
+      severity: 'error',
+      violation: "content_hash IS NULL OR CHAR_LENGTH(content_hash) <> 32 OR content_hash NOT REGEXP '^[0-9a-f]{32}$'",
+    },
+    {
+      id: 'content_whitespace',
+      name: '主内容首尾空白',
+      column: 'content',
+      description: '主内容不应带首尾空白（会影响跨 ROM 去重）',
+      severity: 'warning',
+      violation: "content <> TRIM(content)",
+    },
+  ],
+
+  // dev 表：开发版（周更）公告，同一周数可有大陆版 / 国际版两条
+  dev: [
+    {
+      id: 'region_enum',
+      name: 'region 枚举',
+      column: 'region',
+      description: '开发版区域：cn=大陆版 / global=国际版',
+      severity: 'error',
+      violation: "region IS NULL OR region NOT IN ('cn','global')",
+    },
+    {
+      id: 'week_range',
+      name: 'week 范围',
+      column: 'week',
+      description: '开发版周数应为 1 ~ 999 的整数',
+      severity: 'error',
+      violation: 'week IS NULL OR week < 1 OR week > 999',
+    },
+    {
+      id: 'title_empty',
+      name: '公告标题为空',
+      column: 'title_zh',
+      description: '公告应有简体中文标题',
+      severity: 'warning',
+      violation: "title_zh IS NULL OR TRIM(title_zh) = ''",
+    },
+    {
+      id: 'logs_ids',
+      name: 'logs 应为日志 ID 引用结构',
+      column: 'logs',
+      description: '开发版日志为 logs 表 ID 引用结构 [[模块ID,[条目ID,...],语言掩码],...]',
+      severity: 'error',
+      violation:
+        "logs IS NOT NULL AND logs <> '' AND (JSON_VALID(logs)=0 OR JSON_TYPE(logs) <> 'ARRAY')",
+    },
+  ],
 }
 
 /* ---------------- 忽略（dismiss）管理 ---------------- */
@@ -705,8 +761,8 @@ const SAMPLE_LIMIT = 50
 
 export async function runTableCheck(table: AllowedTable, summaryOnly = false): Promise<TableCheckReport> {
   await ensureDismissalsTable()
-  const rules = CHECK_RULES[table]
-  const context = CONTEXT_COLS[table]
+  const rules = CHECK_RULES[table] || []
+  const context = CONTEXT_COLS[table] || []
   const dismissals = await listDismissals(table)
   const ruleDismissed = new Set(dismissals.filter((d) => d.row_id === 0).map((d) => d.rule_id))
 
