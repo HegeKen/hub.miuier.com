@@ -19,7 +19,7 @@
 ├── data/             # ROM 数据仓库（git submodule → HegeKen/miroms，部署于 api.miuier.com）
 │   ├── api/          # 导出的 JSON 数据（v1 / v2 / v3）
 │   ├── scripts/      # 数据同步 / 抓取 / 导出 / 部署脚本（Python 3）
-│   └── db_structure/ # MySQL 表结构（devices / branches / roms / series）
+│   └── db_structure/ # MySQL 表结构（devices / roms / logs / dev / branches / series）
 ├── graphify-out/     # 代码知识图谱（生成物，勿手改，见 AGENTS.md）
 ├── .trae/rules/      # AI 协作规则（如 git commit 规范）
 ├── AGENTS.md         # AI 代理工作指引（graphify 用法等）
@@ -49,7 +49,7 @@ pnpm dev:admin
 
 ## 前端站点
 
-基于 Nuxt 4 构建，部署于 [hub.miuier.com](https://hub.miuier.com)，提供机型浏览、ROM 刷机包查询（MIUI & HyperOS）、更新日志与下载链接、近期更新统计、反馈入口。
+基于 Nuxt 4 构建，部署于 [hub.miuier.com](https://hub.miuier.com)，提供机型浏览、ROM 刷机包查询（MIUI & HyperOS）、更新日志与下载链接、开发版（周更）日志按周浏览、近期更新统计、反馈入口。
 
 - 入口：`app/web/`
 - 技术栈：Nuxt 4 / Vue 3 / TypeScript / Tailwind CSS
@@ -57,7 +57,7 @@ pnpm dev:admin
 
 ## 管理后台
 
-基于 Nuxt 4 构建，直连 MySQL（`miroms` 库），管理设备、机型、ROM、分支、系列数据，并提供数据自查（基于表结构注释的违规检测）与忽略管理。
+基于 Nuxt 4 构建，直连 MySQL（`miroms` 库），管理设备、机型、ROM、分支、系列、更新日志与开发版数据（含手动录入日志、按中文反推补齐其他语言），并提供数据自查（基于表结构注释的违规检测）与忽略管理。
 
 - 入口：`app/admin/`
 - 端口：3100（`ssr: false`，SPA 模式）
@@ -69,8 +69,8 @@ pnpm dev:admin
 
 详见 [data/README.md](data/README.md)。
 
-- **数据源**：MySQL 数据库（`devices` / `branches` / `roms` / `series` 表）
-- **导出**：Python 脚本从数据库生成 V1/V2/V3 格式 JSON
+- **数据源**：MySQL 数据库（`devices` / `roms` / `logs` / `dev` / `branches` / `series` 表）
+- **导出**：Python 脚本从数据库生成 V1/V2/V3 格式 JSON（含开发版周报 `v3/dev/**`）
 - **API 版本**：
   - V1 — 仅 MIUI（旧格式）
   - V2 — 仅 HyperOS
