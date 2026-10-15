@@ -59,6 +59,7 @@ The panel supports two connection modes (selected/verified on the login page `/l
 - **Log entry** `/logs` — enter changelog text by hand: each line becomes one log row in the shared
   `logs` table (all language versions of a log share a row); "parse & compare" previews whether a line is new or
   matches an existing group, and saving back-fills other languages from the data already in the database
+- **Developer weekly** `/dev` — CRUD on the `dev` table (weekly developer announcements, device/ROM lists, changelogs)
 - **SQL console** `/sql` — read-only queries (SELECT / SHOW / DESCRIBE / EXPLAIN / WITH), auto-appends `LIMIT 1000`
 - **Data self-check** — "Check" button in each module toolbar + "Run check" on the dashboard: based on the column
   comments & examples in `data/db_structure/*.sql`, flags illogical field values (enum values, format regexes, JSON
