@@ -25,8 +25,12 @@ pnpm preview    # preview production build
 
 The panel supports two connection modes (selected/verified on the login page `/login`; there is **no user authentication**):
 
-- **Local default connection**: uses the default `runtimeConfig.db` config from `nuxt.config.ts`, matching
-  `data/scripts/config.py` (`localhost:3306` / `root` / `miroms`). Overridable via environment variables or `.env`:
+- **Local default connection**: resolution order is **`NUXT_DB_*` env vars → `data/scripts/config.py` → built-in
+  defaults** (`localhost:3306` / `root` / `miroms`). In dev the data repo's `data/scripts/config.py` lives in the
+  same checkout and is reused automatically, so no extra setup is needed locally; use env vars in production.
+  To override, copy `app/admin/.env.example` to `app/admin/.env` (gitignored) or set the env vars directly.
+  The startup log prints the connection in use and where it came from
+  (e.g. `root@localhost:3306/miroms (source: data/scripts/config.py)`).
 
 | Env var              | Default    | Description       |
 | -------------------- | ---------- | ----------------- |
@@ -35,6 +39,9 @@ The panel supports two connection modes (selected/verified on the login page `/l
 | `NUXT_DB_USER`       | `root`     | Username          |
 | `NUXT_DB_PASSWORD`   | same as `data/scripts/config.py` | Password |
 | `NUXT_DB_NAME`       | `miroms`   | Database name     |
+
+> When the local connection fails, `/api/auth/test-local` now returns actionable guidance (configure `.env` or use
+> the custom connection).
 
 - **Custom connection**: fill in host / port / user / password / database on the login page; the backend attempts
   a connection and returns the `VERSION()` as verification. On success the config is stored in browser `localStorage`

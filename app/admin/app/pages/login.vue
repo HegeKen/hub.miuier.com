@@ -29,7 +29,9 @@
             </div>
             <div>
               <p class="text-sm font-medium text-[var(--color-text)]">本地数据库</p>
-              <p class="mt-0.5 text-xs text-[var(--color-text-tertiary)]">使用默认配置连接本地 MySQL</p>
+              <p class="mt-0.5 text-xs text-[var(--color-text-tertiary)]">
+                使用默认配置连接本地 MySQL（app/admin/.env，其次 data/scripts/config.py）
+              </p>
             </div>
           </button>
           <button

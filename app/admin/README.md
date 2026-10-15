@@ -24,8 +24,13 @@ pnpm preview    # 预览生产构建
 
 后台支持两种连接方式（登录页 `/login` 选择/验证后生效，无用户鉴权）：
 
-- **本地默认连接**：使用 `nuxt.config.ts` 中 `runtimeConfig.db` 的默认配置，默认参数与 `data/scripts/config.py` 保持一致
-  （`localhost:3306` / `root` / `miroms`），可通过环境变量或 `.env` 覆盖：
+- **本地默认连接**：取值优先级为 **`NUXT_DB_*` 环境变量 → `data/scripts/config.py` → 内置默认值**
+  （`localhost:3306` / `root` / `miroms`）。dev 环境下数据仓库的 `data/scripts/config.py` 就在同一个仓库里，
+  后台会直接复用它，所以本地开发无需额外配置；生产环境请用环境变量注入。
+  覆盖方式：把 `app/admin/.env.example` 复制为 `app/admin/.env`（已被 gitignore）后修改，或直接设置环境变量。
+  启动日志会打印实际使用的连接与来源（如 `root@localhost:3306/miroms（来源：data/scripts/config.py）`）。
+
+| 环境变量             | 默认值      | 说明       |
 
 | 环境变量             | 默认值      | 说明       |
 | -------------------- | ----------- | ---------- |
@@ -34,6 +39,8 @@ pnpm preview    # 预览生产构建
 | `NUXT_DB_USER`       | `root`      | 用户名     |
 | `NUXT_DB_PASSWORD`   | 同 `data/scripts/config.py` | 密码 |
 | `NUXT_DB_NAME`       | `miroms`    | 库名       |
+
+> 「本地数据库」连不上时，`/api/auth/test-local` 的报错会直接给出排查指引（配置 `.env` 或用「自定义连接」）。
 
 - **自定义连接**：登录页填写 host / port / user / password / database，后台用该配置尝试连接并返回 `VERSION()`
   验证结果；验证通过后配置保存在浏览器 `localStorage`（`miroms_db_config`），由客户端插件

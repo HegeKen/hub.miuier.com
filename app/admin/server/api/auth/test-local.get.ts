@@ -24,9 +24,14 @@ export default defineEventHandler(async () => {
       config: { ...cfg },
     }
   } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e)
     throw createError({
       statusCode: 401,
-      message: `本地数据库连接失败：${e instanceof Error ? e.message : String(e)}`,
+      message:
+        `本地数据库连接失败：${detail}\n` +
+        '本地默认连接按「NUXT_DB_* 环境变量 → data/scripts/config.py → 内置默认值」取值。' +
+        '请在 app/admin/.env 里配置 NUXT_DB_HOST / NUXT_DB_USER / NUXT_DB_PASSWORD / NUXT_DB_NAME' +
+        '（模板见 app/admin/.env.example），或在数据库连接的另一项「远程数据库 / 自定义连接」中填写完整参数。',
     })
   }
 })
