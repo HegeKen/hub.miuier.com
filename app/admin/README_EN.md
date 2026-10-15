@@ -97,6 +97,7 @@ and delete confirmation.
 | GET    | `/api/db/check/dismissals`        | Dismissed list (`?table=` optional)   |
 | POST   | `/api/logs/manual`                | Manual log entry `{text, type?, lang?, preview?}`: split lines → compare with `logs` → write / back-fill other languages |
 | GET    | `/api/logs/list`                  | Log group list (`page/pageSize/search/type/missing`) with per-language coverage |
+| GET    | `/api/logs/audit`                 | Dedup audit: duplicate groups / duplicate rows / rows referenced by no `roms`·`dev` record |
 | GET    | `/api/devices-manager`            | Model-manager data (device list + per-model branch details + all branch defs) |
 | GET    | `/api/series-manager`             | Series-manager data (all series + device base rows + brand labels) |
 

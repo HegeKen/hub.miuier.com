@@ -52,7 +52,7 @@ pnpm preview    # 预览生产构建
 - **ROM 管理** `/roms` — `roms` 表 CRUD（5 万+ 行，服务端分页 / 搜索 / 排序）
 - **系列管理** `/series-manager` — `series` 表 CRUD（品牌、中英文名、`device_ids` 设备归属），
   按品牌选择/排序设备，写入走通用 CRUD（`/api/db/series`）
-- **日志录入** `/logs` — 手动录入更新日志：多行文本按换行符拆成多条，写入 `logs` 表
+- **日志录入** `/logs` — 手动录入更新日志：多行文本按换行符拆成多条，写入 `logs` 表（页内「去重体检」可一键检查重复分组与孤儿行）
   （同一日志的各语言版本共用一行）；录入前可「解析比对」预览每行是新增还是命中已有分组，
   保存时会用库中已有数据反推补齐其他语言（把兼容的重复分组的语言文本合并到一起）。
   右侧可检索库中日志、按「缺少某语言」筛选，查看每种语言的分组数
@@ -92,6 +92,7 @@ pnpm preview    # 预览生产构建
 | GET    | `/api/db/check/dismissals`         | 已忽略列表（`?table=` 可选）          |
 | POST   | `/api/logs/manual`                 | 手动录入日志 `{text, type?, lang?, preview?}`：按换行拆行 → 比对 `logs` 表 → 写库 / 补齐其他语言 |
 | GET    | `/api/logs/list`                   | 日志分组列表（`page/pageSize/search/type/missing`），含各语言覆盖数 |
+| GET    | `/api/logs/audit`                  | 去重体检：重复分组 / 重复行数 / 未被 `roms`·`dev` 引用的孤儿行 |
 | GET    | `/api/devices-manager`             | 机型管理数据（设备列表 + 单机型分支详情 + 全部分支定义） |
 | GET    | `/api/series-manager`              | 系列管理数据（全部 series + 设备基准行 + 品牌归属） |
 

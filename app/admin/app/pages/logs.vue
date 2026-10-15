@@ -97,6 +97,48 @@
       </div>
     </section>
 
+    <!-- 去重体检 -->
+    <section class="mt-6">
+      <div class="mb-2 flex flex-wrap items-center gap-3">
+        <h2 class="text-sm font-semibold text-[var(--color-text)]">去重体检</h2>
+        <button type="button" class="btn-secondary !py-1 !text-xs" :disabled="auditing" @click="runAudit">
+          {{ auditing ? '检查中…' : '运行检查' }}
+        </button>
+        <template v-if="audit">
+          <span
+            class="rounded-full px-2 py-0.5 text-[11px] font-medium"
+            :class="audit.duplicateGroupCount
+              ? 'bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
+              : 'bg-[var(--color-ok)]/10 text-[var(--color-ok)]'"
+          >
+            {{ audit.duplicateGroupCount ? `重复分组 ${audit.duplicateGroupCount} 组` : '无重复分组 ✓' }}
+          </span>
+          <span class="text-xs text-[var(--color-text-tertiary)]">
+            共 {{ audit.total }} 行 · 重复 {{ audit.duplicateRowCount }} 行 · 未被引用 {{ audit.unreferencedCount }} 行
+          </span>
+        </template>
+      </div>
+
+      <p class="text-xs text-[var(--color-text-secondary)]">
+        判定标准与写入侧一致：类型相同、各语言互不冲突、且共享同一门语言文本的两行本应是同一行。
+        若出现重复，请在 data 仓库运行
+        <code class="font-mono">python3 scripts/dedup_logs.py --apply --prune-unused</code> 合并。
+      </p>
+
+      <div v-if="audit?.duplicateGroups?.length" class="card mt-2 divide-y divide-[var(--color-border)]">
+        <div v-for="group in audit.duplicateGroups" :key="group.ids.join(',')" class="px-4 py-3">
+          <p class="text-xs font-medium text-[var(--color-danger)]">
+            重复 {{ group.total }} 行 · ID {{ group.ids.join(' / ') }}
+          </p>
+          <ul class="mt-1 space-y-0.5">
+            <li v-for="sample in group.samples" :key="sample.id" class="text-xs text-[var(--color-text-secondary)]">
+              #{{ sample.id }} {{ sample.content }}（{{ sample.languages.join('、') }}）
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <div v-if="error" class="alert-danger mt-5">
       <p class="text-sm font-medium text-[var(--color-danger)]">操作失败</p>
       <p class="mt-1 break-all font-mono text-xs text-[var(--color-text-secondary)]">{{ error }}</p>
@@ -265,6 +307,25 @@ const save = async (preview) => {
     push('error', error.value)
   } finally {
     busy.value = false
+  }
+}
+
+const audit = ref(null)
+const auditing = ref(false)
+
+const runAudit = async () => {
+  auditing.value = true
+  try {
+    audit.value = await $fetch('/api/logs/audit')
+    if (audit.value.duplicateGroupCount) {
+      push('error', `发现 ${audit.value.duplicateGroupCount} 组重复日志，请用 dedup_logs.py 合并`)
+    } else {
+      push('success', '去重体检通过：没有重复分组')
+    }
+  } catch (e) {
+    push('error', errorMessage(e))
+  } finally {
+    auditing.value = false
   }
 }
 
