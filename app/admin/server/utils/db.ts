@@ -124,7 +124,8 @@ const metaCache = new Map<string, { columns: ColumnMeta[]; expires: number }>()
  * 1. information_schema.CHECK_CONSTRAINTS 中的 json_valid(`col`) 约束
  * 2. 列名启发式（数据模型内已知 JSON 字段）
  */
-const JSON_NAME_HINT = /^(full_brands|full_names|names|xiaomi|redmi|poco|logs|logs_[a-z_]+|device_ids)$/i
+// dev 表的 JSON 列没有 CHECK 约束，靠列名识别（devices / roms / description / attention / suspended）
+const JSON_NAME_HINT = /^(full_brands|full_names|names|xiaomi|redmi|poco|logs|logs_[a-z_]+|device_ids|devices|roms|description|attention|suspended)$/i
 
 let jsonColsCache: { map: Map<string, Set<string>>; expires: number } | null = null
 

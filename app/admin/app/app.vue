@@ -194,6 +194,7 @@ const navItems = [
   { label: '分支管理', to: '/branches', icon: 'tag' },
   { label: 'ROM 管理', to: '/roms', icon: 'archive' },
   { label: '日志录入', to: '/logs', icon: 'log' },
+  { label: '开发版周报', to: '/dev', icon: 'archive' },
   { label: 'SQL 控制台', to: '/sql', icon: 'sql' },
 ]
 
@@ -205,6 +206,7 @@ const titleMap = {
   '/branches': '分支管理',
   '/roms': 'ROM 管理',
   '/logs': '日志录入',
+  '/dev': '开发版周报',
   '/sql': 'SQL 控制台',
 }
 

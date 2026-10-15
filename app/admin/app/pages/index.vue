@@ -19,7 +19,7 @@
 
     <template v-else>
       <!-- 统计卡片 -->
-      <section class="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="数据统计">
+      <section class="grid grid-cols-2 gap-4 lg:grid-cols-3" aria-label="数据统计">
         <NuxtLink to="/roms" class="card group p-5 transition-colors hover:border-[var(--color-border-strong)]">
           <p class="text-sm text-[var(--color-text-tertiary)]">ROM 总数</p>
           <p class="mt-1 text-3xl font-semibold tabular-nums text-[var(--color-text)] group-hover:text-[var(--color-accent)]">
@@ -42,6 +42,18 @@
           <p class="text-sm text-[var(--color-text-tertiary)]">今日新增 ROM</p>
           <p class="mt-1 text-3xl font-semibold tabular-nums text-[var(--color-text)] group-hover:text-[var(--color-accent)]">
             {{ fmt(data.romsStats.todayNew) }}
+          </p>
+        </NuxtLink>
+        <NuxtLink to="/logs" class="card group p-5 transition-colors hover:border-[var(--color-border-strong)]">
+          <p class="text-sm text-[var(--color-text-tertiary)]">日志分组（多语言共用一行）</p>
+          <p class="mt-1 text-3xl font-semibold tabular-nums text-[var(--color-text)] group-hover:text-[var(--color-accent)]">
+            {{ fmt(data.counts.logs) }}
+          </p>
+        </NuxtLink>
+        <NuxtLink to="/dev" class="card group p-5 transition-colors hover:border-[var(--color-border-strong)]">
+          <p class="text-sm text-[var(--color-text-tertiary)]">开发版周次</p>
+          <p class="mt-1 text-3xl font-semibold tabular-nums text-[var(--color-text)] group-hover:text-[var(--color-accent)]">
+            {{ fmt(data.counts.dev) }}
           </p>
         </NuxtLink>
       </section>
