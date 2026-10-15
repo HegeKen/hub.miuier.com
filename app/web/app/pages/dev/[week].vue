@@ -105,14 +105,23 @@
           <div
             v-for="item in deviceCards"
             :key="item.device"
-            class="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-3"
+            class="cursor-pointer rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-3 transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-subtle)]"
+            role="button"
+            tabindex="0"
+            @click="openRom(item)"
+            @keydown.enter.prevent="openRom(item)"
+            @keydown.space.prevent="openRom(item)"
           >
-            <NuxtLink
-              :to="`/${locale}/devices/${item.device}`"
-              class="text-sm font-medium text-[var(--color-text)] transition-colors hover:text-[var(--color-accent)]"
-            >
-              {{ localized(item.name) || item.device }}
-            </NuxtLink>
+            <div class="flex items-start justify-between gap-2">
+              <p class="text-sm font-medium text-[var(--color-text)]">{{ localized(item.name) || item.device }}</p>
+              <NuxtLink
+                :to="`/${locale}/devices/${item.device}`"
+                class="shrink-0 text-xs text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-accent)]"
+                @click.stop
+              >
+                {{ $t('devinfo') }}
+              </NuxtLink>
+            </div>
             <p class="mt-1 font-mono text-xs text-[var(--color-text-tertiary)]">
               {{ item.device }}<template v-if="item.version"> · {{ item.version }}</template>
             </p>
@@ -121,6 +130,14 @@
         </div>
       </section>
     </template>
+
+    <RomModal
+      :rom="activeRom"
+      version-key="version"
+      :title="activeTitle"
+      :logs="logs"
+      @close="activeRom = null"
+    />
   </div>
 </template>
 
@@ -161,6 +178,16 @@ const attention = computed(() => week.value?.attention || [])
 const description = computed(() => week.value?.description || [])
 
 const logs = computed(() => pickLogs(week.value?.logs || null, locale.value))
+
+// 点击机型卡片直接弹出该 ROM 的详情（日志用本周的多语言日志）
+const activeRom = ref(null)
+const activeTitle = ref('')
+const openRom = (item) => {
+  const rom = roms.value.find((r) => r.device === item.device)
+  if (!rom) return
+  activeRom.value = { ...rom, release: rom.release || week.value?.release || '' }
+  activeTitle.value = localized(item.name) || item.device
+}
 
 const devices = computed(() => week.value?.devices || [])
 const roms = computed(() => week.value?.roms || [])

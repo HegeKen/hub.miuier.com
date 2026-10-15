@@ -35,8 +35,13 @@ pnpm index      # rebuild data indexes only (no server)
 | `/roms` | ROM packages | Browse all ROM packages grouped by major OS version (OS1 / OS2 / OS3 / V14 / V13 …) |
 | `/roms/:os` | ROMs of one OS | Full ROM package list for a given major OS version |
 | `/dev` | Developer weekly | Browse Developer (Beta / DEV) announcements by week: grouped by major version, week cards with version / release date / device count; China and Global builds are kept separate |
-| `/dev/:week` | One developer week | Announcement title and body, update notes, multilingual changelog (current locale, falling back to English / Chinese), device and ROM lists |
+| `/dev/:week` | One developer week | Announcement title and body, update notes, multilingual changelog (current locale, falling back to English / Chinese), device and ROM lists; clicking a device card opens that ROM's detail modal (the in-card "device info" link still goes to the device page) |
 
+- The **ROM detail modal** is a shared component (`app/components/RomModal.vue`) used by the device detail page and
+  the developer weekly page: version / Android / release / security patch, recovery and fastboot packages (plus
+  carrier packages, with copy-link buttons), high-speed download (shown when branch credentials are passed) and
+  the multilingual changelog. Blocks with missing data hide themselves, so the dev weekly page — which has no
+  branch code — simply shows no high-speed section.
 - Download links point to Xiaomi's OSS CDN (`bkt-sgp-miui-ota-update-alisgp.oss-ap-southeast-1.aliyuncs.com`)
 - The site includes a disclaimer (not affiliated with Xiaomi), a dark-mode toggle, and zh/en language switching
 
