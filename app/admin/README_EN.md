@@ -64,6 +64,14 @@ The panel supports two connection modes (selected/verified on the login page `/l
 - **Series** `/series-manager` — CRUD on the `series` table (brand, zh/en names, `device_ids` device membership),
   pick/order devices by brand; writes go through the generic CRUD (`/api/db/series`)
 - **Log entry** `/logs` — enter changelog text by hand: each line becomes one log row in the shared
+
+- **Dev binding** `/dev-bind` — associate ROMs with a developer week by hand: the left column lists the week's bound
+  ROMs (unbind one or all), the right column searches candidates by codename / version / package filename (filter by
+  year and binding state) and binds the selected ones. The dev weekly device list is not stored separately — the
+  binding *is* `roms.dev_week`, and both the exporter and the weekly page derive the list from `dev_week + zone`.
+  Weeks that cannot be matched automatically (old weekly posts that only listed devices without a version, or
+  postponed-release notices) are filled in here. The search box is pre-filled with the week's version, and matching
+  full versions are offered as chips (an announcement may say `5.20` while the DB has `21.5.20` / `22.5.20`).
   `logs` table (all language versions of a log share a row); "parse & compare" previews whether a line is new or
   matches an existing group, and saving back-fills other languages from the data already in the database
 - **Developer weekly** `/dev` — CRUD on the `dev` table (weekly developer announcements, device/ROM lists, changelogs)
@@ -105,6 +113,10 @@ and delete confirmation.
 | POST   | `/api/logs/manual`                | Manual log entry `{text, type?, lang?, preview?}`: split lines → compare with `logs` → write / back-fill other languages |
 | GET    | `/api/logs/list`                  | Log group list (`page/pageSize/search/type/missing`) with per-language coverage |
 | GET    | `/api/logs/audit`                 | Dedup audit: duplicate groups / duplicate rows / rows referenced by no `roms`·`dev` record |
+| GET    | `/api/dev/weeks`                  | Dev week overview (bound ROM / device counts; `bound=0` means it needs manual binding) |
+| GET    | `/api/dev/bind`                   | ROMs currently bound to a week (`week` / `region`) |
+| GET    | `/api/dev/roms`                   | Candidate ROM search (`search` / `week` / `region` / `bound` / `year` / paging, plus full-version facets) |
+| POST   | `/api/dev/bind`                   | Bind / unbind: `{ week, region, action: bind\|unbind, romIds, force }` |
 | GET    | `/api/devices-manager`            | Model-manager data (device list + per-model branch details + all branch defs) |
 | GET    | `/api/series-manager`             | Series-manager data (all series + device base rows + brand labels) |
 

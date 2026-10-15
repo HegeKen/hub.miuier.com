@@ -60,6 +60,12 @@ pnpm preview    # 预览生产构建
 - **系列管理** `/series-manager` — `series` 表 CRUD（品牌、中英文名、`device_ids` 设备归属），
   按品牌选择/排序设备，写入走通用 CRUD（`/api/db/series`）
 - **日志录入** `/logs` — 手动录入更新日志：多行文本按换行符拆成多条，写入 `logs` 表（页内「去重体检」可一键检查重复分组与孤儿行）
+- **开发版绑定** `/dev-bind` — 手动把 ROM 关联到某一周开发版：左侧是该周已绑定的 ROM（可单条 / 全部解绑），
+  右侧按机型代号 · 版本号 · 包文件名检索候选（可按年份和绑定状态过滤），勾选后「绑定选中」。
+  开发版周报的机型清单不单独建表——绑定关系就是 `roms.dev_week`，导出与周报页都按
+  `dev_week + zone` 现算；老周报（发布会只有机型列表、没有版本号）和延期公告这类
+  自动匹配不上的周次，在这里补齐。检索框会自动用该周版本号预填，命中的完整版本号会以
+  标签列出（例如公告写 `5.20`、库里是 `21.5.20` / `22.5.20`，避免挑错年份）
   （同一日志的各语言版本共用一行）；录入前可「解析比对」预览每行是新增还是命中已有分组，
   保存时会用库中已有数据反推补齐其他语言（把兼容的重复分组的语言文本合并到一起）。
   右侧可检索库中日志、按「缺少某语言」筛选，查看每种语言的分组数
@@ -100,6 +106,10 @@ pnpm preview    # 预览生产构建
 | POST   | `/api/logs/manual`                 | 手动录入日志 `{text, type?, lang?, preview?}`：按换行拆行 → 比对 `logs` 表 → 写库 / 补齐其他语言 |
 | GET    | `/api/logs/list`                   | 日志分组列表（`page/pageSize/search/type/missing`），含各语言覆盖数 |
 | GET    | `/api/logs/audit`                  | 去重体检：重复分组 / 重复行数 / 未被 `roms`·`dev` 引用的孤儿行 |
+| GET    | `/api/dev/weeks`                   | 开发版周次一览（含每周已绑定 ROM / 机型数，`bound=0` 即待手动绑定） |
+| GET    | `/api/dev/bind`                    | 某周已绑定的 ROM 列表（`week` / `region`） |
+| GET    | `/api/dev/roms`                    | 候选 ROM 检索（`search` / `week` / `region` / `bound` / `year` / 分页，附完整版本号候选） |
+| POST   | `/api/dev/bind`                    | 绑定 / 解绑：`{ week, region, action: bind\|unbind, romIds, force }` |
 | GET    | `/api/devices-manager`             | 机型管理数据（设备列表 + 单机型分支详情 + 全部分支定义） |
 | GET    | `/api/series-manager`              | 系列管理数据（全部 series + 设备基准行 + 品牌归属） |
 

@@ -413,6 +413,15 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       violation: "dev_week IS NOT NULL AND (branch IS NULL OR branch <> 'X')",
     },
     {
+      id: 'dev_week_orphan',
+      name: 'dev_week 指向不存在的开发版周次',
+      column: 'dev_week',
+      description:
+        '开发版周报的机型清单 = roms.dev_week + zone 对应的行，指向不存在的 dev 记录会导致该 ROM 既不属于任何周报、也不出现在周报页',
+      severity: 'error',
+      violation: 'dev_week IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `dev` d WHERE d.`week` = t.`dev_week` AND d.`zone` = t.`zone`)',
+    },
+    {
       id: 'package_filename',
       name: '包文件名',
       column: 'recovery/fastboot',
