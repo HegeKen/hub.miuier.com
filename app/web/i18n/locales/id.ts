@@ -168,4 +168,17 @@ export default {
   devAttention: 'Catatan pembaruan',
   devDescription: 'Pengumuman',
   devUnknownBigver: 'Versi belum ditetapkan',
+  // Site log (/sitelog)
+  sitelog: 'Log situs',
+  sitelogSub: 'Catatan pembaruan fitur dan pengalaman situs ini',
+  currentVersion: 'Versi saat ini',
+  sitelogEmpty: 'Belum ada log situs',
+  // Tools (/tools)
+  tools: 'Alat',
+  toolsSub: 'Alat flashing resmi (MiFlash, Mi Assistant, ...) dan versi-versi sebelumnya',
+  toolVersions: '{count} versi',
+  attentions: 'Catatan',
+  // Common
+  loadFailed: 'Gagal dimuat',
+  retry: 'Coba lagi',
 }

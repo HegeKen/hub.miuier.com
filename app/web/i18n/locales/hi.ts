@@ -168,4 +168,17 @@ export default {
   devAttention: 'अपडेट नोट्स',
   devDescription: 'घोषणा',
   devUnknownBigver: 'संस्करण असाइन नहीं',
+  // साइट लॉग (/sitelog)
+  sitelog: 'साइट लॉग',
+  sitelogSub: 'इस साइट की सुविधाओं और अनुभव के अपडेट',
+  currentVersion: 'वर्तमान संस्करण',
+  sitelogEmpty: 'अभी कोई साइट लॉग नहीं',
+  // टूल डाउनलोड (/tools)
+  tools: 'टूल डाउनलोड',
+  toolsSub: 'MiFlash, Mi Assistant जैसे आधिकारिक फ़्लैशिंग टूल के पुराने संस्करण',
+  toolVersions: '{count} संस्करण',
+  attentions: 'नोट्स',
+  // सामान्य
+  loadFailed: 'लोड विफल',
+  retry: 'पुनः प्रयास करें',
 }

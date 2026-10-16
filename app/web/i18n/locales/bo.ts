@@ -168,4 +168,17 @@ export default {
   devAttention: 'གསར་བཅོས་དྲན་འཛིན།',
   devDescription: 'གསལ་བསྒྲགས།',
   devUnknownBigver: 'ཐོན་རིམ་མི་གསལ།',
+  // དྲ་ཚིགས་ཟིན་ཐོ། (/sitelog)
+  sitelog: 'དྲ་ཚིགས་ཟིན་ཐོ།',
+  sitelogSub: 'དྲ་ཚིགས་འདིའི་བྱེད་ནུས་དང་ཉམས་མྱོང་གི་གསར་བཅོས་ཟིན་ཐོ།',
+  currentVersion: 'ད་ལྟའི་པར་གཞི།',
+  sitelogEmpty: 'དྲ་ཚིགས་ཟིན་ཐོ་མེད།',
+  // ལག་ཆ་ཕབ་ལེན། (/tools)
+  tools: 'ལག་ཆ་ཕབ་ལེན།',
+  toolsSub: 'MiFlash、Mi Assistant སོགས་གཞུང་བའི་ཕབ་ལེན་ལག་ཆའི་སྔོན་མའི་པར་གཞི།',
+  toolVersions: '{count} པར་གཞི།',
+  attentions: 'དྲན་འཛིན།',
+  // སྤྱིའི
+  loadFailed: 'ཕབ་ལེན་མ་ཐུབ།',
+  retry: 'ཡང་བསྐྱར་ཚོད་ལྟ།',
 }

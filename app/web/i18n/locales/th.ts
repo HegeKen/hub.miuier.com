@@ -168,4 +168,17 @@ export default {
   devAttention: 'หมายเหตุการอัปเดต',
   devDescription: 'ประกาศ',
   devUnknownBigver: 'ยังไม่ระบุเวอร์ชัน',
+  // Site log (/sitelog)
+  sitelog: 'บันทึกของเว็บไซต์',
+  sitelogSub: 'บันทึกการอัปเดตฟีเจอร์และประสบการณ์การใช้งานของเว็บไซต์นี้',
+  currentVersion: 'เวอร์ชันปัจจุบัน',
+  sitelogEmpty: 'ยังไม่มีบันทึกของเว็บไซต์',
+  // Tools (/tools)
+  tools: 'เครื่องมือ',
+  toolsSub: 'เครื่องมือแฟลชอย่างเป็นทางการ (MiFlash, Mi Assistant, ...) และเวอร์ชันก่อนหน้า',
+  toolVersions: '{count} เวอร์ชัน',
+  attentions: 'หมายเหตุ',
+  // Common
+  loadFailed: 'โหลดไม่สำเร็จ',
+  retry: 'ลองใหม่',
 }

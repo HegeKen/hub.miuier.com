@@ -168,4 +168,17 @@ export default {
   devAttention: 'Інструкція з оновлення',
   devDescription: 'Анонс',
   devUnknownBigver: 'Версію не вказано',
+  // Журнал сайту (/sitelog)
+  sitelog: 'Журнал сайту',
+  sitelogSub: 'Історія оновлень функцій та інтерфейсу сайту',
+  currentVersion: 'Поточна версія',
+  sitelogEmpty: 'Записів у журналі сайту ще немає',
+  // Інструменти (/tools)
+  tools: 'Інструменти',
+  toolsSub: 'Офіційні інструменти прошивки (MiFlash, Mi Assistant тощо) та їхні попередні версії',
+  toolVersions: '{count} версій',
+  attentions: 'Примітки',
+  // Загальні
+  loadFailed: 'Не вдалося завантажити',
+  retry: 'Повторити',
 }

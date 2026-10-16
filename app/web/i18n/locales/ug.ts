@@ -168,4 +168,17 @@ export default {
   devAttention: 'يېڭىلاش ئەسكەرتىشى',
   devDescription: 'ئېلان',
   devUnknownBigver: 'نەشرى بەلگىلەنمىگەن',
+  // تور بەت خاتىرىسى (/sitelog)
+  sitelog: 'تور بەت خاتىرىسى',
+  sitelogSub: 'بۇ تور بەتنىڭ ئىقتىدار ۋە تەجرىبە يېڭىلانمىلىرىنىڭ خاتىرىسى',
+  currentVersion: 'نۆۋەتتىكى نەشرى',
+  sitelogEmpty: 'تور بەت خاتىرىسى يوق',
+  // قورال چۈشۈرۈش (/tools)
+  tools: 'قورال چۈشۈرۈش',
+  toolsSub: 'MiFlash، Mi Assistant قاتارلىق رەسمىي فلاش قوراللىرىنىڭ ئالدىنقى نەشرىلىرى',
+  toolVersions: '{count} نەشرى',
+  attentions: 'ئەسكەرتىشلەر',
+  // ئومۇمىي
+  loadFailed: 'يۈكلەش مەغلۇپ بولدى',
+  retry: 'قايتا سىناش',
 }

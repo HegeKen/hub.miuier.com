@@ -168,4 +168,17 @@ export default {
   devAttention: 'Notas de atualização',
   devDescription: 'Anúncio',
   devUnknownBigver: 'Versão não atribuída',
+  // Site log (/sitelog)
+  sitelog: 'Registro do site',
+  sitelogSub: 'Novidades e melhorias deste site',
+  currentVersion: 'Versão atual',
+  sitelogEmpty: 'Ainda não há registro do site',
+  // Tools (/tools)
+  tools: 'Ferramentas',
+  toolsSub: 'Ferramentas oficiais de flash (MiFlash, Mi Assistant, ...) e suas versões anteriores',
+  toolVersions: '{count} versões',
+  attentions: 'Observações',
+  // Common
+  loadFailed: 'Falha ao carregar',
+  retry: 'Tentar novamente',
 }

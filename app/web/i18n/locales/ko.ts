@@ -168,4 +168,17 @@ export default {
   devAttention: '업데이트 안내',
   devDescription: '공지 내용',
   devUnknownBigver: '버전 미지정',
+  // 사이트 로그(/sitelog)
+  sitelog: '사이트 로그',
+  sitelogSub: '사이트 기능과 사용성 업데이트 기록',
+  currentVersion: '현재 버전',
+  sitelogEmpty: '아직 사이트 로그가 없습니다',
+  // 도구(/tools)
+  tools: '도구',
+  toolsSub: 'MiFlash, Mi Assistant 등 공식 플래싱 도구의 이전 버전',
+  toolVersions: '{count}개 버전',
+  attentions: '주의 사항',
+  // 공통
+  loadFailed: '불러오기 실패',
+  retry: '다시 시도',
 }

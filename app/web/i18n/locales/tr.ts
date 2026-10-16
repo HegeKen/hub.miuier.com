@@ -168,4 +168,17 @@ export default {
   devAttention: 'Güncelleme notları',
   devDescription: 'Duyuru',
   devUnknownBigver: 'Sürüm atanmamış',
+  // Site log (/sitelog)
+  sitelog: 'Site günlüğü',
+  sitelogSub: 'Bu sitenin özellik ve deneyim güncellemelerinin kaydı',
+  currentVersion: 'Geçerli sürüm',
+  sitelogEmpty: 'Henüz site günlüğü yok',
+  // Tools (/tools)
+  tools: 'Araçlar',
+  toolsSub: 'Resmi flash araçları (MiFlash, Mi Assistant, ...) ve önceki sürümleri',
+  toolVersions: '{count} sürüm',
+  attentions: 'Notlar',
+  // Common
+  loadFailed: 'Yüklenemedi',
+  retry: 'Yeniden dene',
 }

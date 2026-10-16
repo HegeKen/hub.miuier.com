@@ -168,4 +168,17 @@ export default {
   devAttention: '升級說明',
   devDescription: '公告內容',
   devUnknownBigver: '未標註大版本',
+  // 網站日誌（/sitelog）
+  sitelog: '網站日誌',
+  sitelogSub: '本站功能與體驗的更新記錄',
+  currentVersion: '目前版本',
+  sitelogEmpty: '暫無網站日誌',
+  // 工具下載（/tools）
+  tools: '工具下載',
+  toolsSub: 'MiFlash、小米助手等官方刷機工具的歷史版本',
+  toolVersions: '{count} 個版本',
+  attentions: '注意事項',
+  // 通用
+  loadFailed: '載入失敗',
+  retry: '重試',
 }

@@ -168,4 +168,17 @@ export default {
   devAttention: 'Ghi chú cập nhật',
   devDescription: 'Thông báo',
   devUnknownBigver: 'Chưa gán phiên bản',
+  // Site log (/sitelog)
+  sitelog: 'Nhật ký trang',
+  sitelogSub: 'Bản ghi cập nhật tính năng và trải nghiệm của trang này',
+  currentVersion: 'Phiên bản hiện tại',
+  sitelogEmpty: 'Chưa có nhật ký trang',
+  // Tools (/tools)
+  tools: 'Công cụ',
+  toolsSub: 'Công cụ flash chính thức (MiFlash, Mi Assistant, ...) và các phiên bản trước',
+  toolVersions: '{count} phiên bản',
+  attentions: 'Lưu ý',
+  // Common
+  loadFailed: 'Tải thất bại',
+  retry: 'Thử lại',
 }

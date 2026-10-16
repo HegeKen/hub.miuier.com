@@ -168,4 +168,17 @@ export default {
   devAttention: 'Instrukcja aktualizacji',
   devDescription: 'Ogłoszenie',
   devUnknownBigver: 'Nieprzypisana wersja',
+  // Site log (/sitelog)
+  sitelog: 'Dziennik strony',
+  sitelogSub: 'Historia zmian funkcji i działania tej strony',
+  currentVersion: 'Bieżąca wersja',
+  sitelogEmpty: 'Brak wpisów w dzienniku strony',
+  // Tools (/tools)
+  tools: 'Narzędzia',
+  toolsSub: 'Oficjalne narzędzia do flashowania (MiFlash, Mi Assistant, ...) i ich starsze wersje',
+  toolVersions: '{count} wersji',
+  attentions: 'Uwagi',
+  // Common
+  loadFailed: 'Nie udało się załadować',
+  retry: 'Ponów',
 }

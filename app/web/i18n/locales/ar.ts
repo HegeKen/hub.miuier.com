@@ -172,4 +172,17 @@ export default {
   devAttention: 'ملاحظات التحديث',
   devDescription: 'الإعلان',
   devUnknownBigver: 'إصدار غير محدد',
+  // سجل الموقع (/sitelog)
+  sitelog: 'سجل الموقع',
+  sitelogSub: 'سجل تحديثات الميزات والتجربة في هذا الموقع',
+  currentVersion: 'الإصدار الحالي',
+  sitelogEmpty: 'لا يوجد سجل للموقع بعد',
+  // تنزيل الأدوات (/tools)
+  tools: 'تنزيل الأدوات',
+  toolsSub: 'الإصدارات السابقة لأدوات الفلاش الرسمية (MiFlash، Mi Assistant، ...)',
+  toolVersions: '{count} إصدار',
+  attentions: 'ملاحظات',
+  // عام
+  loadFailed: 'فشل التحميل',
+  retry: 'إعادة المحاولة',
 }

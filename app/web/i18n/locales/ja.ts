@@ -168,4 +168,17 @@ export default {
   devAttention: 'アップデート手順',
   devDescription: 'アナウンス',
   devUnknownBigver: 'バージョン未設定',
+  // サイトログ（/sitelog）
+  sitelog: 'サイトログ',
+  sitelogSub: '当サイトの機能と体験の更新ログ',
+  currentVersion: '現在のバージョン',
+  sitelogEmpty: 'サイトログはまだありません',
+  // ツール（/tools）
+  tools: 'ツール',
+  toolsSub: 'MiFlash、小米助手などの公式フラッシュツールの旧バージョン',
+  toolVersions: '{count} 件のバージョン',
+  attentions: '注意事項',
+  // 共通
+  loadFailed: '読み込みに失敗しました',
+  retry: '再試行',
 }

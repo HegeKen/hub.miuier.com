@@ -10,7 +10,7 @@ import { createError } from 'h3'
  * 2. 请求级连接：从 x-db-config 请求头读取客户端传来的配置（远程模式）
  */
 
-export const ALLOWED_TABLES = ['devices', 'branches', 'roms', 'series', 'logs', 'dev'] as const
+export const ALLOWED_TABLES = ['devices', 'branches', 'roms', 'series', 'logs', 'dev', 'sitelog'] as const
 export type AllowedTable = (typeof ALLOWED_TABLES)[number]
 
 export interface ColumnMeta {

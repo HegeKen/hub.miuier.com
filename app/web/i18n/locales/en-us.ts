@@ -170,4 +170,17 @@ export default {
   devAttention: 'Update notes',
   devDescription: 'Announcement',
   devUnknownBigver: 'Unassigned version',
+  // Site log (/sitelog)
+  sitelog: 'Site log',
+  sitelogSub: 'Release notes for this site',
+  currentVersion: 'Current version',
+  sitelogEmpty: 'No site log yet',
+  // Tools (/tools)
+  tools: 'Tools',
+  toolsSub: 'Official flashing tools (MiFlash, Mi Assistant, ...) and their previous versions',
+  toolVersions: '{count} versions',
+  attentions: 'Notes',
+  // Common
+  loadFailed: 'Failed to load',
+  retry: 'Retry',
 }
