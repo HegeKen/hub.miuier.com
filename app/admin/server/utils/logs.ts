@@ -146,6 +146,101 @@ export function groupsCompatible(left: LogGroup, right: LogGroup): boolean {
   return true
 }
 
+/** 中文分桶键：logs_zh 优先，缺失时回退 content（与 Python LogMaintenance.build_buckets 一致） */
+export function logBucketKey(row: LogGroup): string | null {
+  const zh = normalizeLogText(row.texts.logs_zh || row.content)
+  return zh ? `${row.type}\u0000logs_zh\u0000${zh}` : null
+}
+
+/**
+ * 找出「同一日志被拆成多行」的重复分组（与 data/scripts/miroms/logs_maintenance.py 的
+ * duplicate_plan / union_groups 一致）：以中文分桶；桶内逐对尝试合并，
+ * 类型相同且各语言文本互不冲突才合并（A 与基准冲突、但彼此兼容的行也能合并）。
+ *
+ * 返回 [[id, ...], ...]：每组已升序，按组大小降序，只含 2 行以上的组。
+ */
+export function findDuplicateLogGroups(rows: LogGroup[]): number[][] {
+  const info = new Map<number, LogGroup>()
+  const texts = new Map<number, Record<string, string>>()
+  const buckets = new Map<string, number[]>()
+  for (const row of rows) {
+    info.set(row.id, row)
+    texts.set(row.id, { ...row.texts })
+    const key = logBucketKey(row)
+    if (!key) continue
+    const list = buckets.get(key)
+    if (list) list.push(row.id)
+    else buckets.set(key, [row.id])
+  }
+
+  const parent = new Map<number, number>()
+  for (const id of info.keys()) parent.set(id, id)
+  const find = (node: number): number => {
+    let root = node
+    while (parent.get(root) !== root) root = parent.get(root)!
+    let current = node
+    while (parent.get(current) !== root) {
+      const next = parent.get(current)!
+      parent.set(current, root)
+      current = next
+    }
+    return root
+  }
+  const compatible = (left: number, right: number): boolean => {
+    if (info.get(left)!.type !== info.get(right)!.type) return false
+    const a = texts.get(left)!
+    const b = texts.get(right)!
+    for (const column of LOG_LANG_COLUMNS) {
+      const x = a[column]
+      const y = b[column]
+      if (x && y && x !== y) return false
+    }
+    return true
+  }
+
+  // 反复扫描直到不再合并：一次扫描可能因根节点变化而漏掉传递关系
+  for (;;) {
+    let merged = false
+    for (const members of buckets.values()) {
+      if (members.length < 2) continue
+      for (;;) {
+        const roots: number[] = []
+        for (const member of members) {
+          const root = find(member)
+          if (!roots.includes(root)) roots.push(root)
+        }
+        let pair: [number, number] | null = null
+        for (let i = 0; i < roots.length && !pair; i += 1) {
+          for (let j = i + 1; j < roots.length; j += 1) {
+            if (compatible(roots[i]!, roots[j]!)) {
+              pair = [roots[i]!, roots[j]!]
+              break
+            }
+          }
+        }
+        if (!pair) break
+        const [baseRoot, otherRoot] = pair
+        parent.set(otherRoot, baseRoot)
+        texts.set(baseRoot, { ...texts.get(otherRoot)!, ...texts.get(baseRoot)! })
+        merged = true
+      }
+    }
+    if (!merged) break
+  }
+
+  const groups = new Map<number, number[]>()
+  for (const id of info.keys()) {
+    const root = find(id)
+    const list = groups.get(root)
+    if (list) list.push(id)
+    else groups.set(root, [id])
+  }
+  return [...groups.values()]
+    .filter((ids) => ids.length > 1)
+    .map((ids) => ids.sort((a, b) => a - b))
+    .sort((a, b) => b.length - a.length)
+}
+
 /** 把 source 的语言文本补进 target（只填空缺），返回补写的语言列 */
 export function mergeGroupTexts(target: LogGroup, source: LogGroup): string[] {
   const filled: string[] = []
@@ -182,7 +277,10 @@ export async function fillLogGroup(pool: Pool, id: number, texts: Record<string,
     params.push(value)
   }
   if (!sets.length) return []
-  await pool.query(`UPDATE \`logs\` SET ${sets.join(', ')} WHERE \`id\` = ?`, [...params, id])
+  await pool.query(
+    `UPDATE \`logs\` SET ${sets.join(', ')}, \`proofed\` = 0, \`complete\` = 0, \`lang_issues\` = NULL WHERE \`id\` = ?`,
+    [...params, id],
+  )
   return sets.map((s) => s.split('`')[1] || '')
 }
 
