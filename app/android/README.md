@@ -193,9 +193,9 @@ AsyncContent(holder, contentPadding, l10n.strings, scrollBehavior) { stats -> �
 
 ## 数据更新时间显示为 GMT+8
 
-接口的 `stats.generatedAt` 是 **UTC**（`2026-09-20T14:41:54.111Z`），首页原来直接
-`take(19).replace('T', ' ')`，等于把 UTC 当本地时间显示 —— 数据明明是 22:41 生成的，界面上写 14:41。
-现在统一经 `data/TimeFormat.kt` 的 `utcToGmt8()` 转成东八区，并在界面上标出 `GMT+8`。
+接口的 `stats.generatedAt` 现在统一是 **北京时间**（`2026-10-18T21:41:54.111+08:00`），
+首页经 `data/TimeFormat.kt` 的 `utcToGmt8()` 直接取墙钟，并在界面上标出 `GMT+8`。
+早期数据可能是 UTC（`2026-09-20T14:41:54.111Z`），该函数仍会「加 8 小时 + 处理进位」兼容。
 
 没有为此引入 `kotlinx-datetime`：偏移固定（东八区没有夏令时）、输入格式由我们自己的导出脚本决定，
 只需要「加 8 小时 + 处理进位」这点算术。闰年 / 跨月 / 跨年都覆盖了，

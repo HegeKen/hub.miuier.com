@@ -83,8 +83,8 @@ fun HomeScreen(app: HubAppState, contentPadding: PaddingValues, scrollBehavior: 
                         }
                         Spacer(Modifier.height(10.dp))
                         Text(
-                            // 接口给的是 UTC（`…T14:41:54.111Z`），展示统一换成 GMT+8，
-                            // 并把时区标出来，免得被当成本地时间读
+                            // 接口时间已统一为北京时间（`…+08:00`），旧数据可能是 UTC（`…Z`），
+                            // utcToGmt8 两种都能处理，展示时统一标出 GMT+8
                             text = l10n.strings.dataUpdatedAt.fill(
                                 "time" to "${utcToGmt8(stats.generatedAt)} GMT+8",
                             ),
