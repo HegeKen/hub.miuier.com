@@ -26,6 +26,18 @@ const RELEASES_INDEX_FILE = join(RELEASES_DIR, 'index.json')
 // 近 N 天窗口（ROM 版本按 release 日期统计）
 const RECENT_DAYS = 7
 
+// 导出时间统一用北京时间（Asia/Shanghai，UTC+8，无夏令时）
+const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000
+const pad2 = (n) => String(n).padStart(2, '0')
+
+/** 当前北京时间，ISO 8601 带 +08:00 偏移（如 2026-10-18T21:30:00.123+08:00） */
+function beijingNowIso(date = new Date()) {
+  const bj = new Date(date.getTime() + BEIJING_OFFSET_MS)
+  return `${bj.getUTCFullYear()}-${pad2(bj.getUTCMonth() + 1)}-${pad2(bj.getUTCDate())}`
+    + `T${pad2(bj.getUTCHours())}:${pad2(bj.getUTCMinutes())}:${pad2(bj.getUTCSeconds())}`
+    + `.${String(bj.getUTCMilliseconds()).padStart(3, '0')}+08:00`
+}
+
 // 品牌优先排序：Xiaomi > REDMI > POCO
 const brandOrder = { xiaomi: 0, redmi: 1, poco: 2 }
 const primaryBrand = (b) => {
@@ -113,10 +125,13 @@ async function generateIndex() {
     const files = await readdir(DEVICES_DIR)
     const jsonFiles = files.filter((f) => f.endsWith('.json'))
 
-    // 近 7 日窗口起点：按自然日计算（今天 - 6 天，含今天共 7 天）
+    // 近 7 日窗口起点：按北京时间自然日计算（今天 - 6 天，含今天共 7 天）
     const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const since = new Date(today.getTime() - (RECENT_DAYS - 1) * 24 * 60 * 60 * 1000)
+    const beijingNow = new Date(now.getTime() + BEIJING_OFFSET_MS)
+    const beijingToday = Date.UTC(
+      beijingNow.getUTCFullYear(), beijingNow.getUTCMonth(), beijingNow.getUTCDate()
+    )
+    const since = new Date(beijingToday - (RECENT_DAYS - 1) * 24 * 60 * 60 * 1000)
     const sinceStr = since.toISOString().slice(0, 10)
 
     const devices = []
@@ -272,7 +287,7 @@ async function generateIndex() {
     console.log(`Generated index with ${devices.length} devices -> ${INDEX_FILE}`)
 
     const stats = {
-      generatedAt: now.toISOString(),
+      generatedAt: beijingNowIso(now),
       recentDays: RECENT_DAYS,
       since: sinceStr,
       recentRoms: recent.length,
@@ -335,7 +350,7 @@ async function generateIndex() {
     await writeFile(
       RELEASES_INDEX_FILE,
       JSON.stringify({
-        generatedAt: now.toISOString(),
+        generatedAt: beijingNowIso(now),
         minDate,
         maxDate,
         totalRoms: releaseRoms,

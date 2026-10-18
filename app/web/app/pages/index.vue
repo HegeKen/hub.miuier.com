@@ -315,14 +315,24 @@ const totalBranches = computed(() => statistics.value?.branchCount || 0)
 const totalRoms = computed(() => statistics.value?.romCount || 0)
 const todayNewRoms = computed(() => statistics.value?.todayNewRoms || 0)
 
-// stats.json 的生成时间，格式化为本地时区 YYYY-MM-DD HH:mm:ss
+// stats.json 的生成时间统一按北京时间（Asia/Shanghai）展示
 const generatedAtText = computed(() => {
   const ts = stats.value?.generatedAt
   if (!ts) return ''
   const d = new Date(ts)
   if (Number.isNaN(d.getTime())) return ''
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(d)
+  const pick = (type) => parts.find((p) => p.type === type)?.value || ''
+  return `${pick('year')}-${pick('month')}-${pick('day')} ${pick('hour')}:${pick('minute')}:${pick('second')}`
 })
 
 // ---- 按发布日期查询 ROM ----
