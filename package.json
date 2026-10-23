@@ -8,6 +8,6 @@
     "build:admin": "pnpm --dir app/admin install && pnpm --dir app/admin build"
   },
   "devDependencies": {
-    "concurrently": "^10.0.5"
+    "concurrently": "^10.0.6"
   }
 }
