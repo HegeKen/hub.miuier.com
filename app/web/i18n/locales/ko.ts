@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: '기기 / 패키지 / 앱 이름 검색',
   xmsDownloadFailed: '다운로드 링크를 가져오지 못했습니다. 잠시 후 다시 시도하세요',
   xmsEmpty: '앱 업데이트 기록이 없습니다',
+  xmsAll: '전체',
+  xmsSeries: '시리즈',
+  xmsTablet: '태블릿',
+  xmsArchiveHint: '수집된 XMS 버전과 설치 패키지만 표시됩니다. 이전 버전은 수집되면 자동으로 추가됩니다.',
+  xmsTypeUniversal: '전 플랫폼 공용',
+  xmsTypePhone: '스마트폰',
+  xmsTypePad: '태블릿',
+  xmsTypeFold: '폴더블',
 }

@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'Tìm thiết bị / gói / ứng dụng',
   xmsDownloadFailed: 'Không lấy được liên kết tải xuống, vui lòng thử lại sau',
   xmsEmpty: 'Chưa có lịch sử cập nhật ứng dụng',
+  xmsAll: 'Tất cả',
+  xmsSeries: 'Dòng',
+  xmsTablet: 'Máy tính bảng',
+  xmsArchiveHint: 'Chỉ hiển thị các phiên bản và gói XMS đã thu thập; các phiên bản cũ hơn sẽ tự động xuất hiện sau khi thu thập.',
+  xmsTypeUniversal: 'Dùng chung',
+  xmsTypePhone: 'Điện thoại',
+  xmsTypePad: 'Máy tính bảng',
+  xmsTypeFold: 'Gập',
 }

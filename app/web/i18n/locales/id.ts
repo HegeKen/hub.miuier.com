@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'Cari perangkat / paket / aplikasi',
   xmsDownloadFailed: 'Tautan unduhan tidak tersedia, coba lagi nanti',
   xmsEmpty: 'Belum ada riwayat pembaruan aplikasi',
+  xmsAll: 'Semua',
+  xmsSeries: 'Seri',
+  xmsTablet: 'Tablet',
+  xmsArchiveHint: 'Hanya versi dan paket XMS yang telah dikumpulkan yang ditampilkan; versi lama akan muncul otomatis setelah dikumpulkan.',
+  xmsTypeUniversal: 'Universal',
+  xmsTypePhone: 'Ponsel',
+  xmsTypePad: 'Tablet',
+  xmsTypeFold: 'Lipat',
 }

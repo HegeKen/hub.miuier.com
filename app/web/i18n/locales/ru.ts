@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'Поиск по устройству / пакету / приложению',
   xmsDownloadFailed: 'Не удалось получить ссылку для скачивания, попробуйте позже',
   xmsEmpty: 'Записей об обновлениях приложений пока нет',
+  xmsAll: 'Все',
+  xmsSeries: 'Серия',
+  xmsTablet: 'Планшет',
+  xmsArchiveHint: 'Показаны только уже собранные версии XMS и пакеты; более старые версии появятся автоматически после сбора.',
+  xmsTypeUniversal: 'Универсальный',
+  xmsTypePhone: 'Смартфон',
+  xmsTypePad: 'Планшет',
+  xmsTypeFold: 'Складной',
 }

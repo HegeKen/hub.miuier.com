@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'ค้นหาอุปกรณ์ / แพ็กเกจ / แอป',
   xmsDownloadFailed: 'ไม่สามารถรับลิงก์ดาวน์โหลดได้ โปรดลองใหม่ภายหลัง',
   xmsEmpty: 'ยังไม่มีประวัติการอัปเดตแอป',
+  xmsAll: 'ทั้งหมด',
+  xmsSeries: 'ซีรีส์',
+  xmsTablet: 'แท็บเล็ต',
+  xmsArchiveHint: 'แสดงเฉพาะเวอร์ชันและแพ็กเกจ XMS ที่รวบรวมแล้วเท่านั้น เวอร์ชันเก่าจะปรากฏโดยอัตโนมัติเมื่อรวบรวมแล้ว',
+  xmsTypeUniversal: 'ใช้ได้ทุกแพลตฟอร์ม',
+  xmsTypePhone: 'สมาร์ทโฟน',
+  xmsTypePad: 'แท็บเล็ต',
+  xmsTypeFold: 'พับได้',
 }

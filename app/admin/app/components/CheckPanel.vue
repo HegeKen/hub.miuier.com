@@ -22,6 +22,15 @@
               </p>
             </div>
             <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="btn-secondary !py-1.5 text-xs"
+                :disabled="fixing || busy || loading"
+                :title="'把 AUTO_INCREMENT 重置为 MAX(id)+1，去掉尾部跳号（不重排已有 ID）'"
+                @click="fixAutoIncrement"
+              >
+                {{ fixing ? '修复中…' : '重置自增 ID' }}
+              </button>
               <button type="button" class="btn-secondary !py-1.5 text-xs" :disabled="loading || busy" @click="load">
                 重新检查
               </button>
@@ -74,6 +83,16 @@
             </button>
             <span v-if="report.summary.dismissed > 0" class="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-1.5 font-medium text-[var(--color-text-tertiary)]">
               已忽略规则 <span class="tabular-nums text-[var(--color-text)]">{{ report.summary.dismissed }}</span>
+            </span>
+            <span
+              v-if="ai"
+              class="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-1.5 font-medium text-[var(--color-text-tertiary)]"
+              :title="ai.gap > 0 ? '下一号与最后一行之间存在空号，可点「重置自增 ID」修复' : '自增 ID 连续'"
+            >
+              自增 <span class="tabular-nums text-[var(--color-text)]">{{ ai.autoIncrement.toLocaleString() }}</span>
+              <span class="opacity-60">/</span>
+              MAX(id) <span class="tabular-nums text-[var(--color-text)]">{{ ai.maxId.toLocaleString() }}</span>
+              <span v-if="ai.gap > 0" class="text-[var(--color-warn)]">跳号 {{ ai.gap }}</span>
             </span>
             <span v-if="activeFilter !== 'all'" class="text-[var(--color-accent)]">
               已筛选：{{ activeFilter === 'error' ? '仅错误' : '仅警告' }}
@@ -346,11 +365,13 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'edit'])
 
-const { runCheck, dismissViolation, restoreViolation, autofixRecord } = useAdminApi()
+const { runCheck, dismissViolation, restoreViolation, autofixRecord, getAutoIncrement, resetAutoIncrement } = useAdminApi()
 const { push } = useToast()
 
 const loading = ref(false)
 const refreshing = ref(false)
+const fixing = ref(false)
+const ai = ref(null)
 const error = ref('')
 const report = ref(null)
 const expanded = ref(new Set())
@@ -451,6 +472,35 @@ const load = async (quiet = false) => {
   }
 }
 
+const loadAi = async () => {
+  try {
+    ai.value = await getAutoIncrement(props.table)
+  } catch {
+    ai.value = null
+  }
+}
+
+/** 把 AUTO_INCREMENT 重置为 MAX(id)+1（只改计数器，不重排已有 ID） */
+const fixAutoIncrement = async () => {
+  if (fixing.value || busy.value) return
+  const tip = ai.value
+    ? `当前 AUTO_INCREMENT=${ai.value.autoIncrement}，MAX(id)=${ai.value.maxId}。\n`
+      + `将重置为 ${ai.value.maxId + 1}。\n只影响后续新增行的编号，不会重排已有 ID，继续？`
+    : '把 AUTO_INCREMENT 重置为 MAX(id)+1？只影响后续新增行，不会重排已有 ID。'
+  if (!window.confirm(tip)) return
+
+  fixing.value = true
+  try {
+    const res = await resetAutoIncrement(props.table)
+    push('success', `AUTO_INCREMENT 已重置：${res.before} → ${res.after}（MAX(id)=${res.maxId}）`)
+    await loadAi()
+  } catch (e) {
+    push('error', errorMessage(e))
+  } finally {
+    fixing.value = false
+  }
+}
+
 watch(
   () => props.open,
   (open) => {
@@ -460,6 +510,7 @@ watch(
       dismissReason.value = ''
       activeFilter.value = 'all'
       load()
+      loadAi()
     }
   },
 )
@@ -470,6 +521,7 @@ watch(
   () => {
     if (props.open && props.refreshSignal > 0) {
       load(true)
+      loadAi()
     }
   },
 )

@@ -70,10 +70,27 @@ pnpm preview    # 预览生产构建
   保存时会用库中已有数据反推补齐其他语言（把兼容的重复分组的语言文本合并到一起）。
   右侧可检索库中日志、按「缺少某语言」筛选，查看每种语言的分组数
 - **开发版周报** `/dev` — `dev` 表 CRUD（开发版周更公告、机型与 ROM 清单、更新日志）
+- **XMS 应用更新** `/xms` — XMS（SOTA 系统应用更新）推送与应用明细：按机型 / 版本 / 关键词筛选，
+  展开推送编辑每个应用的包名、中英文名与多语言 `names`、版本号、安装包信息与更新日志（JSON），
+  可新增 / 删除应用；推送本身（备注、`changelog` 无包名模块、是否最新、推送日期等）走通用记录弹窗。
+  XMS 版本号带 OS 标注（C → HyperOS 3、D → HyperOS 4），无包名模块只存在推送的 `changelog` 里。
+  修改应用名时可用「用 logs 表补全翻译」按中文 / 英文名匹配 `logs` 的 module 行补齐缺失语种；
+  保存时默认把 `name` / `name_en` / `names` **同步到所有 pkg 相同的推送**（日志按推送各自保留，
+  可在表单里取消勾选）。手工修过的 `apk_name` 会被后续抓取的新推送沿用（同机型优先），
+  避免接口返回的杂乱名称覆盖人工修复。应用名在 `logs` 的 module 行里**不存在时会自动登记一条 zh/en 占位**
+  （保存、点「用 logs 表补全翻译」、抓取脚本写入时都会触发），之后可在「日志录入」里继续补全其它语种
+- **XMS 应用明细** `/xms_app` — `xms_app` 表 CRUD（多语言 `names` 始终以 JSON 文本框编辑，不会被截断；
+  该表没有品牌字段，所以不显示设备表那个「从分支生成」，改为「用 logs 表补全翻译」按 `name` / `name_en` 补语种）。
+  自查额外检查 `names` / `apk_name` **缺失**与**同包名不一致**（平板 / 折叠等变体的 apk_name 差异会作为警告列出，便于人工核对）。
+  编辑记录时底部有「保存后把 name / name_en / names / apk_name 同步到同包名的所有记录」勾选项（默认开），
+  自查里发现的问题可以一次修完同包名的全部行；apk_name 变体需要保留时取消勾选即可
 - **SQL 控制台** `/sql` — 只读查询（SELECT / SHOW / DESCRIBE / EXPLAIN / WITH），自动追加 `LIMIT 1000`
 - **数据自查** — 每个模块工具栏的「自查」按钮 + 仪表盘「运行自查」：依据 `data/db_structure/*.sql`
   中每列的注释与示例，主动筛选不符合逻辑的字段（枚举值、格式正则、JSON 合法性、空字符串、包文件名等），
   展示违规计数与样本，样本可直接跳转编辑；汇总区的「违规合计 / 错误 / 警告」可点击按级别筛选规则列表
+- **AUTO_INCREMENT 修复** — 每个表的自查面板会显示当前 `AUTO_INCREMENT` 与 `MAX(id)`（以及跳号数），
+  点「重置自增 ID」把计数器重置为 `MAX(id)+1`，去掉删除/回滚留下的尾部空号；
+  只影响后续新增行的编号，**不会重排已有 ID**（重排会破坏 `xms_app.xms_id`、`roms.dev_week` 等引用关系）
 - **自查忽略（dismiss）** — 特殊情况（如历史遗留格式、运营商定制机型）可忽略：
   - 行级：样本行「忽略」按钮，只跳过该记录
   - 规则级：规则头「忽略此规则」（可填原因），整条规则不再计入违规
@@ -103,6 +120,8 @@ pnpm preview    # 预览生产构建
 | POST   | `/api/db/check/dismiss`            | 忽略违规 `{table, ruleId, rowId?, reason?}`（rowId=0 或缺省 = 整条规则） |
 | DELETE | `/api/db/check/dismiss`            | 取消忽略 `{table, ruleId, rowId?}`        |
 | GET    | `/api/db/check/dismissals`         | 已忽略列表（`?table=` 可选）          |
+| GET    | `/api/db/:table/auto-increment`    | 查看自增状态：当前 `AUTO_INCREMENT`、`MAX(id)`、跳号数 |
+| POST   | `/api/db/:table/auto-increment`    | 重置 `AUTO_INCREMENT` 为 `MAX(id)+1`（只影响后续新行） |
 | POST   | `/api/logs/manual`                 | 手动录入日志 `{text, type?, lang?, preview?}`：按换行拆行 → 比对 `logs` 表 → 写库 / 补齐其他语言 |
 | GET    | `/api/logs/list`                   | 日志分组列表（`page/pageSize/search/type/missing`），含各语言覆盖数 |
 | GET    | `/api/logs/audit`                  | 去重体检：重复分组 / 重复行数 / 未被 `roms`·`dev` 引用的孤儿行 |
@@ -112,6 +131,12 @@ pnpm preview    # 预览生产构建
 | POST   | `/api/dev/bind`                    | 绑定 / 解绑：`{ week, region, action: bind\|unbind, romIds, force }` |
 | GET    | `/api/devices-manager`             | 机型管理数据（设备列表 + 单机型分支详情 + 全部分支定义） |
 | GET    | `/api/series-manager`              | 系列管理数据（全部 series + 设备基准行 + 品牌归属） |
+| GET    | `/api/xms/list`                    | XMS 推送列表（`page/pageSize/search/latest/version`），附应用数与机型名 |
+| GET    | `/api/xms/apps`                    | 某次推送（`xmsId`）的应用明细 + 推送的 `changelog`（无包名模块） |
+| GET    | `/api/xms/translate`               | 按 `name` / `nameEn` 查 `logs` 的 module 多语言译文，用于补全应用名 |
+| POST   | `/api/xms/app`                     | 新增 / 更新应用并同步同包名：校验 JSON、用 `logs` 补全译文、`propagate` 默认把名称同步到同 pkg 的所有行 |
+| POST   | `/api/xms/module`                  | 把应用名登记到 `logs` 的 module 行（不存在时创建 zh/en 占位），供后续补全其它语种 |
+| POST   | `/api/xms/propagate`               | 把 `name` / `name_en` / `names` / `apk_name` 同步到同包名的所有记录（`xms_app` 自查修复用） |
 
 安全措施：表名白名单（`devices|branches|roms|series|logs|dev`）、列名白名单校验、全程参数化查询、
 SQL 控制台仅允许只读语句且自动限制行数、JSON 字段服务端二次校验、空串自动转 NULL。

@@ -16,15 +16,16 @@ export default defineEventHandler(async (event) => {
     return { executedAt: Date.now(), tables: summary }
   }
 
-  assertTable(tableParam)
-  const query = getQuery(event)
-  const summaryOnly = query.summary === '1' || query.summary === 'true'
-
-  // 兼容旧式路径 /api/db/check?table=xxx（可选）
+  // 兼容旧式路径 /api/db/check?table=xxx（可选）；放在白名单校验之前，
+  // 否则 assertTable 把类型收窄成 AllowedTable 后与 'all' 比较会被 TS 判为无交集
   if (tableParam === 'all') {
     const summary = await runAllSummary()
     return { executedAt: Date.now(), tables: summary }
   }
+
+  assertTable(tableParam)
+  const query = getQuery(event)
+  const summaryOnly = query.summary === '1' || query.summary === 'true'
 
   return await runTableCheck(tableParam, summaryOnly)
 })

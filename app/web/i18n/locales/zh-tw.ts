@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: '搜尋機型 / 套件名稱 / 應用程式名稱',
   xmsDownloadFailed: '暫時無法取得下載連結，請稍後再試',
   xmsEmpty: '尚無應用程式更新記錄',
+  xmsAll: '全部',
+  xmsSeries: '系列',
+  xmsTablet: '平板',
+  xmsArchiveHint: '僅顯示已擷取到的 XMS 版本與安裝檔；更早版本在擷取到後會自動補入。',
+  xmsTypeUniversal: '全平台通用',
+  xmsTypePhone: '手機',
+  xmsTypePad: '平板',
+  xmsTypeFold: '摺疊屏',
 }

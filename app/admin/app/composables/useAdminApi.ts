@@ -43,6 +43,8 @@ export interface CheckRuleResult {
   total: number
   samples: Array<Record<string, unknown>>
   sampleCols?: string[]
+  /** 样本里的计算列（别名 → SQL 表达式），接口会原样返回 */
+  sampleExprs?: Record<string, string>
   /** 整条规则被忽略 */
   dismissed?: boolean
 }
@@ -115,6 +117,21 @@ export function useAdminApi() {
     })
   }
 
+  /** 查看表自增状态（AUTO_INCREMENT / MAX(id) / 跳号数） */
+  const getAutoIncrement = async (table: string) => {
+    return $fetch<{ table: string; autoIncrement: number; maxId: number; gap: number }>(
+      `/api/db/${table}/auto-increment`,
+    )
+  }
+
+  /** 重置 AUTO_INCREMENT 为 MAX(id)+1（只影响后续新行，不重排已有 ID） */
+  const resetAutoIncrement = async (table: string) => {
+    return $fetch<{ ok: boolean; table: string; before: number; after: number; maxId: number; next: number; changed: boolean }>(
+      `/api/db/${table}/auto-increment`,
+      { method: 'POST' },
+    )
+  }
+
   const runSql = async (sql: string) => {
     return $fetch<{ ok: boolean; duration: number; fields: string[]; rows: unknown[]; rowCount: number; affectedRows: number }>(
       '/api/db/sql',
@@ -172,6 +189,8 @@ export function useAdminApi() {
     dismissViolation,
     restoreViolation,
     autofixRecord,
+    getAutoIncrement,
+    resetAutoIncrement,
     listDismissals,
   }
 }

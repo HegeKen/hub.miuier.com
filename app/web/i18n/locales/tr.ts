@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'Cihaz / paket / uygulama ara',
   xmsDownloadFailed: 'İndirme bağlantısı alınamadı, lütfen daha sonra tekrar deneyin',
   xmsEmpty: 'Henüz uygulama güncelleme kaydı yok',
+  xmsAll: 'Tümü',
+  xmsSeries: 'Seri',
+  xmsTablet: 'Tablet',
+  xmsArchiveHint: 'Yalnızca toplanmış XMS sürümleri ve paketleri gösterilir; daha eski sürümler toplandığında otomatik olarak eklenir.',
+  xmsTypeUniversal: 'Tüm platformlar',
+  xmsTypePhone: 'Telefon',
+  xmsTypePad: 'Tablet',
+  xmsTypeFold: 'Katlanabilir',
 }

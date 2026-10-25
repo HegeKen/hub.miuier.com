@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'ئۈسكۈنە / بولاق / ئەپ ئىزدەش',
   xmsDownloadFailed: 'چۈشۈرۈش ئۇلىنىشىنى ئالالمىدى، سەل تۇرۇپ قايتا سىناڭ',
   xmsEmpty: 'تېخى ئەپ يېڭىلانما خاتىرىسى يوق',
+  xmsAll: 'All',
+  xmsSeries: 'Series',
+  xmsTablet: 'Tablet',
+  xmsArchiveHint: 'Only XMS versions and packages that have been crawled are shown; older versions appear automatically once fetched.',
+  xmsTypeUniversal: 'Universal',
+  xmsTypePhone: 'Phone',
+  xmsTypePad: 'Tablet',
+  xmsTypeFold: 'Fold',
 }

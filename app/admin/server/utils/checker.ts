@@ -69,6 +69,9 @@ const CONTEXT_COLS: Record<AllowedTable, string[]> = {
   series: ['brand', 'name_zh'],
   logs: ['type', 'content'],
   dev: ['week', 'region', 'versions'],
+  sitelog: ['site', 'ver', 'log_date'],
+  xms: ['device', 'version', 'rom_version'],
+  xms_app: ['pkg', 'name'],
 }
 
 /* ---------------- 规则定义 ---------------- */
@@ -690,6 +693,160 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       severity: 'error',
       violation:
         "logs IS NOT NULL AND logs <> '' AND (JSON_VALID(logs)=0 OR JSON_TYPE(logs) <> 'ARRAY')",
+    },
+  ],
+
+  // sitelog 表：站点日志（参考站点 + hub 自身）
+  sitelog: [
+    {
+      id: 'kind_enum',
+      name: 'kind 枚举',
+      column: 'kind',
+      description: '行类型：entry=日志条目 / meta=站点级元信息',
+      severity: 'error',
+      violation: "kind NOT IN ('entry','meta')",
+    },
+    {
+      id: 'logs_json',
+      name: 'logs 应为 JSON 数组',
+      column: 'logs',
+      description: '日志正文为 [{"zh","en"},...] 形式的 JSON 数组',
+      severity: 'error',
+      violation: "logs IS NOT NULL AND logs <> '' AND (JSON_VALID(logs)=0 OR JSON_TYPE(logs) <> 'ARRAY')",
+    },
+  ],
+
+  // xms 表：XMS（SOTA 系统应用更新）推送，一次推送一行
+  xms: [
+    {
+      id: 'latest_enum',
+      name: 'is_latest 枚举',
+      column: 'is_latest',
+      description: '是否为最新：1=是、0=否',
+      severity: 'error',
+      violation: 'is_latest IS NULL OR is_latest NOT IN (0, 1)',
+    },
+    {
+      id: 'version_empty',
+      name: 'XMS 版本号为空',
+      column: 'version',
+      description: 'XMS 版本号（如 C11，首字母对应系统大版本）',
+      severity: 'error',
+      violation: "version IS NULL OR TRIM(version) = ''",
+    },
+    {
+      id: 'rom_version_empty',
+      name: '系统版本为空',
+      column: 'rom_version',
+      description: '该推送所基于的系统版本号，如 OS3.0.305.0.WOTCNXM',
+      severity: 'warning',
+      violation: "rom_version IS NULL OR TRIM(rom_version) = ''",
+    },
+    {
+      id: 'changelog_json',
+      name: 'changelog 应为 JSON 数组',
+      column: 'changelog',
+      description: '没有包名的日志模块为 [{name, logs}] 形式的 JSON 数组',
+      severity: 'error',
+      violation: "changelog IS NOT NULL AND changelog <> '' AND (JSON_VALID(changelog)=0 OR JSON_TYPE(changelog) <> 'ARRAY')",
+    },
+  ],
+
+  // xms_app 表：一次推送里的应用明细，唯一键 (xms_id, pkg)
+  xms_app: [
+    {
+      id: 'pkg_empty',
+      name: '包名为空',
+      column: 'pkg',
+      description: '应用必须有包名；没有包名的模块应存在 xms.changelog',
+      severity: 'error',
+      violation: "pkg IS NULL OR TRIM(pkg) = ''",
+    },
+    {
+      id: 'names_json',
+      name: 'names 应为 JSON 对象',
+      column: 'names',
+      description: '多语言应用名 {zh, en, ja, ...}；同一包名共享一份',
+      severity: 'error',
+      violation: "names IS NOT NULL AND names <> '' AND (JSON_VALID(names)=0 OR JSON_TYPE(names) <> 'OBJECT')",
+    },
+    {
+      id: 'logs_json',
+      name: 'logs 应为 JSON 数组',
+      column: 'logs',
+      description: '更新日志条目 [{zh, en, ...}]',
+      severity: 'error',
+      violation: "logs IS NOT NULL AND logs <> '' AND (JSON_VALID(logs)=0 OR JSON_TYPE(logs) <> 'ARRAY')",
+    },
+    {
+      id: 'size_negative',
+      name: 'size 为负',
+      column: 'size',
+      description: '安装包体积应为非负整数（字节）',
+      severity: 'warning',
+      violation: 'size IS NOT NULL AND size < 0',
+    },
+    {
+      id: 'names_missing',
+      name: 'names 缺失',
+      column: 'names',
+      description: '应用应有名称 JSON（names）；完全为空说明抓取 / 整理时没拿到模块名，需要补录',
+      severity: 'warning',
+      violation:
+        "names IS NULL OR TRIM(names) = '' "
+        + "OR (JSON_VALID(names) = 1 AND (JSON_TYPE(names) <> 'OBJECT' OR JSON_LENGTH(names) = 0))",
+      sampleCols: ['pkg', 'name', 'name_en'],
+    },
+    {
+      id: 'apk_name_missing',
+      name: 'apk_name 缺失',
+      column: 'apk_name',
+      description: '安装包名称（apk_name）为空：接口偶尔不返回，通常需要人工补一个可读名称',
+      severity: 'warning',
+      violation: "apk_name IS NULL OR TRIM(apk_name) = ''",
+      sampleCols: ['pkg', 'name'],
+    },
+    {
+      id: 'names_inconsistent',
+      name: '同包名 names 不一致',
+      column: 'names',
+      description:
+        '同一个 pkg 的所有推送应共用一份 names；与多数行不同说明只改了单行 / 历史数据没统一，重新整理或同步即可',
+      severity: 'warning',
+      violation:
+        "names IS NOT NULL AND TRIM(names) <> '' AND names <> ("
+        + "SELECT o.names FROM xms_app o WHERE o.pkg = t.pkg "
+        + "AND o.names IS NOT NULL AND TRIM(o.names) <> '' "
+        + "GROUP BY o.names ORDER BY COUNT(*) DESC, MIN(o.id) LIMIT 1)",
+      sampleCols: ['pkg', 'name'],
+      sampleExprs: {
+        variants:
+          "(SELECT COUNT(DISTINCT o.names) FROM xms_app o "
+          + "WHERE o.pkg = t.pkg AND o.names IS NOT NULL AND o.names <> '')",
+      },
+    },
+    {
+      id: 'apk_name_inconsistent',
+      name: '同包名 apk_name 不一致',
+      column: 'apk_name',
+      description:
+        '同一个 pkg 的 apk_name 多数应一致（平板 / 折叠等变体可能有多个）；与多数行不同通常是接口返回的杂乱名称，建议人工核对',
+      severity: 'warning',
+      violation:
+        "apk_name IS NOT NULL AND TRIM(apk_name) <> '' AND apk_name <> ("
+        + "SELECT o.apk_name FROM xms_app o WHERE o.pkg = t.pkg "
+        + "AND o.apk_name IS NOT NULL AND TRIM(o.apk_name) <> '' "
+        + "GROUP BY o.apk_name ORDER BY COUNT(*) DESC, MIN(o.id) LIMIT 1)",
+      sampleCols: ['pkg', 'apk_name'],
+      sampleExprs: {
+        variants:
+          "(SELECT COUNT(DISTINCT o.apk_name) FROM xms_app o "
+          + "WHERE o.pkg = t.pkg AND o.apk_name IS NOT NULL AND o.apk_name <> '')",
+        majority:
+          "(SELECT o.apk_name FROM xms_app o WHERE o.pkg = t.pkg "
+          + "AND o.apk_name IS NOT NULL AND o.apk_name <> '' "
+          + "GROUP BY o.apk_name ORDER BY COUNT(*) DESC, MIN(o.id) LIMIT 1)",
+      },
     },
   ],
 }

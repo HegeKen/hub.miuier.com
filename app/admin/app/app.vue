@@ -197,6 +197,7 @@ const navItems = [
   { label: '日志录入', to: '/logs', icon: 'log' },
   { label: '开发版周报', to: '/dev', icon: 'archive' },
   { label: '开发版绑定', to: '/dev-bind', icon: 'link' },
+  { label: 'XMS 应用更新', to: '/xms', icon: 'archive' },
   { label: '站点日志', to: '/sitelog', icon: 'log' },
   { label: 'SQL 控制台', to: '/sql', icon: 'sql' },
 ]
@@ -211,6 +212,8 @@ const titleMap = {
   '/logs': '日志录入',
   '/dev': '开发版周报',
   '/dev-bind': '开发版绑定 ROM',
+  '/xms': 'XMS 应用更新',
+  '/xms_app': 'XMS 应用明细',
   '/sitelog': '站点日志',
   '/sql': 'SQL 控制台',
 }

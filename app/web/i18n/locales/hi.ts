@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'डिवाइस / पैकेज / ऐप खोजें',
   xmsDownloadFailed: 'डाउनलोड लिंक उपलब्ध नहीं, कृपया बाद में पुनः प्रयास करें',
   xmsEmpty: 'अभी कोई ऐप अपडेट रिकॉर्ड नहीं',
+  xmsAll: 'सभी',
+  xmsSeries: 'सीरीज़',
+  xmsTablet: 'टैबलेट',
+  xmsArchiveHint: 'केवल एकत्र किए गए XMS संस्करण और पैकेज दिखाए जाते हैं; पुराने संस्करण एकत्र होने पर स्वचालित रूप से दिखाई देंगे।',
+  xmsTypeUniversal: 'सभी प्लेटफ़ॉर्म के लिए',
+  xmsTypePhone: 'फ़ोन',
+  xmsTypePad: 'टैबलेट',
+  xmsTypeFold: 'फ़ोल्डेबल',
 }

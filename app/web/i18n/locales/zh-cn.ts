@@ -199,4 +199,12 @@ export default {
   xmsSearchPlaceholder: '搜索机型 / 包名 / 应用名',
   xmsDownloadFailed: '暂时无法获取下载链接，请稍后再试',
   xmsEmpty: '暂无应用更新记录',
+  xmsAll: '全部',
+  xmsSeries: '系列',
+  xmsTablet: '平板',
+  xmsArchiveHint: '仅展示已抓取到的 XMS 版本与安装包；更早版本在抓取到后会自动补入。',
+  xmsTypeUniversal: '全平台通用',
+  xmsTypePhone: '手机',
+  xmsTypePad: '平板',
+  xmsTypeFold: '折叠屏',
 }

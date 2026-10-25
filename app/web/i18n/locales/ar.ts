@@ -201,4 +201,12 @@ export default {
   xmsSearchPlaceholder: 'بحث عن جهاز / حزمة / تطبيق',
   xmsDownloadFailed: 'رابط التنزيل غير متاح، يرجى المحاولة لاحقا',
   xmsEmpty: 'لا توجد سجلات تحديث للتطبيقات بعد',
+  xmsAll: 'الكل',
+  xmsSeries: 'السلسلة',
+  xmsTablet: 'جهاز لوحي',
+  xmsArchiveHint: 'يتم عرض إصدارات وحزم XMS التي تم جمعها فقط؛ ستظهر الإصدارات الأقدم تلقائيًا بعد جمعها.',
+  xmsTypeUniversal: 'لجميع الأجهزة',
+  xmsTypePhone: 'هاتف',
+  xmsTypePad: 'جهاز لوحي',
+  xmsTypeFold: 'قابل للطي',
 }

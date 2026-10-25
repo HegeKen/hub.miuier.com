@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'Пошук за пристроєм / пакетом / застосунком',
   xmsDownloadFailed: 'Не вдалося отримати посилання для завантаження, спробуйте пізніше',
   xmsEmpty: 'Записів про оновлення застосунків ще немає',
+  xmsAll: 'Усі',
+  xmsSeries: 'Серія',
+  xmsTablet: 'Планшет',
+  xmsArchiveHint: 'Показано лише вже зібрані версії XMS і пакети; старіші версії з’являться автоматично після збору.',
+  xmsTypeUniversal: 'Універсальний',
+  xmsTypePhone: 'Смартфон',
+  xmsTypePad: 'Планшет',
+  xmsTypeFold: 'Складний',
 }

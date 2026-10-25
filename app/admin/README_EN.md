@@ -65,6 +65,22 @@ The panel supports two connection modes (selected/verified on the login page `/l
   pick/order devices by brand; writes go through the generic CRUD (`/api/db/series`)
 - **Log entry** `/logs` — enter changelog text by hand: each line becomes one log row in the shared
 
+- **XMS app updates** `/xms` — XMS (SOTA system-app update) pushes and app details: filter by device / version /
+  keyword, expand a push to edit each app's package, zh/en names plus the multilingual `names`, version code, package
+  info and changelog (JSON); apps can be added or removed. The push itself (notes, `changelog` modules without a
+  package, latest flag, push date, …) is edited through the generic record modal. The XMS version carries an OS label
+  (C → HyperOS 3, D → HyperOS 4); package-less modules live in the push `changelog`.
+  "Fill translations from logs" matches the zh/en name against `logs` module rows and adds missing languages; saving
+  syncs `name` / `name_en` / `names` to **every push with the same pkg** (changelogs stay per push; the checkbox can
+  turn the sync off). Hand-fixed `apk_name` values are reused by later XMS fetches (same-device rows first), so messy
+  API names do not overwrite manual repairs. If the name is missing from `logs` modules, a zh/en placeholder row is registered automatically
+  (on save, on "fill translations", and while the fetcher writes XMS), so other languages can be filled later in "Log entry"
+- **XMS app rows** `/xms_app` — CRUD on the `xms_app` table (multilingual `names` is always a JSON textarea so no language
+  is truncated; this table has no brand fields, so instead of the device-page "generate from brands" button it offers
+  "fill translations from logs" using `name` / `name_en`). Its self-check also flags **missing** `names` / `apk_name`
+  and **inconsistent** `names` / `apk_name` within the same package (tablet/fold apk_name variants show up as warnings
+  for manual review). The edit modal has a "sync name / name_en / names / apk_name to every row of the same package"
+  checkbox (on by default), so a self-check finding can be fixed for all rows at once; untick it to keep apk_name variants
 - **Dev binding** `/dev-bind` — associate ROMs with a developer week by hand: the left column lists the week's bound
   ROMs (unbind one or all), the right column searches candidates by codename / version / package filename (filter by
   year and binding state) and binds the selected ones. The dev weekly device list is not stored separately — the
@@ -80,6 +96,10 @@ The panel supports two connection modes (selected/verified on the login page `/l
   comments & examples in `data/db_structure/*.sql`, flags illogical field values (enum values, format regexes, JSON
   validity, empty strings, package filenames, etc.), shows violation counts and samples; samples link directly to
   editing; the "total / errors / warnings" summary is clickable to filter the rule list by severity
+- **AUTO_INCREMENT repair** — every table's self-check panel shows the current `AUTO_INCREMENT` and `MAX(id)`
+  (plus the number of skipped ids); "reset auto-increment" sets the counter to `MAX(id)+1`, removing the tail gap
+  left by deletes/rollbacks. It only affects ids of future rows and **never renumbers existing rows** (that would
+  break references such as `xms_app.xms_id` / `roms.dev_week`)
 - **Dismiss** — special cases (e.g. legacy formats, carrier-customized models) can be ignored:
   - Row level: "Ignore" button on a sample row — skips only that record
   - Rule level: "Ignore this rule" in the rule header (optional reason) — the whole rule no longer counts
@@ -110,6 +130,8 @@ and delete confirmation.
 | POST   | `/api/db/check/dismiss`           | Dismiss violation `{table, ruleId, rowId?, reason?}` (rowId=0 or omitted = whole rule) |
 | DELETE | `/api/db/check/dismiss`           | Undismiss `{table, ruleId, rowId?}`   |
 | GET    | `/api/db/check/dismissals`        | Dismissed list (`?table=` optional)   |
+| GET    | `/api/db/:table/auto-increment`   | Auto-increment status: current `AUTO_INCREMENT`, `MAX(id)`, skipped ids |
+| POST   | `/api/db/:table/auto-increment`   | Reset `AUTO_INCREMENT` to `MAX(id)+1` (future rows only) |
 | POST   | `/api/logs/manual`                | Manual log entry `{text, type?, lang?, preview?}`: split lines → compare with `logs` → write / back-fill other languages |
 | GET    | `/api/logs/list`                  | Log group list (`page/pageSize/search/type/missing`) with per-language coverage |
 | GET    | `/api/logs/audit`                 | Dedup audit: duplicate groups / duplicate rows / rows referenced by no `roms`·`dev` record |
@@ -119,6 +141,12 @@ and delete confirmation.
 | POST   | `/api/dev/bind`                   | Bind / unbind: `{ week, region, action: bind\|unbind, romIds, force }` |
 | GET    | `/api/devices-manager`            | Model-manager data (device list + per-model branch details + all branch defs) |
 | GET    | `/api/series-manager`             | Series-manager data (all series + device base rows + brand labels) |
+| GET    | `/api/xms/list`                   | XMS push list (`page/pageSize/search/latest/version`) with app count and device name |
+| GET    | `/api/xms/apps`                   | App details of one push (`xmsId`) plus the push `changelog` (package-less modules) |
+| GET    | `/api/xms/translate`              | Look up `logs` module translations by `name` / `nameEn` to complete app names |
+| POST   | `/api/xms/app`                    | Create/update an app and sync the same pkg: validates JSON, fills translations from `logs`, and with `propagate` (default) syncs names to every row of that pkg |
+| POST   | `/api/xms/module`                 | Register an app name in `logs` modules (creates a zh/en placeholder when missing) for later translation |
+| POST   | `/api/xms/propagate`              | Sync `name` / `name_en` / `names` / `apk_name` to every row of the same package (self-check repair) |
 
 Security: table whitelist (`devices|branches|roms|series|logs|dev`), column whitelist validation, parameterized queries
 everywhere, read-only SQL console with row limits, server-side JSON re-validation, and empty-string → NULL conversion.

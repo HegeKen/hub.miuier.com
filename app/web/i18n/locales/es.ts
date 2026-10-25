@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'Buscar dispositivo / paquete / app',
   xmsDownloadFailed: 'Enlace de descarga no disponible, inténtalo más tarde',
   xmsEmpty: 'Aún no hay registros de actualizaciones de apps',
+  xmsAll: 'Todas',
+  xmsSeries: 'Serie',
+  xmsTablet: 'Tableta',
+  xmsArchiveHint: 'Solo se muestran las versiones y paquetes XMS ya recopilados; las versiones anteriores aparecerán automáticamente al recopilarse.',
+  xmsTypeUniversal: 'Universal',
+  xmsTypePhone: 'Teléfono',
+  xmsTypePad: 'Tableta',
+  xmsTypeFold: 'Plegable',
 }

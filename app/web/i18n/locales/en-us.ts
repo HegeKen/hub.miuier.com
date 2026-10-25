@@ -199,4 +199,12 @@ export default {
   xmsSearchPlaceholder: 'Search device / package / app',
   xmsDownloadFailed: 'Could not get a download link, please try again later',
   xmsEmpty: 'No app update records yet',
+  xmsAll: 'All',
+  xmsSeries: 'Series',
+  xmsTablet: 'Tablet',
+  xmsArchiveHint: 'Only XMS versions and packages that have been crawled are shown; older versions appear automatically once fetched.',
+  xmsTypeUniversal: 'Universal',
+  xmsTypePhone: 'Phone',
+  xmsTypePad: 'Tablet',
+  xmsTypeFold: 'Fold',
 }

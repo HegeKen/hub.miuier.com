@@ -3,6 +3,7 @@
     <header class="mb-8">
       <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">{{ $t('xms') }}</h1>
       <p class="mt-2 text-sm text-[var(--color-text-secondary)]">{{ $t('xmsSub') }}</p>
+      <p class="mt-1.5 text-xs text-[var(--color-text-tertiary)]">{{ $t('xmsArchiveHint') }}</p>
       <p v-if="generatedAt" class="mt-2 text-xs text-[var(--color-text-tertiary)]">
         {{ $t('statsGeneratedAt') }}: {{ generatedAt }}
       </p>
@@ -66,6 +67,75 @@
         />
       </div>
 
+      <!-- 筛选：系统版本 / 区域 / 系列 -->
+      <div class="mb-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="me-1 text-xs font-medium text-[var(--color-text-tertiary)]">OS</span>
+          <button
+            type="button"
+            class="filter-pill !px-2.5 !py-1 text-xs"
+            :class="osFilter === '' ? 'filter-pill-active' : ''"
+            @click="osFilter = ''"
+          >
+            {{ $t('xmsAll') }}
+          </button>
+          <button
+            v-for="os in osOptions"
+            :key="os"
+            type="button"
+            class="filter-pill !px-2.5 !py-1 text-xs"
+            :class="osFilter === os ? 'filter-pill-active' : ''"
+            @click="osFilter = osFilter === os ? '' : os"
+          >
+            {{ os }}
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="me-1 text-xs font-medium text-[var(--color-text-tertiary)]">{{ $t('region') }}</span>
+          <button
+            type="button"
+            class="filter-pill !px-2.5 !py-1 text-xs"
+            :class="regionFilter === '' ? 'filter-pill-active' : ''"
+            @click="regionFilter = ''"
+          >
+            {{ $t('xmsAll') }}
+          </button>
+          <button
+            v-for="region in regionOptions"
+            :key="region"
+            type="button"
+            class="filter-pill !px-2.5 !py-1 text-xs"
+            :class="regionFilter === region ? 'filter-pill-active' : ''"
+            @click="regionFilter = regionFilter === region ? '' : region"
+          >
+            {{ $t('regions.' + region) }}
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="me-1 text-xs font-medium text-[var(--color-text-tertiary)]">{{ $t('xmsSeries') }}</span>
+          <button
+            type="button"
+            class="filter-pill !px-2.5 !py-1 text-xs"
+            :class="seriesFilter === '' ? 'filter-pill-active' : ''"
+            @click="seriesFilter = ''"
+          >
+            {{ $t('xmsAll') }}
+          </button>
+          <button
+            v-for="series in seriesOptions"
+            :key="series"
+            type="button"
+            class="filter-pill !px-2.5 !py-1 text-xs"
+            :class="seriesFilter === series ? 'filter-pill-active' : ''"
+            @click="seriesFilter = seriesFilter === series ? '' : series"
+          >
+            {{ seriesLabel(series) }}
+          </button>
+        </div>
+      </div>
+
       <!-- 按应用 -->
       <section class="mb-10">
         <h2 class="mb-3 flex flex-wrap items-baseline gap-x-2">
@@ -90,6 +160,15 @@
               </span>
               <span class="mt-0.5 block truncate font-mono text-[11px] text-[var(--color-text-tertiary)]">
                 {{ app.pkg }}
+              </span>
+              <span v-if="app.types && app.types.length" class="mt-1 flex flex-wrap gap-1">
+                <span
+                  v-for="type in app.types"
+                  :key="type"
+                  class="rounded-full border border-[var(--color-border)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-secondary)]"
+                >
+                  {{ typeLabel(type) }}
+                </span>
               </span>
             </span>
             <span class="shrink-0 text-end">
@@ -168,6 +247,49 @@ const generatedAt = computed(() => data.value?.generatedAt || '')
 const query = ref('')
 const keyword = computed(() => query.value.trim().toLowerCase())
 
+const osFilter = ref('')
+const regionFilter = ref('')
+const seriesFilter = ref('')
+
+const osOptions = computed(() => {
+  const set = new Set()
+  for (const app of apps.value) for (const os of app.os || []) set.add(os)
+  for (const version of versions.value) if (version.os) set.add(version.os)
+  return [...set].sort()
+})
+
+const regionOptions = computed(() => {
+  const set = new Set()
+  for (const app of apps.value) for (const region of app.regions || []) set.add(region)
+  for (const item of devices.value) if (item.region) set.add(item.region)
+  return [...set].sort()
+})
+
+const SERIES_ORDER = ['xiaomi', 'redmi', 'poco', 'tablet']
+const SERIES_LABELS = { xiaomi: 'Xiaomi', redmi: 'Redmi', poco: 'POCO' }
+
+const seriesOptions = computed(() => {
+  const set = new Set()
+  for (const app of apps.value) {
+    for (const brand of app.brands || []) set.add(brand)
+    if (app.tablet) set.add('tablet')
+  }
+  for (const item of devices.value) {
+    for (const brand of item.brands || []) set.add(brand)
+    if (item.tablet) set.add('tablet')
+  }
+  return SERIES_ORDER.filter((key) => set.has(key))
+})
+
+const seriesLabel = (key) => (key === 'tablet' ? t('xmsTablet') : SERIES_LABELS[key] || key)
+
+const typeLabel = (type) =>
+  type === 'phone' ? t('xmsTypePhone')
+    : type === 'pad' ? t('xmsTypePad')
+      : type === 'fold' ? t('xmsTypeFold')
+        : type === 'universal' ? t('xmsTypeUniversal')
+          : ''
+
 const matches = (values) => {
   if (!keyword.value) return true
   return values
@@ -177,12 +299,40 @@ const matches = (values) => {
     .includes(keyword.value)
 }
 
+const matchesOs = (item) => {
+  if (!osFilter.value) return true
+  const values = item.os || (item.latest?.os ? [item.latest.os] : [])
+  return values.includes(osFilter.value)
+}
+
+const matchesRegion = (item) => {
+  if (!regionFilter.value) return true
+  const values = item.regions || (item.region ? [item.region] : [])
+  return values.includes(regionFilter.value)
+}
+
+const matchesSeries = (item) => {
+  if (!seriesFilter.value) return true
+  if (seriesFilter.value === 'tablet') return Boolean(item.tablet)
+  return (item.brands || []).includes(seriesFilter.value)
+}
+
 const filteredApps = computed(() =>
-  apps.value.filter((app) => matches([app.pkg, app.name?.zh, app.name?.en, app.apkName]))
+  apps.value.filter((app) =>
+    matches([app.pkg, app.name?.zh, app.name?.en, app.apkName])
+    && matchesOs(app)
+    && matchesRegion(app)
+    && matchesSeries(app)
+  )
 )
 
 const filteredDevices = computed(() =>
-  devices.value.filter((item) => matches([item.device, item.name?.zh, item.name?.en, item.code]))
+  devices.value.filter((item) =>
+    matches([item.device, item.name?.zh, item.name?.en, item.code])
+    && matchesOs(item)
+    && matchesRegion(item)
+    && matchesSeries(item)
+  )
 )
 
 const appPath = (pkg) => `/${locale.value}/xms/${encodeURIComponent(pkg)}`

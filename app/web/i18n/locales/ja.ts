@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: '機種 / パッケージ / アプリ名を検索',
   xmsDownloadFailed: 'ダウンロードリンクを取得できません。しばらくしてから再度お試しください',
   xmsEmpty: 'アプリ更新の記録はありません',
+  xmsAll: 'すべて',
+  xmsSeries: 'シリーズ',
+  xmsTablet: 'タブレット',
+  xmsArchiveHint: '取得済みの XMS バージョンとパッケージのみ表示されます。古いバージョンは取得後に自動で追加されます。',
+  xmsTypeUniversal: '全プラットフォーム共通',
+  xmsTypePhone: 'スマートフォン',
+  xmsTypePad: 'タブレット',
+  xmsTypeFold: '折りたたみ',
 }

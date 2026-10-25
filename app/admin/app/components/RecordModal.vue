@@ -90,14 +90,23 @@
                     />
                   </div>
                 </div>
-                <!-- names 自动生成按钮 -->
+                <!-- names：设备从品牌字段生成；xms_app 用 logs 表补全多语言 -->
                 <button
-                  v-if="col.name === 'names'"
+                  v-if="col.name === 'names' && isBilingual(col) && isDeviceTable"
                   type="button"
                   class="btn-secondary mt-1.5 !py-1 text-xs"
                   @click="autoGenNames(col.name)"
                 >
                   从分支生成
+                </button>
+                <button
+                  v-if="col.name === 'names' && table === 'xms_app'"
+                  type="button"
+                  class="btn-secondary mt-1.5 !py-1 text-xs"
+                  :disabled="translating"
+                  @click="completeXmsTranslations"
+                >
+                  {{ translating ? '查询中…' : '用 logs 表补全翻译' }}
                 </button>
 
                 <!-- 数字 -->
@@ -155,6 +164,18 @@
             </template>
           </form>
 
+          <!-- xms_app：一次修复同包名的所有记录 -->
+          <div
+            v-if="table === 'xms_app'"
+            class="mt-4 flex items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-3 py-2"
+          >
+            <input id="sync-xms-pkg" v-model="syncXmsPkg" type="checkbox" class="mt-0.5" />
+            <label for="sync-xms-pkg" class="text-xs leading-relaxed text-[var(--color-text-secondary)]">
+              保存后把 name / name_en / names / apk_name 同步到同包名的所有记录（自查修复用；
+              平板 / 折叠等 apk_name 变体请取消勾选）
+            </label>
+          </div>
+
           <!-- 底部操作 -->
           <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border)] pt-4">
             <div class="flex gap-2">
@@ -200,6 +221,8 @@ const { push } = useToast()
 
 const form = ref({})
 const saving = ref(false)
+const translating = ref(false)
+const syncXmsPkg = ref(true)
 const jsonInvalid = ref({})
 
 const primaryCol = computed(() => props.columns.find((c) => c.isPrimary) || null)
@@ -219,7 +242,42 @@ const isFilenameCol = (col) => FILENAME_COLS.has(col.name)
 
 /** 双语字段：拆分为 _zh / _en 两个独立输入 */
 const BILINGUAL_COLS = new Set(['names', 'xiaomi', 'redmi', 'poco'])
-const isBilingual = (col) => BILINGUAL_COLS.has(col.name)
+
+/**
+ * 实际按双语编辑的字段：只有当记录的 JSON 里确实只有 zh / en 两个键时才拆分。
+ * xms_app.names 这类多语言对象（zh / en / ja / …）必须保留成 JSON 文本框，
+ * 否则保存时会把其它语种截断。
+ */
+const bilingualCols = computed(() => {
+  const cols = new Set()
+  for (const name of BILINGUAL_COLS) {
+    const raw = props.record?.[name]
+    if (!raw) {
+      cols.add(name)
+      continue
+    }
+    try {
+      const obj = typeof raw === 'string' ? JSON.parse(raw) : raw
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        const keys = Object.keys(obj)
+        if (keys.length === 0 || keys.every((k) => k === 'zh' || k === 'en')) cols.add(name)
+      } else {
+        cols.add(name)
+      }
+    } catch {
+      cols.add(name)
+    }
+  }
+  return cols
+})
+const isDeviceTable = computed(() => props.table === 'devices')
+
+const isBilingual = (col) => {
+  if (!BILINGUAL_COLS.has(col.name)) return false
+  // xms_app 的 names 是多语言对象（zh / zh_tw / en / ja …），始终按 JSON 文本编辑
+  if (col.name === 'names' && props.table === 'xms_app') return false
+  return bilingualCols.value.has(col.name)
+}
 
 /** 设备级全局字段：不在分支编辑弹窗中显示 */
 const GLOBAL_COLS = new Set(['full_brands', 'full_names'])
@@ -240,6 +298,7 @@ function parseZhEn(raw) {
 const initForm = () => {
   jsonInvalid.value = {}
   crossErrors.value = {}
+  syncXmsPkg.value = true
   const init = {}
   for (const col of props.columns) {
     if (col.isPrimary || GLOBAL_COLS.has(col.name)) continue
@@ -378,6 +437,64 @@ const formatAllJson = () => {
   }
 }
 
+/**
+ * xms_app 专用：按 name / name_en 去 logs 表查 module 译文，补全 names 里缺失的语种。
+ * （应用名与设备品牌无关，不能沿用「从分支生成」。）
+ */
+const completeXmsTranslations = async () => {
+  const name = String(form.value.name || '').trim()
+  const nameEn = String(form.value.name_en || '').trim()
+  if (!name && !nameEn) {
+    push('info', '请先填写 name / name_en，再用 logs 表匹配')
+    return
+  }
+
+  translating.value = true
+  try {
+    const res = await $fetch('/api/xms/translate', { params: { name, nameEn } })
+    if (!res?.found) {
+      // logs 里还没有这个应用名：先写一条 module 占位，之后可在「日志录入」补翻译
+      const ensured = await $fetch('/api/xms/module', { method: 'POST', body: { name, nameEn } })
+      push('info', ensured?.created
+        ? 'logs 表中没有该模块，已先写入占位，待补翻译'
+        : 'logs 表已有该模块，但还没有译文')
+      return
+    }
+
+    let current = {}
+    const raw = String(form.value.names || '').trim()
+    if (raw) {
+      try {
+        current = JSON.parse(raw)
+      } catch {
+        jsonInvalid.value = { ...jsonInvalid.value, names: 'names 不是合法 JSON，无法补全' }
+        return
+      }
+    }
+    if (!current || typeof current !== 'object' || Array.isArray(current)) {
+      jsonInvalid.value = { ...jsonInvalid.value, names: 'names 必须是 JSON 对象' }
+      return
+    }
+
+    let added = 0
+    for (const [key, value] of Object.entries(res.translations || {})) {
+      if (!current[key]) {
+        current[key] = value
+        added += 1
+      }
+    }
+    if (name) current.zh = name
+    if (nameEn) current.en = nameEn
+    form.value.names = JSON.stringify(current, null, 2)
+    jsonInvalid.value = { ...jsonInvalid.value, names: '' }
+    push('success', added ? `已补全 ${added} 种语言` : '没有缺失的语种')
+  } catch (e) {
+    push('error', errorMessage(e))
+  } finally {
+    translating.value = false
+  }
+}
+
 /** 从 xiaomi / redmi / poco 自动生成 names（多品牌用 / 拼接，顺序：Xiaomi → Redmi → POCO） */
 const autoGenNames = (target) => {
   const brandFields = ['xiaomi', 'redmi', 'poco']
@@ -431,13 +548,37 @@ const onSave = async () => {
 
   saving.value = true
   try {
+    // xms_app：保存时把应用名登记到 logs 的 module 行（缺失则创建占位）
+    if (props.table === 'xms_app') {
+      const zh = String(form.value.name || '').trim()
+      if (zh) {
+        try {
+          await $fetch('/api/xms/module', {
+            method: 'POST',
+            body: { name: zh, nameEn: String(form.value.name_en || '').trim() },
+          })
+        } catch {
+          /* 写 logs 失败不阻塞应用保存 */
+        }
+      }
+    }
+
     // 合并双语字段：_zh/_en → JSON
+    // 只跳过由 BILINGUAL_COLS 拆出来的合成字段（names_zh / xiaomi_en …），
+    // 真实列 name_en / title_zh 等必须原样提交，否则会被无声丢弃。
+    const isSyntheticBilingualKey = (key) => {
+      for (const name of BILINGUAL_COLS) {
+        if (key === name + '_zh' || key === name + '_en') return true
+      }
+      return false
+    }
     const payload = {}
     for (const [k, v] of Object.entries(form.value)) {
-      if (k.endsWith('_zh') || k.endsWith('_en')) continue
+      if (isSyntheticBilingualKey(k)) continue
       payload[k] = v
     }
     for (const name of BILINGUAL_COLS) {
+      if (!isBilingual({ name })) continue
       const zh = form.value[name + '_zh'] || ''
       const en = form.value[name + '_en'] || ''
       if (zh || en) {
@@ -450,13 +591,37 @@ const onSave = async () => {
       }
     }
     const id = primaryValue.value
+    let message = ''
     if (id !== undefined) {
       await updateRecord(props.table, id, payload)
-      push('success', `记录 #${id} 更新成功`)
+      message = `记录 #${id} 更新成功`
     } else {
       const res = await createRecord(props.table, payload)
-      push('success', `新记录已创建（id=${res.id}）`)
+      message = `新记录已创建（id=${res.id}）`
     }
+
+    // xms_app：把名称类字段一次性同步到同包名的所有记录（自查修复）
+    if (props.table === 'xms_app' && syncXmsPkg.value && String(payload.pkg || '').trim()) {
+      // 只同步有值的字段：修哪项就同步哪项，避免用空值把其它行的名称清掉
+      const fields = {}
+      if (String(payload.name || '').trim()) fields.name = String(payload.name).trim()
+      if (String(payload.name_en || '').trim()) fields.name_en = String(payload.name_en).trim()
+      if (String(payload.names || '').trim()) fields.names = payload.names
+      if (String(payload.apk_name || '').trim()) fields.apk_name = String(payload.apk_name).trim()
+      try {
+        const res = Object.keys(fields).length
+          ? await $fetch('/api/xms/propagate', {
+              method: 'POST',
+              body: { pkg: String(payload.pkg).trim(), ...fields },
+            })
+          : null
+        const updated = Number(res?.updated || 0)
+        if (updated > 1) message += `，并同步同包名 ${updated} 条记录`
+      } catch (e) {
+        push('error', `记录已保存，但同包名同步失败：${errorMessage(e)}`)
+      }
+    }
+    push('success', message)
 
     emit('saved')
     emit('close')

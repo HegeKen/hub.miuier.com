@@ -197,4 +197,12 @@ export default {
   xmsSearchPlaceholder: 'འཕྲིན་ཆས་ / ཐུམ་སྒྲིག་ / ཨེཔ་འཚོལ།',
   xmsDownloadFailed: 'ཕབ་ལེན་སྦྲེལ་མཐུད་མ་ཐོབ། ཡང་བསྐྱར་ཚོད་ལྟ་བྱེད་རོགས།',
   xmsEmpty: 'ད་དུང་ཨེཔ་གསར་བཅོས་ཀྱི་ཐོ་ཡིག་མེད།',
+  xmsAll: 'All',
+  xmsSeries: 'Series',
+  xmsTablet: 'Tablet',
+  xmsArchiveHint: 'Only XMS versions and packages that have been crawled are shown; older versions appear automatically once fetched.',
+  xmsTypeUniversal: 'Universal',
+  xmsTypePhone: 'Phone',
+  xmsTypePad: 'Tablet',
+  xmsTypeFold: 'Fold',
 }

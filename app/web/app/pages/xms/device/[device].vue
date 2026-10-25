@@ -60,7 +60,7 @@
       <!-- 推送列表：最新的展开，历史推送折叠 -->
       <details
         v-for="(push, pushIndex) in device.pushes"
-        :key="push.version + '-' + push.romVersion + '-' + pushIndex"
+        :key="push.version + '-' + pushIndex"
         :open="pushIndex === 0"
         class="mb-4 overflow-hidden rounded-xl border border-[var(--color-border)]"
       >
@@ -74,7 +74,13 @@
           >
             {{ push.os }}
           </span>
-          <span class="break-all font-mono text-xs text-[var(--color-text-secondary)]">{{ push.romVersion }}</span>
+          <span
+            v-for="romVersion in push.romVersions || []"
+            :key="romVersion"
+            class="rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-text-secondary)]"
+          >
+            {{ romVersion }}
+          </span>
           <span v-if="push.isLatest" class="rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-accent)]">
             {{ $t('xmsLatest') }}
           </span>
@@ -115,6 +121,12 @@
               <span v-if="app.pkg" class="break-all font-mono text-[11px] text-[var(--color-text-tertiary)]">
                 <span class="sr-only">{{ $t('xmsPackage') }}: </span>{{ app.pkg }}
               </span>
+              <span
+                v-if="app.type"
+                class="rounded-full border border-[var(--color-border)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-secondary)]"
+              >
+                {{ typeLabel(app.type) }}
+              </span>
               <span class="grow" />
               <span class="font-mono text-xs text-[var(--color-text)]">{{ app.version || '—' }}</span>
               <XmsDownloadButton
@@ -125,16 +137,26 @@
                 :region="push.region"
                 :zone="push.zone ?? 1"
                 :android="push.android"
-                :rom-version="push.romVersion"
+                :rom-version="push.romVersions?.[0] || ''"
                 :xms-version="push.version"
                 :size="app.size"
               />
             </div>
 
             <XmsLogList v-if="app.logs && app.logs.length" :logs="app.logs" class="mt-2" />
-            <p v-if="app.file" class="mt-1.5 break-all font-mono text-[11px] text-[var(--color-text-tertiary)]">
-              {{ app.file }}
+            <p
+              v-if="app.file"
+              class="mt-1.5 break-all font-mono text-[11px] text-[var(--color-text-tertiary)]"
+              :title="app.file"
+            >
+              {{ xmsFileVersion(app.file, app.version) }}
             </p>
+          </div>
+
+          <!-- 没有包名的日志模块（如「小米超级岛」）：不是应用，只展示模块名与日志 -->
+          <div v-for="(extra, extraIndex) in push.extra || []" :key="'extra-' + extraIndex" class="px-4 py-3">
+            <p class="text-sm font-medium text-[var(--color-text)]">{{ pickXmsText(extra.name, locale) }}</p>
+            <XmsLogList v-if="extra.logs && extra.logs.length" :logs="extra.logs" class="mt-2" />
           </div>
         </div>
       </details>
@@ -143,9 +165,16 @@
 </template>
 
 <script setup>
-import { pickXmsText } from '~/utils/xms'
+import { pickXmsText, xmsFileVersion } from '~/utils/xms'
 
 const { locale, t } = useI18n()
+
+const typeLabel = (type) =>
+  type === 'phone' ? t('xmsTypePhone')
+    : type === 'pad' ? t('xmsTypePad')
+      : type === 'fold' ? t('xmsTypeFold')
+        : type === 'universal' ? t('xmsTypeUniversal')
+          : ''
 const route = useRoute()
 const { buildXmsDeviceUrl } = useApi()
 const regionName = useRegionName()
