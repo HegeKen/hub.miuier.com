@@ -124,12 +124,18 @@ export function useAdminApi() {
     )
   }
 
-  /** 重置 AUTO_INCREMENT 为 MAX(id)+1（只影响后续新行，不重排已有 ID） */
+  /** 重排已有 ID（1..N，同步引用）并重置 AUTO_INCREMENT */
   const resetAutoIncrement = async (table: string) => {
-    return $fetch<{ ok: boolean; table: string; before: number; after: number; maxId: number; next: number; changed: boolean }>(
-      `/api/db/${table}/auto-increment`,
-      { method: 'POST' },
-    )
+    return $fetch<{
+      ok: boolean
+      table: string
+      count: number
+      renumbered: number
+      references: number
+      beforeAutoIncrement: number
+      afterAutoIncrement: number
+      dryRun: boolean
+    }>(`/api/db/${table}/auto-increment`, { method: 'POST' })
   }
 
   const runSql = async (sql: string) => {

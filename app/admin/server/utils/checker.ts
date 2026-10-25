@@ -807,6 +807,18 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       sampleCols: ['pkg', 'name'],
     },
     {
+      id: 'empty_entry',
+      name: '空条目（只有名称）',
+      column: 'file_name',
+      description:
+        '只有名称 / 包名，没有安装包（file_name、md5）也没有更新日志；属于无实际内容的条目，建议清理',
+      severity: 'warning',
+      violation:
+        "(file_name IS NULL OR file_name = '') AND (md5 IS NULL OR md5 = '') "
+        + "AND (logs IS NULL OR logs = '' OR logs = '[]')",
+      sampleCols: ['pkg', 'name'],
+    },
+    {
       id: 'names_inconsistent',
       name: '同包名 names 不一致',
       column: 'names',

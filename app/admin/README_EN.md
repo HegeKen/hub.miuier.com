@@ -96,10 +96,12 @@ The panel supports two connection modes (selected/verified on the login page `/l
   comments & examples in `data/db_structure/*.sql`, flags illogical field values (enum values, format regexes, JSON
   validity, empty strings, package filenames, etc.), shows violation counts and samples; samples link directly to
   editing; the "total / errors / warnings" summary is clickable to filter the rule list by severity
-- **AUTO_INCREMENT repair** — every table's self-check panel shows the current `AUTO_INCREMENT` and `MAX(id)`
-  (plus the number of skipped ids); "reset auto-increment" sets the counter to `MAX(id)+1`, removing the tail gap
-  left by deletes/rollbacks. It only affects ids of future rows and **never renumbers existing rows** (that would
-  break references such as `xms_app.xms_id` / `roms.dev_week`)
+- **ID renumbering (AUTO_INCREMENT repair)** — every table's self-check panel shows the current `AUTO_INCREMENT` and
+  `MAX(id)` (plus the number of skipped ids); "renumber ids" compacts existing ids to `1..N` and **updates the
+  references** in the same transaction: `series.device_ids` (devices.id), `xms.rom_id` (roms.id), `xms_app.xms_id`
+  (xms.id), `roms.logs` / `dev.logs` (logs.id; only module & entry ids are mapped, language masks stay as-is), then
+  resets `AUTO_INCREMENT` to `N+1`. The operation is transactional (rolls back on error) but irreversible; large
+  tables (roms / logs) may take seconds to tens of seconds
 - **Dismiss** — special cases (e.g. legacy formats, carrier-customized models) can be ignored:
   - Row level: "Ignore" button on a sample row — skips only that record
   - Rule level: "Ignore this rule" in the rule header (optional reason) — the whole rule no longer counts
@@ -131,7 +133,7 @@ and delete confirmation.
 | DELETE | `/api/db/check/dismiss`           | Undismiss `{table, ruleId, rowId?}`   |
 | GET    | `/api/db/check/dismissals`        | Dismissed list (`?table=` optional)   |
 | GET    | `/api/db/:table/auto-increment`   | Auto-increment status: current `AUTO_INCREMENT`, `MAX(id)`, skipped ids |
-| POST   | `/api/db/:table/auto-increment`   | Reset `AUTO_INCREMENT` to `MAX(id)+1` (future rows only) |
+| POST   | `/api/db/:table/auto-increment`   | Renumber existing ids to `1..N`, update references and reset `AUTO_INCREMENT` (`{dryRun:true}` previews and rolls back) |
 | POST   | `/api/logs/manual`                | Manual log entry `{text, type?, lang?, preview?}`: split lines → compare with `logs` → write / back-fill other languages |
 | GET    | `/api/logs/list`                  | Log group list (`page/pageSize/search/type/missing`) with per-language coverage |
 | GET    | `/api/logs/audit`                 | Dedup audit: duplicate groups / duplicate rows / rows referenced by no `roms`·`dev` record |

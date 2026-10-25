@@ -88,9 +88,11 @@ pnpm preview    # 预览生产构建
 - **数据自查** — 每个模块工具栏的「自查」按钮 + 仪表盘「运行自查」：依据 `data/db_structure/*.sql`
   中每列的注释与示例，主动筛选不符合逻辑的字段（枚举值、格式正则、JSON 合法性、空字符串、包文件名等），
   展示违规计数与样本，样本可直接跳转编辑；汇总区的「违规合计 / 错误 / 警告」可点击按级别筛选规则列表
-- **AUTO_INCREMENT 修复** — 每个表的自查面板会显示当前 `AUTO_INCREMENT` 与 `MAX(id)`（以及跳号数），
-  点「重置自增 ID」把计数器重置为 `MAX(id)+1`，去掉删除/回滚留下的尾部空号；
-  只影响后续新增行的编号，**不会重排已有 ID**（重排会破坏 `xms_app.xms_id`、`roms.dev_week` 等引用关系）
+- **ID 重排（AUTO_INCREMENT 修复）** — 每个表的自查面板会显示当前 `AUTO_INCREMENT` 与 `MAX(id)`（以及跳号数），
+  点「重排自增 ID」会把已有 ID 压紧成连续的 `1..N`，并**同步更新引用**：
+  `series.device_ids`（devices.id）、`xms.rom_id`（roms.id）、`xms_app.xms_id`（xms.id）、
+  `roms.logs` / `dev.logs`（logs.id，只映射模块 ID 与条目 ID，语言掩码不动），最后把 `AUTO_INCREMENT` 收到 `N+1`。
+  操作在单个事务里完成（失败回滚），但不可撤销；`roms` / `logs` 数据量大时可能需要几秒到几十秒
 - **自查忽略（dismiss）** — 特殊情况（如历史遗留格式、运营商定制机型）可忽略：
   - 行级：样本行「忽略」按钮，只跳过该记录
   - 规则级：规则头「忽略此规则」（可填原因），整条规则不再计入违规
@@ -121,7 +123,7 @@ pnpm preview    # 预览生产构建
 | DELETE | `/api/db/check/dismiss`            | 取消忽略 `{table, ruleId, rowId?}`        |
 | GET    | `/api/db/check/dismissals`         | 已忽略列表（`?table=` 可选）          |
 | GET    | `/api/db/:table/auto-increment`    | 查看自增状态：当前 `AUTO_INCREMENT`、`MAX(id)`、跳号数 |
-| POST   | `/api/db/:table/auto-increment`    | 重置 `AUTO_INCREMENT` 为 `MAX(id)+1`（只影响后续新行） |
+| POST   | `/api/db/:table/auto-increment`    | 重排已有 ID 为 `1..N`、同步引用并重置 `AUTO_INCREMENT`（`{dryRun:true}` 可预演后回滚） |
 | POST   | `/api/logs/manual`                 | 手动录入日志 `{text, type?, lang?, preview?}`：按换行拆行 → 比对 `logs` 表 → 写库 / 补齐其他语言 |
 | GET    | `/api/logs/list`                   | 日志分组列表（`page/pageSize/search/type/missing`），含各语言覆盖数 |
 | GET    | `/api/logs/audit`                  | 去重体检：重复分组 / 重复行数 / 未被 `roms`·`dev` 引用的孤儿行 |

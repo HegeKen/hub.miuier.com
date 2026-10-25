@@ -26,10 +26,10 @@
                 type="button"
                 class="btn-secondary !py-1.5 text-xs"
                 :disabled="fixing || busy || loading"
-                :title="'把 AUTO_INCREMENT 重置为 MAX(id)+1，去掉尾部跳号（不重排已有 ID）'"
+                :title="'把已有 ID 重排为连续的 1..N，同步更新引用并重置 AUTO_INCREMENT'"
                 @click="fixAutoIncrement"
               >
-                {{ fixing ? '修复中…' : '重置自增 ID' }}
+                {{ fixing ? '重排中…' : '重排自增 ID' }}
               </button>
               <button type="button" class="btn-secondary !py-1.5 text-xs" :disabled="loading || busy" @click="load">
                 重新检查
@@ -485,14 +485,19 @@ const fixAutoIncrement = async () => {
   if (fixing.value || busy.value) return
   const tip = ai.value
     ? `当前 AUTO_INCREMENT=${ai.value.autoIncrement}，MAX(id)=${ai.value.maxId}。\n`
-      + `将重置为 ${ai.value.maxId + 1}。\n只影响后续新增行的编号，不会重排已有 ID，继续？`
-    : '把 AUTO_INCREMENT 重置为 MAX(id)+1？只影响后续新增行，不会重排已有 ID。'
+      + '将把已有 ID 重排为连续的 1..N，并同步更新引用（series.device_ids / xms.rom_id / '
+      + 'xms_app.xms_id / roms.logs / dev.logs），然后重置 AUTO_INCREMENT。\n'
+      + '此操作不可撤销，数据量大时可能需要一会儿，继续？'
+    : '将把已有 ID 重排为连续的 1..N 并同步更新引用，此操作不可撤销，继续？'
   if (!window.confirm(tip)) return
 
   fixing.value = true
   try {
     const res = await resetAutoIncrement(props.table)
-    push('success', `AUTO_INCREMENT 已重置：${res.before} → ${res.after}（MAX(id)=${res.maxId}）`)
+    const head = res.renumbered > 0
+      ? `ID 已重排：${res.renumbered} 行，引用更新 ${res.references} 条`
+      : 'ID 已连续，无需重排'
+    push('success', `${head}（AUTO_INCREMENT ${res.beforeAutoIncrement} → ${res.afterAutoIncrement}）`)
     await loadAi()
   } catch (e) {
     push('error', errorMessage(e))

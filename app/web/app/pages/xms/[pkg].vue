@@ -106,6 +106,9 @@
               {{ xmsFileVersion(group.file, group.appVersion) }}
             </span>
             <span v-if="group.size" class="text-xs tabular-nums text-[var(--color-text-tertiary)]">{{ formatBytes(group.size) }}</span>
+            <span v-if="group.releaseDate" class="text-xs tabular-nums text-[var(--color-text-tertiary)]">
+              {{ $t('release') }} {{ group.releaseDate }}
+            </span>
             <span class="grow" />
             <XmsDownloadButton
               :pkg="app.pkg"

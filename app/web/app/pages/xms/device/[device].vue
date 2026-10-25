@@ -128,6 +128,9 @@
                 {{ typeLabel(app.type) }}
               </span>
               <span class="grow" />
+              <span v-if="app.releaseDate" class="text-[11px] tabular-nums text-[var(--color-text-tertiary)]">
+                {{ app.releaseDate }}
+              </span>
               <span class="font-mono text-xs text-[var(--color-text)]">{{ app.version || '—' }}</span>
               <XmsDownloadButton
                 v-if="app.pkg"
