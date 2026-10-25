@@ -36,6 +36,9 @@ pnpm index      # rebuild data indexes only (no server)
 | `/roms/:os` | ROMs of one OS | Full ROM package list for a given major OS version |
 | `/dev` | Developer weekly | Browse Developer (Beta / DEV) announcements by week: grouped by major version, week cards with version / release date / device count; China and Global builds are kept separate |
 | `/dev/:week` | One developer week | Announcement title and body, update notes, multilingual changelog (current locale, falling back to English / Chinese), device and ROM lists; clicking a device card opens that ROM's detail modal (the in-card "device info" link still goes to the device page) |
+| `/xms` | App updates (SOTA) | XMS system-app push index: browse by app (package) or device; `?pkg=<package>` / `?device=<codename>` deep-links straight to a detail page |
+| `/xms/:pkg` | App update detail | Grouped by XMS version + app version: version info, APK and changelog appear once, with the devices and their system versions listed below; the XMS version carries an OS label (C→OS3, D→OS4) and a fresh signed APK link |
+| `/xms/device/:codename` | Device app updates | All XMS pushes of one device, their notes and each app's changelog, with APK downloads |
 
 - The **ROM detail modal** is a shared component (`app/components/RomModal.vue`) used by the device detail page and
   the developer weekly page: version / Android / release / security patch, recovery and fastboot packages (plus
@@ -43,6 +46,9 @@ pnpm index      # rebuild data indexes only (no server)
   the multilingual changelog. Blocks with missing data hide themselves, so the dev weekly page — which has no
   branch code — simply shows no high-speed section.
 - Download links point to Xiaomi's OSS CDN (`bkt-sgp-miui-ota-update-alisgp.oss-ap-southeast-1.aliyuncs.com`)
+- XMS APK links carry a time-limited signature, so they are not stored in the static JSON; clicking Download on an
+  `/xms` page asks `server/api/xms/download.post.ts` for a fresh signed link (same approach as the ROM high-speed
+  download — only metadata is proxied, never the APK itself)
 - The site includes a disclaimer (not affiliated with Xiaomi), a dark-mode toggle, and zh/en language switching
 
 ## Data Source

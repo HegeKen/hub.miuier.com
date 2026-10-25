@@ -181,4 +181,20 @@ export default {
   // Common
   loadFailed: 'Tải thất bại',
   retry: 'Thử lại',
+
+  // XMS (/xms)
+  xms: 'Cập nhật ứng dụng',
+  xmsSub: 'Bản đẩy ứng dụng hệ thống (SOTA / XMS): xem phiên bản và nhật ký theo thiết bị hoặc gói',
+  xmsByDevice: 'Theo thiết bị',
+  xmsByApp: 'Theo ứng dụng',
+  xmsApps: '{count} ứng dụng',
+  xmsLatest: 'Mới nhất',
+  xmsRecords: 'Lịch sử cập nhật',
+  xmsPackage: 'Gói',
+  xmsSystemVersion: 'Phiên bản hệ thống',
+  xmsAppVersion: 'Phiên bản ứng dụng',
+  xmsPushDate: 'Ngày đẩy',
+  xmsSearchPlaceholder: 'Tìm thiết bị / gói / ứng dụng',
+  xmsDownloadFailed: 'Không lấy được liên kết tải xuống, vui lòng thử lại sau',
+  xmsEmpty: 'Chưa có lịch sử cập nhật ứng dụng',
 }

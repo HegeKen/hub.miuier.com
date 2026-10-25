@@ -181,4 +181,20 @@ export default {
   // Common
   loadFailed: 'Falha ao carregar',
   retry: 'Tentar novamente',
+
+  // XMS (/xms)
+  xms: 'Atualizações de apps',
+  xmsSub: 'Atualizações de apps do sistema (SOTA / XMS): versões e registros por dispositivo ou pacote',
+  xmsByDevice: 'Por dispositivo',
+  xmsByApp: 'Por app',
+  xmsApps: '{count} apps',
+  xmsLatest: 'Mais recente',
+  xmsRecords: 'Histórico de atualizações',
+  xmsPackage: 'Pacote',
+  xmsSystemVersion: 'Versão do sistema',
+  xmsAppVersion: 'Versão do app',
+  xmsPushDate: 'Data de envio',
+  xmsSearchPlaceholder: 'Pesquisar dispositivo / pacote / app',
+  xmsDownloadFailed: 'Link de download indisponível, tente novamente mais tarde',
+  xmsEmpty: 'Ainda não há registros de atualizações de apps',
 }

@@ -19,7 +19,7 @@ Xiaomi / Redmi / POCO device ROM data platform, providing full firmware informat
 ├── data/             # ROM data repo (git submodule → HegeKen/miroms, deployed at api.miuier.com)
 │   ├── api/          # Exported JSON data (v1 / v2 / v3)
 │   ├── scripts/      # Data sync / fetch / export / deploy scripts (Python 3)
-│   └── db_structure/ # MySQL table schemas (devices / branches / roms / series)
+│   └── db_structure/ # MySQL table schemas (devices / roms / logs / dev / branches / series / xms / xms_app)
 ├── graphify-out/     # Code knowledge graph (generated; do not hand-edit, see AGENTS.md)
 ├── .trae/rules/      # AI collaboration rules (e.g. git commit conventions)
 ├── AGENTS.md         # AI agent instructions (graphify usage, etc.)
@@ -49,7 +49,7 @@ pnpm dev:admin
 
 ## Frontend Site
 
-Built with Nuxt 4, deployed at [hub.miuier.com](https://hub.miuier.com). Features device browsing, ROM package lookup (MIUI & HyperOS), changelogs & download links, recent-update stats, and a feedback entry.
+Built with Nuxt 4, deployed at [hub.miuier.com](https://hub.miuier.com). Features device browsing, ROM package lookup (MIUI & HyperOS), changelogs & download links, developer weekly logs, system-app updates (SOTA / XMS) with APK downloads, recent-update stats, and a feedback entry.
 
 - Entry: `app/web/`
 - Stack: Nuxt 4 / Vue 3 / TypeScript / Tailwind CSS

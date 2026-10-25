@@ -181,4 +181,20 @@ export default {
   // Common
   loadFailed: 'โหลดไม่สำเร็จ',
   retry: 'ลองใหม่',
+
+  // XMS (/xms)
+  xms: 'อัปเดตแอป',
+  xmsSub: 'ประวัติการส่งแอประบบ (SOTA / XMS): ดูเวอร์ชันและบันทึกการเปลี่ยนแปลงตามอุปกรณ์หรือแพ็กเกจ',
+  xmsByDevice: 'ตามอุปกรณ์',
+  xmsByApp: 'ตามแอป',
+  xmsApps: '{count} แอป',
+  xmsLatest: 'ล่าสุด',
+  xmsRecords: 'ประวัติการอัปเดต',
+  xmsPackage: 'แพ็กเกจ',
+  xmsSystemVersion: 'เวอร์ชันระบบ',
+  xmsAppVersion: 'เวอร์ชันแอป',
+  xmsPushDate: 'วันที่ส่ง',
+  xmsSearchPlaceholder: 'ค้นหาอุปกรณ์ / แพ็กเกจ / แอป',
+  xmsDownloadFailed: 'ไม่สามารถรับลิงก์ดาวน์โหลดได้ โปรดลองใหม่ภายหลัง',
+  xmsEmpty: 'ยังไม่มีประวัติการอัปเดตแอป',
 }

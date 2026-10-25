@@ -120,6 +120,20 @@ export function useApi() {
     return buildUrl('/v3/tools.json')
   }
 
+  // XMS（SOTA 系统应用更新）：v3/xms/index.json 是索引，
+  // apps/<包名>.json / devices/<机型>.json 是单应用 / 单机型详情
+  const buildXmsIndexUrl = (): string => {
+    return buildUrl('/v3/xms/index.json')
+  }
+
+  const buildXmsAppUrl = (pkg: string): string => {
+    return buildUrl(`/v3/xms/apps/${encodeURIComponent(pkg)}.json`)
+  }
+
+  const buildXmsDeviceUrl = (device: string): string => {
+    return buildUrl(`/v3/xms/devices/${encodeURIComponent(device)}.json`)
+  }
+
   // 高速下载：始终同源走 Nitro（开发为 Node 路由，生产为 Cloudflare Pages Function），
   // 由服务端代理小米 OTA 接口。签名直链有实效性，不能缓存。
   const fetchHighSpeed = async (params: HighSpeedParams): Promise<HighSpeedResult> => {
@@ -147,6 +161,9 @@ export function useApi() {
     buildDevWeekUrl,
     buildSiteLogUrl,
     buildToolsUrl,
+    buildXmsIndexUrl,
+    buildXmsAppUrl,
+    buildXmsDeviceUrl,
     fetchHighSpeed,
   }
 }

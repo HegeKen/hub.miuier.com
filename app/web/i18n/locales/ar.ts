@@ -185,4 +185,20 @@ export default {
   // عام
   loadFailed: 'فشل التحميل',
   retry: 'إعادة المحاولة',
+
+  // XMS (/xms)
+  xms: 'تحديثات التطبيقات',
+  xmsSub: 'سجل دفع تطبيقات النظام (SOTA / XMS): تصفح الإصدارات وسجلات التغيير حسب الجهاز أو الحزمة',
+  xmsByDevice: 'حسب الجهاز',
+  xmsByApp: 'حسب التطبيق',
+  xmsApps: '{count} تطبيقات',
+  xmsLatest: 'الأحدث',
+  xmsRecords: 'سجل التحديثات',
+  xmsPackage: 'الحزمة',
+  xmsSystemVersion: 'إصدار النظام',
+  xmsAppVersion: 'إصدار التطبيق',
+  xmsPushDate: 'تاريخ الدفع',
+  xmsSearchPlaceholder: 'بحث عن جهاز / حزمة / تطبيق',
+  xmsDownloadFailed: 'رابط التنزيل غير متاح، يرجى المحاولة لاحقا',
+  xmsEmpty: 'لا توجد سجلات تحديث للتطبيقات بعد',
 }

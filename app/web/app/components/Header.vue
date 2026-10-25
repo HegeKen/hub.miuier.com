@@ -118,6 +118,7 @@ const navItems = computed(() => {
     { label: 'devices', path: base + '/devices' },
     { label: 'roms', path: base + '/roms' },
     { label: 'dev', path: base + '/dev' },
+    { label: 'xms', path: base + '/xms' },
     { label: 'tools', path: base + '/tools' },
     { label: 'sitelog', path: base + '/sitelog' },
   ]

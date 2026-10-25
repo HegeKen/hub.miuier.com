@@ -181,4 +181,20 @@ export default {
   // Common
   loadFailed: 'Yüklenemedi',
   retry: 'Yeniden dene',
+
+  // XMS (/xms)
+  xms: 'Uygulama güncellemeleri',
+  xmsSub: 'Sistem uygulaması (SOTA / XMS) gönderimleri: sürümler ve değişiklik günlükleri cihaza veya pakete göre',
+  xmsByDevice: 'Cihaza göre',
+  xmsByApp: 'Uygulamaya göre',
+  xmsApps: '{count} uygulama',
+  xmsLatest: 'En son',
+  xmsRecords: 'Güncelleme kayıtları',
+  xmsPackage: 'Paket',
+  xmsSystemVersion: 'Sistem sürümü',
+  xmsAppVersion: 'Uygulama sürümü',
+  xmsPushDate: 'Gönderim tarihi',
+  xmsSearchPlaceholder: 'Cihaz / paket / uygulama ara',
+  xmsDownloadFailed: 'İndirme bağlantısı alınamadı, lütfen daha sonra tekrar deneyin',
+  xmsEmpty: 'Henüz uygulama güncelleme kaydı yok',
 }

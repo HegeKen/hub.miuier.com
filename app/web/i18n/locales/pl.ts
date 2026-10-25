@@ -181,4 +181,20 @@ export default {
   // Common
   loadFailed: 'Nie udało się załadować',
   retry: 'Ponów',
+
+  // XMS (/xms)
+  xms: 'Aktualizacje aplikacji',
+  xmsSub: 'Aktualizacje aplikacji systemowych (SOTA / XMS): wersje i dzienniki zmian według urządzenia lub pakietu',
+  xmsByDevice: 'Według urządzenia',
+  xmsByApp: 'Według aplikacji',
+  xmsApps: 'Aplikacje: {count}',
+  xmsLatest: 'Najnowsze',
+  xmsRecords: 'Historia aktualizacji',
+  xmsPackage: 'Pakiet',
+  xmsSystemVersion: 'Wersja systemu',
+  xmsAppVersion: 'Wersja aplikacji',
+  xmsPushDate: 'Data wysyłki',
+  xmsSearchPlaceholder: 'Szukaj urządzenia / pakietu / aplikacji',
+  xmsDownloadFailed: 'Nie udało się pobrać linku do pobrania, spróbuj później',
+  xmsEmpty: 'Brak historii aktualizacji aplikacji',
 }

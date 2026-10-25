@@ -181,4 +181,20 @@ export default {
   // Common
   loadFailed: 'Gagal dimuat',
   retry: 'Coba lagi',
+
+  // XMS (/xms)
+  xms: 'Pembaruan aplikasi',
+  xmsSub: 'Pengiriman aplikasi sistem (SOTA / XMS): versi dan log perubahan berdasarkan perangkat atau paket',
+  xmsByDevice: 'Berdasarkan perangkat',
+  xmsByApp: 'Berdasarkan aplikasi',
+  xmsApps: '{count} aplikasi',
+  xmsLatest: 'Terbaru',
+  xmsRecords: 'Riwayat pembaruan',
+  xmsPackage: 'Paket',
+  xmsSystemVersion: 'Versi sistem',
+  xmsAppVersion: 'Versi aplikasi',
+  xmsPushDate: 'Tanggal pengiriman',
+  xmsSearchPlaceholder: 'Cari perangkat / paket / aplikasi',
+  xmsDownloadFailed: 'Tautan unduhan tidak tersedia, coba lagi nanti',
+  xmsEmpty: 'Belum ada riwayat pembaruan aplikasi',
 }

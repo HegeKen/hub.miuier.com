@@ -181,4 +181,20 @@ export default {
   // 通用
   loadFailed: '載入失敗',
   retry: '重試',
+
+  // XMS (/xms)
+  xms: '應用程式更新',
+  xmsSub: '系統應用程式（SOTA / XMS）推送記錄：依機型或套件名稱查看應用程式版本與更新日誌',
+  xmsByDevice: '依機型瀏覽',
+  xmsByApp: '依應用程式瀏覽',
+  xmsApps: '{count} 個應用程式',
+  xmsLatest: '最新',
+  xmsRecords: '更新記錄',
+  xmsPackage: '套件名稱',
+  xmsSystemVersion: '系統版本',
+  xmsAppVersion: '應用程式版本',
+  xmsPushDate: '推送日期',
+  xmsSearchPlaceholder: '搜尋機型 / 套件名稱 / 應用程式名稱',
+  xmsDownloadFailed: '暫時無法取得下載連結，請稍後再試',
+  xmsEmpty: '尚無應用程式更新記錄',
 }

@@ -183,4 +183,20 @@ export default {
   // 通用
   loadFailed: '加载失败',
   retry: '重试',
+
+  // XMS (/xms)
+  xms: '应用更新',
+  xmsSub: '系统应用（SOTA / XMS）推送记录：按机型或包名查看应用版本与更新日志',
+  xmsByDevice: '按机型浏览',
+  xmsByApp: '按应用浏览',
+  xmsApps: '{count} 个应用',
+  xmsLatest: '最新',
+  xmsRecords: '更新记录',
+  xmsPackage: '包名',
+  xmsSystemVersion: '系统版本',
+  xmsAppVersion: '应用版本',
+  xmsPushDate: '推送日期',
+  xmsSearchPlaceholder: '搜索机型 / 包名 / 应用名',
+  xmsDownloadFailed: '暂时无法获取下载链接，请稍后再试',
+  xmsEmpty: '暂无应用更新记录',
 }

@@ -19,7 +19,7 @@
 ├── data/             # ROM 数据仓库（git submodule → HegeKen/miroms，部署于 api.miuier.com）
 │   ├── api/          # 导出的 JSON 数据（v1 / v2 / v3）
 │   ├── scripts/      # 数据同步 / 抓取 / 导出 / 部署脚本（Python 3）
-│   └── db_structure/ # MySQL 表结构（devices / roms / logs / dev / branches / series）
+│   └── db_structure/ # MySQL 表结构（devices / roms / logs / dev / branches / series / xms / xms_app）
 ├── graphify-out/     # 代码知识图谱（生成物，勿手改，见 AGENTS.md）
 ├── .trae/rules/      # AI 协作规则（如 git commit 规范）
 ├── AGENTS.md         # AI 代理工作指引（graphify 用法等）
@@ -49,7 +49,7 @@ pnpm dev:admin
 
 ## 前端站点
 
-基于 Nuxt 4 构建，部署于 [hub.miuier.com](https://hub.miuier.com)，提供机型浏览、ROM 刷机包查询（MIUI & HyperOS）、更新日志与下载链接、开发版（周更）日志按周浏览、近期更新统计、反馈入口。
+基于 Nuxt 4 构建，部署于 [hub.miuier.com](https://hub.miuier.com)，提供机型浏览、ROM 刷机包查询（MIUI & HyperOS）、更新日志与下载链接、开发版（周更）日志按周浏览、应用更新（SOTA / XMS）与 APK 下载、近期更新统计、反馈入口。
 
 - 入口：`app/web/`
 - 技术栈：Nuxt 4 / Vue 3 / TypeScript / Tailwind CSS

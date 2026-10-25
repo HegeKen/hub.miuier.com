@@ -181,4 +181,20 @@ export default {
   // 共通
   loadFailed: '読み込みに失敗しました',
   retry: '再試行',
+
+  // XMS (/xms)
+  xms: 'アプリ更新',
+  xmsSub: 'システムアプリ（SOTA / XMS）の配信履歴。機種またはパッケージからアプリのバージョンと更新履歴を確認できます',
+  xmsByDevice: '機種から探す',
+  xmsByApp: 'アプリから探す',
+  xmsApps: '{count} 個のアプリ',
+  xmsLatest: '最新',
+  xmsRecords: '更新履歴',
+  xmsPackage: 'パッケージ',
+  xmsSystemVersion: 'システムバージョン',
+  xmsAppVersion: 'アプリバージョン',
+  xmsPushDate: '配信日',
+  xmsSearchPlaceholder: '機種 / パッケージ / アプリ名を検索',
+  xmsDownloadFailed: 'ダウンロードリンクを取得できません。しばらくしてから再度お試しください',
+  xmsEmpty: 'アプリ更新の記録はありません',
 }

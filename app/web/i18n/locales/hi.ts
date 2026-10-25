@@ -181,4 +181,20 @@ export default {
   // सामान्य
   loadFailed: 'लोड विफल',
   retry: 'पुनः प्रयास करें',
+
+  // XMS (/xms)
+  xms: 'ऐप अपडेट',
+  xmsSub: 'सिस्टम ऐप (SOTA / XMS) पुश: डिवाइस या पैकेज के अनुसार ऐप संस्करण और चेंजलॉग देखें',
+  xmsByDevice: 'डिवाइस के अनुसार',
+  xmsByApp: 'ऐप के अनुसार',
+  xmsApps: '{count} ऐप',
+  xmsLatest: 'नवीनतम',
+  xmsRecords: 'अपडेट रिकॉर्ड',
+  xmsPackage: 'पैकेज',
+  xmsSystemVersion: 'सिस्टम संस्करण',
+  xmsAppVersion: 'ऐप संस्करण',
+  xmsPushDate: 'पुश तिथि',
+  xmsSearchPlaceholder: 'डिवाइस / पैकेज / ऐप खोजें',
+  xmsDownloadFailed: 'डाउनलोड लिंक उपलब्ध नहीं, कृपया बाद में पुनः प्रयास करें',
+  xmsEmpty: 'अभी कोई ऐप अपडेट रिकॉर्ड नहीं',
 }

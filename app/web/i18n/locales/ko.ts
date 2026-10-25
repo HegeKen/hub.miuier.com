@@ -181,4 +181,20 @@ export default {
   // 공통
   loadFailed: '불러오기 실패',
   retry: '다시 시도',
+
+  // XMS (/xms)
+  xms: '앱 업데이트',
+  xmsSub: '시스템 앱(SOTA / XMS) 배포 기록입니다. 기기 또는 패키지로 앱 버전과 업데이트 내역을 확인하세요',
+  xmsByDevice: '기기별 보기',
+  xmsByApp: '앱별 보기',
+  xmsApps: '앱 {count}개',
+  xmsLatest: '최신',
+  xmsRecords: '업데이트 기록',
+  xmsPackage: '패키지',
+  xmsSystemVersion: '시스템 버전',
+  xmsAppVersion: '앱 버전',
+  xmsPushDate: '배포 날짜',
+  xmsSearchPlaceholder: '기기 / 패키지 / 앱 이름 검색',
+  xmsDownloadFailed: '다운로드 링크를 가져오지 못했습니다. 잠시 후 다시 시도하세요',
+  xmsEmpty: '앱 업데이트 기록이 없습니다',
 }

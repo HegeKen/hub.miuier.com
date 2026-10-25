@@ -44,6 +44,21 @@ export default defineNitroPlugin((nitroApp) => {
         urls.push({ loc: `/${sitemapName}/roms/${o.os}`, lastmod })
       }
 
+      // XMS（SOTA 应用更新）：索引 + 单应用 + 单机型。
+      // 旧数据里可能还没有 xms/ 目录，单独 try 以免影响其它 URL 的注入。
+      try {
+        const xms = JSON.parse(readFileSync(resolve(DATA_ROOT, 'xms/index.json'), 'utf-8'))
+        urls.push({ loc: `/${sitemapName}/xms`, lastmod })
+        for (const app of xms.apps || []) {
+          urls.push({ loc: `/${sitemapName}/xms/${app.pkg}`, lastmod })
+        }
+        for (const device of xms.devices || []) {
+          urls.push({ loc: `/${sitemapName}/xms/device/${device.device}`, lastmod })
+        }
+      } catch {
+        // xms 数据尚未导出时跳过
+      }
+
       if (urls.length) {
         sources.push({ context: { name: 'data' }, urls })
         console.log('[sitemap:sources] injected', urls.length, 'urls for', sitemapName)

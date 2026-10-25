@@ -181,4 +181,20 @@ export default {
   // ئومۇمىي
   loadFailed: 'يۈكلەش مەغلۇپ بولدى',
   retry: 'قايتا سىناش',
+
+  // XMS (/xms)
+  xms: 'ئەپ يېڭىلانمىسى',
+  xmsSub: 'سىستېما ئەپ (SOTA / XMS) ئۇچۇرلىرى: ئۈسكۈنە ياكى بولاق بويىچە نەشرى ۋە يېڭىلانما خاتىرىسىنى كۆرۈڭ',
+  xmsByDevice: 'ئۈسكۈنە بويىچە',
+  xmsByApp: 'ئەپ بويىچە',
+  xmsApps: '{count} ئەپ',
+  xmsLatest: 'ئەڭ يېڭى',
+  xmsRecords: 'يېڭىلانما خاتىرىسى',
+  xmsPackage: 'بولاق',
+  xmsSystemVersion: 'سىستېما نەشرى',
+  xmsAppVersion: 'ئەپ نەشرى',
+  xmsPushDate: 'تارقىتىش ۋاقتى',
+  xmsSearchPlaceholder: 'ئۈسكۈنە / بولاق / ئەپ ئىزدەش',
+  xmsDownloadFailed: 'چۈشۈرۈش ئۇلىنىشىنى ئالالمىدى، سەل تۇرۇپ قايتا سىناڭ',
+  xmsEmpty: 'تېخى ئەپ يېڭىلانما خاتىرىسى يوق',
 }

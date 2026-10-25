@@ -181,4 +181,20 @@ export default {
   // Common
   loadFailed: 'Laden fehlgeschlagen',
   retry: 'Erneut versuchen',
+
+  // XMS (/xms)
+  xms: 'App-Updates',
+  xmsSub: 'Updates der System-Apps (SOTA / XMS): Versionen und Änderungsprotokolle nach Gerät oder Paket',
+  xmsByDevice: 'Nach Gerät',
+  xmsByApp: 'Nach App',
+  xmsApps: '{count} Apps',
+  xmsLatest: 'Neueste',
+  xmsRecords: 'Update-Verlauf',
+  xmsPackage: 'Paket',
+  xmsSystemVersion: 'Systemversion',
+  xmsAppVersion: 'App-Version',
+  xmsPushDate: 'Übertragungsdatum',
+  xmsSearchPlaceholder: 'Gerät / Paket / App suchen',
+  xmsDownloadFailed: 'Download-Link nicht verfügbar, bitte später erneut versuchen',
+  xmsEmpty: 'Noch keine App-Update-Einträge',
 }

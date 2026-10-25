@@ -183,4 +183,20 @@ export default {
   // Common
   loadFailed: 'Failed to load',
   retry: 'Retry',
+
+  // XMS (/xms)
+  xms: 'App updates',
+  xmsSub: 'System app (SOTA / XMS) pushes — browse by device or package to see app versions and changelogs',
+  xmsByDevice: 'Browse by device',
+  xmsByApp: 'Browse by app',
+  xmsApps: '{count} apps',
+  xmsLatest: 'Latest',
+  xmsRecords: 'Update records',
+  xmsPackage: 'Package',
+  xmsSystemVersion: 'System version',
+  xmsAppVersion: 'App version',
+  xmsPushDate: 'Push date',
+  xmsSearchPlaceholder: 'Search device / package / app',
+  xmsDownloadFailed: 'Could not get a download link, please try again later',
+  xmsEmpty: 'No app update records yet',
 }

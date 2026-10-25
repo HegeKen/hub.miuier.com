@@ -181,4 +181,20 @@ export default {
   // Common
   loadFailed: 'Échec du chargement',
   retry: 'Réessayer',
+
+  // XMS (/xms)
+  xms: 'Mises à jour des applications',
+  xmsSub: 'Mises à jour des applications système (SOTA / XMS) : versions et journaux par appareil ou paquet',
+  xmsByDevice: 'Par appareil',
+  xmsByApp: 'Par application',
+  xmsApps: '{count} applications',
+  xmsLatest: 'Dernière',
+  xmsRecords: 'Historique des mises à jour',
+  xmsPackage: 'Paquet',
+  xmsSystemVersion: 'Version système',
+  xmsAppVersion: 'Version application',
+  xmsPushDate: 'Date de diffusion',
+  xmsSearchPlaceholder: 'Rechercher un appareil / paquet / une application',
+  xmsDownloadFailed: 'Lien de téléchargement indisponible, réessayez plus tard',
+  xmsEmpty: 'Aucun historique de mise à jour des applications',
 }
