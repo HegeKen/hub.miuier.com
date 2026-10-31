@@ -17,9 +17,9 @@
     "@nuxtjs/device": "^4.0.0",
     "@nuxtjs/i18n": "^10.6.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
-    "@types/node": "^26.6.5",
-    "baseline-browser-mapping": "^2.11.30",
-    "nuxt": "^4.6.2"
+    "@types/node": "^26.6.6",
+    "baseline-browser-mapping": "^2.11.34",
+    "nuxt": "^4.6.3"
   },
   "dependencies": {
     "@nuxtjs/sitemap": "^9.1.0"

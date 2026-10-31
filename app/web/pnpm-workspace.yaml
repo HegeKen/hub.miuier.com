@@ -4,3 +4,6 @@ minimumReleaseAgeExclude:
   - baseline-browser-mapping@2.11.18
 onlyBuiltDependencies:
   - esbuild
+overrides:
+  glob@>=9.0.0 <=14.0.1: ^14.0.2
+  minimatch@<11.0.1: ^11.0.1
