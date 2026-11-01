@@ -94,6 +94,27 @@ data class Strings(
     val myDeviceFound: String,
     val myDeviceSummary: String,
 
+    // —— 应用更新（XMS / SOTA）——
+    val xms: String,
+    val xmsSub: String,
+    val xmsByDevice: String,
+    val xmsByApp: String,
+    val xmsApps: String,
+    val xmsLatest: String,
+    val xmsRecords: String,
+    val xmsAppVersion: String,
+    val xmsPushDate: String,
+    val xmsSearchPlaceholder: String,
+    val xmsDownloadFailed: String,
+    val xmsEmpty: String,
+    val xmsTypeUniversal: String,
+    val xmsTypePhone: String,
+    val xmsTypePad: String,
+    val xmsTypeFold: String,
+    val totalDevices: String,
+    val release: String,
+    val attentions: String,
+
     // —— 设置 ——
     val appearance: String,
     val themeSystem: String,

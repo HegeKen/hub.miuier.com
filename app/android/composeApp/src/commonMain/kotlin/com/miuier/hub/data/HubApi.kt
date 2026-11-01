@@ -59,6 +59,14 @@ class HubApi(private val client: HttpClient = createHttpClient()) {
 
     suspend fun stats(): HubStats = client.get("$API_BASE/v3/stats.json").body()
 
+    // —— XMS（系统应用更新 / SOTA）——
+
+    suspend fun xmsIndex(): XmsIndex = client.get("$API_BASE/v3/xms/index.json").body()
+
+    suspend fun xmsApp(pkg: String): XmsAppDetail = client.get("$API_BASE/v3/xms/apps/$pkg.json").body()
+
+    suspend fun xmsDevice(device: String): XmsDeviceDetail = client.get("$API_BASE/v3/xms/devices/$device.json").body()
+
     /**
      * 某个 ROM 的多语种更新日志。
      *

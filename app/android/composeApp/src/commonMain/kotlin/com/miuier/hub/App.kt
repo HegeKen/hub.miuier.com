@@ -37,6 +37,9 @@ import com.miuier.hub.ui.screens.MyDeviceScreen
 import com.miuier.hub.ui.screens.OsRomsScreen
 import com.miuier.hub.ui.screens.RomsScreen
 import com.miuier.hub.ui.screens.SettingsScreen
+import com.miuier.hub.ui.screens.XmsAppDetailScreen
+import com.miuier.hub.ui.screens.XmsDeviceScreen
+import com.miuier.hub.ui.screens.XmsScreen
 import com.miuier.hub.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.FabPosition
@@ -57,6 +60,7 @@ import top.yukonga.miuix.kmp.icon.extended.Home
 import top.yukonga.miuix.kmp.icon.extended.Phone
 import top.yukonga.miuix.kmp.icon.extended.SearchDevice
 import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.icon.extended.Update
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -98,12 +102,15 @@ fun App(
                 Screen.Home -> l10n.strings.home
                 Screen.Devices -> l10n.strings.devices
                 Screen.Roms -> l10n.strings.roms
+                Screen.Xms -> l10n.strings.xms
                 Screen.Settings -> l10n.strings.settings
                 // 直接显示机型名比显示「本机信息」更有用；拿不到就退回 tab 名
                 Screen.MyDevice -> app.localSummary?.name?.pick(l10n.dataLang)
                     ?: l10n.strings.myDevice
                 is Screen.DeviceDetail -> screen.title
                 is Screen.OsRoms -> screen.title
+                is Screen.XmsAppDetail -> screen.title
+                is Screen.XmsDevice -> screen.title
             }
 
             Scaffold(
@@ -180,6 +187,12 @@ fun App(
                             DeviceDetailScreen(app, screen.code, padding, scrollBehavior)
 
                         is Screen.OsRoms -> OsRomsScreen(app, screen.os, padding, scrollBehavior)
+
+                        is Screen.XmsAppDetail ->
+                            XmsAppDetailScreen(app, screen.pkg, padding, scrollBehavior)
+
+                        is Screen.XmsDevice ->
+                            XmsDeviceScreen(app, screen.device, padding, scrollBehavior)
                         else -> RootScreenContent(screen, app, padding, scrollBehavior)
                     }
                 } else {
@@ -250,9 +263,12 @@ private fun Screen.pagerKey(): String = when (this) {
     Screen.Devices -> "devices"
     Screen.MyDevice -> "my-device"
     Screen.Roms -> "roms"
+    Screen.Xms -> "xms"
     Screen.Settings -> "settings"
     is Screen.DeviceDetail -> "device:$code"
     is Screen.OsRoms -> "os:$os"
+    is Screen.XmsAppDetail -> "xms-app:$pkg"
+    is Screen.XmsDevice -> "xms-device:$device"
 }
 
 /** 根页面（底栏那几项）的内容。Pager 里按页渲染，兜底单页渲染也走它，避免两处 when 走偏 */
@@ -267,6 +283,7 @@ private fun RootScreenContent(
         Screen.Home -> HomeScreen(app, contentPadding, scrollBehavior)
         Screen.Devices -> DevicesScreen(app, contentPadding, scrollBehavior)
         Screen.Roms -> RomsScreen(app, contentPadding, scrollBehavior)
+        Screen.Xms -> XmsScreen(app, contentPadding, scrollBehavior)
         Screen.Settings -> SettingsScreen(app, contentPadding, scrollBehavior)
         Screen.MyDevice -> MyDeviceScreen(app, contentPadding, scrollBehavior)
         else -> Unit
@@ -281,6 +298,7 @@ private fun tabAppearance(screen: Screen, app: HubAppState): Pair<ImageVector, S
         Screen.Devices -> MiuixIcons.Demibold.Phone to strings.devices
         Screen.MyDevice -> MiuixIcons.Demibold.SearchDevice to strings.myDevice
         Screen.Roms -> MiuixIcons.Demibold.Folder to strings.roms
+        Screen.Xms -> MiuixIcons.Demibold.Update to strings.xms
         else -> MiuixIcons.Demibold.Settings to strings.settings
     }
 }

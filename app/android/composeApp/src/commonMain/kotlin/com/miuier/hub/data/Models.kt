@@ -158,3 +158,183 @@ fun pickChangelog(file: ChangelogFile, lang: String): List<ChangelogModule> {
         ?: return emptyList()
     return table.map { (title, lines) -> ChangelogModule(title, lines) }
 }
+
+// —— XMS（系统应用更新 / SOTA）——
+
+/**
+ * 一条 XMS 更新日志。接口导出的是「语言 → 文案」的对象，
+ * 例如 `{"zh": "新增 …", "en": "Added …"}`，语言键不止 zh / en。
+ */
+typealias XmsLog = Map<String, String>
+
+/** 按当前语言取一条 XMS 日志；缺失时依次回落英文、中文 */
+fun pickXmsLog(log: XmsLog, lang: String): String {
+    val preferred = if (lang == "zh") "zh" else "en"
+    return log[preferred].orEmpty()
+        .ifBlank { log["en"].orEmpty() }
+        .ifBlank { log["zh"].orEmpty() }
+}
+
+/** GET /v3/xms/index.json —— 应用更新总表 */
+@Serializable
+data class XmsIndex(
+    val generatedAt: String = "",
+    val counts: XmsCounts = XmsCounts(),
+    val versions: List<XmsVersion> = emptyList(),
+    val devices: List<XmsDeviceEntry> = emptyList(),
+    val apps: List<XmsAppEntry> = emptyList(),
+)
+
+@Serializable
+data class XmsCounts(
+    val pushes: Int = 0,
+    val apps: Int = 0,
+    val devices: Int = 0,
+    val versions: Int = 0,
+)
+
+/** 一次 XMS 推送（如 C11 对应 OS3） */
+@Serializable
+data class XmsVersion(
+    val version: String = "",
+    val os: String = "",
+    val pushDate: String = "",
+    val devices: Int = 0,
+    val apps: Int = 0,
+)
+
+/** 总表里的机型条目 */
+@Serializable
+data class XmsDeviceEntry(
+    val device: String = "",
+    val name: I18nText = I18nText(),
+    val code: String = "",
+    val region: String = "",
+    val brands: List<String> = emptyList(),
+    val tablet: Boolean = false,
+    val pushCount: Int = 0,
+    val latest: XmsDeviceLatest? = null,
+)
+
+@Serializable
+data class XmsDeviceLatest(
+    val version: String = "",
+    val os: String = "",
+    val romVersion: String = "",
+    val pushDate: String = "",
+    val isLatest: Boolean = false,
+    val appCount: Int = 0,
+)
+
+/** 总表里的应用条目 */
+@Serializable
+data class XmsAppEntry(
+    val pkg: String = "",
+    val name: I18nText = I18nText(),
+    val apkName: String = "",
+    val latestVersion: String = "",
+    val releaseDate: String = "",
+    val recordCount: Int = 0,
+    val deviceCount: Int = 0,
+    val os: List<String> = emptyList(),
+    val regions: List<String> = emptyList(),
+    val brands: List<String> = emptyList(),
+    val tablet: Boolean = false,
+    val types: List<String> = emptyList(),
+    val path: String = "",
+)
+
+/** GET /v3/xms/apps/{pkg}.json —— 单个应用的推送历史 */
+@Serializable
+data class XmsAppDetail(
+    val pkg: String = "",
+    val name: I18nText = I18nText(),
+    val apkName: String = "",
+    val releaseDate: String = "",
+    val latestVersion: String = "",
+    val recordCount: Int = 0,
+    val deviceCount: Int = 0,
+    val os: List<String> = emptyList(),
+    val regions: List<String> = emptyList(),
+    val brands: List<String> = emptyList(),
+    val tablet: Boolean = false,
+    val types: List<String> = emptyList(),
+    val groups: List<XmsGroup> = emptyList(),
+)
+
+/** 同一「XMS 版本 + 应用版本」的一批推送：版本 / 安装包 / 日志只出现一次，下面列机型 */
+@Serializable
+data class XmsGroup(
+    val version: String = "",
+    val os: String = "",
+    val appVersion: String = "",
+    val type: String = "",
+    val pushDate: String = "",
+    val isLatest: Boolean = false,
+    val apkName: String = "",
+    val file: String = "",
+    val releaseDate: String = "",
+    val size: Long = 0,
+    val md5: String = "",
+    val sha256: String = "",
+    val logs: List<XmsLog> = emptyList(),
+    val recordCount: Int = 0,
+    val devices: List<XmsGroupDevice> = emptyList(),
+)
+
+@Serializable
+data class XmsGroupDevice(
+    val device: String = "",
+    val name: I18nText = I18nText(),
+    val code: String = "",
+    val region: String = "",
+    val zone: Int = 1,
+    val android: String = "",
+    val pushDate: String = "",
+    val isLatest: Boolean = false,
+    val romVersions: List<String> = emptyList(),
+)
+
+/** GET /v3/xms/devices/{device}.json —— 单个机型的推送历史 */
+@Serializable
+data class XmsDeviceDetail(
+    val device: String = "",
+    val name: I18nText = I18nText(),
+    val code: String = "",
+    val region: String = "",
+    val pushes: List<XmsPush> = emptyList(),
+)
+
+@Serializable
+data class XmsPush(
+    val version: String = "",
+    val os: String = "",
+    val android: String = "",
+    val pushDate: String = "",
+    val isLatest: Boolean = false,
+    val pkgCnt: Int = 0,
+    val prio: Int = 0,
+    val notice: String = "",
+    val romVersions: List<String> = emptyList(),
+    val extra: List<XmsExtra> = emptyList(),
+    val apps: List<XmsPushApp> = emptyList(),
+)
+
+/** 没有包名的日志模块（如「小米超级岛」），只展示模块名与日志 */
+@Serializable
+data class XmsExtra(
+    val name: I18nText = I18nText(),
+    val logs: List<XmsLog> = emptyList(),
+)
+
+@Serializable
+data class XmsPushApp(
+    val pkg: String = "",
+    val name: I18nText = I18nText(),
+    val version: String = "",
+    val type: String = "",
+    val file: String = "",
+    val size: Long = 0,
+    val releaseDate: String = "",
+    val logs: List<XmsLog> = emptyList(),
+)

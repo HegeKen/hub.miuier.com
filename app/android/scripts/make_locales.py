@@ -68,6 +68,26 @@ REUSE = {
     'authorSite': 'authorsite',
     'feedback': 'feedback',
     'searchDevice': 'searchPlaceholder',
+    # XMS（系统应用更新）整块复用网页端 /xms 页面的词条
+    'xms': 'xms',
+    'xmsSub': 'xmsSub',
+    'xmsByDevice': 'xmsByDevice',
+    'xmsByApp': 'xmsByApp',
+    'xmsApps': 'xmsApps',
+    'xmsLatest': 'xmsLatest',
+    'xmsRecords': 'xmsRecords',
+    'xmsAppVersion': 'xmsAppVersion',
+    'xmsPushDate': 'xmsPushDate',
+    'xmsSearchPlaceholder': 'xmsSearchPlaceholder',
+    'xmsDownloadFailed': 'xmsDownloadFailed',
+    'xmsEmpty': 'xmsEmpty',
+    'xmsTypeUniversal': 'xmsTypeUniversal',
+    'xmsTypePhone': 'xmsTypePhone',
+    'xmsTypePad': 'xmsTypePad',
+    'xmsTypeFold': 'xmsTypeFold',
+    'totalDevices': 'totalDevices',
+    'release': 'release',
+    'attentions': 'attentions',
 }
 
 # 只在本 App 出现的词条。占位符统一写成 {name}，渲染时用 Strings.fill 替换。

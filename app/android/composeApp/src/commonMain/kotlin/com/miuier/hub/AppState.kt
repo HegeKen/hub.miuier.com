@@ -27,6 +27,7 @@ sealed interface Screen {
     data object Home : Screen
     data object Devices : Screen
     data object Roms : Screen
+    data object Xms : Screen
     data object Settings : Screen
 
     /** 本机信息。只在本机机型出现在 hub 名单里时才会进底栏 */
@@ -35,6 +36,12 @@ sealed interface Screen {
     /** 带 title 是为了顶栏能立刻显示机型名，而不用等详情加载完 */
     data class DeviceDetail(val code: String, val title: String) : Screen
     data class OsRoms(val os: String, val title: String) : Screen
+
+    /** XMS 应用详情（按包名） */
+    data class XmsAppDetail(val pkg: String, val title: String) : Screen
+
+    /** XMS 机型的推送历史 */
+    data class XmsDevice(val device: String, val title: String) : Screen
 
     /**
      * 这个页面归属于底栏的哪一项。详情页是从某个根页面推进去的，
@@ -47,6 +54,7 @@ sealed interface Screen {
             Screen.Devices, is Screen.DeviceDetail -> Screen.Devices
             Screen.MyDevice -> Screen.MyDevice
             Screen.Roms, is Screen.OsRoms -> Screen.Roms
+            Screen.Xms, is Screen.XmsAppDetail, is Screen.XmsDevice -> Screen.Xms
             Screen.Settings -> Screen.Settings
         }
 }
@@ -113,6 +121,7 @@ class HubAppState(
             add(Screen.Devices)
             if (localSummary != null) add(Screen.MyDevice)
             add(Screen.Roms)
+            add(Screen.Xms)
             add(Screen.Settings)
         }
 

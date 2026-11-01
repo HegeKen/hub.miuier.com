@@ -11,6 +11,7 @@ class HubRepository(
     private val api: HubApi = HubApi(),
     private val ota: OtaApi = OtaApi(),
     private val fastbootApi: FastbootApi = FastbootApi(),
+    private val xmsApi: XmsApi = XmsApi(),
 ) {
 
     private var devicesCache: List<DeviceSummary>? = null
@@ -19,6 +20,9 @@ class HubRepository(
     private val deviceCache = mutableMapOf<String, DeviceDetail>()
     private val osRomsCache = mutableMapOf<String, List<OsRom>>()
     private val changelogCache = mutableMapOf<String, ChangelogFile>()
+    private var xmsIndexCache: XmsIndex? = null
+    private val xmsAppCache = mutableMapOf<String, XmsAppDetail>()
+    private val xmsDeviceCache = mutableMapOf<String, XmsDeviceDetail>()
 
     /**
      * 机型名单会被两处同时要：App 启动时为了判断「本机信息」tab 要不要出现，
@@ -63,6 +67,30 @@ class HubRepository(
         return api.changelog(device, region, version).also { changelogCache[key] = it }
     }
 
+    // —— XMS（系统应用更新 / SOTA）——
+
+    suspend fun xmsIndex(): XmsIndex {
+        xmsIndexCache?.let { return it }
+        return api.xmsIndex().also { xmsIndexCache = it }
+    }
+
+    suspend fun xmsApp(pkg: String): XmsAppDetail {
+        xmsAppCache[pkg]?.let { return it }
+        return api.xmsApp(pkg).also { xmsAppCache[pkg] = it }
+    }
+
+    suspend fun xmsDevice(device: String): XmsDeviceDetail {
+        xmsDeviceCache[device]?.let { return it }
+        return api.xmsDevice(device).also { xmsDeviceCache[device] = it }
+    }
+
+    /**
+     * 换取 APK 的签名下载地址（直接问小米的 getXmsVer）。
+     * **故意不缓存**：地址带时效签名（`?t=&s=`），缓存下来过一会儿就 403 了，
+     * 必须每次实打实去问一次。
+     */
+    suspend fun xmsDownload(request: XmsDownloadRequest): XmsDownloadResult = xmsApi.download(request)
+
     /**
      * 高速下载链接（superota / ultimateota）。
      * **故意不缓存**：接口返回的地址带时效签名（`?t=<时间戳>&s=...`），
@@ -95,5 +123,8 @@ class HubRepository(
         deviceCache.clear()
         osRomsCache.clear()
         changelogCache.clear()
+        xmsIndexCache = null
+        xmsAppCache.clear()
+        xmsDeviceCache.clear()
     }
 }
