@@ -24,6 +24,7 @@ export default {
   brand: 'ماركا',
   android: 'Android',
   supports: 'قوللايدىغان OS',
+  api: 'API',
   branches: 'ROM تارماقلىرى',
   romlist: 'ROM تىزىملىكى',
   numeric: 'تەرتىپ',

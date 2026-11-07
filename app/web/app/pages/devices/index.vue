@@ -177,7 +177,7 @@
               />
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
-                  <span class="font-mono text-sm font-medium text-[var(--color-text)]">{{ device.device }}</span>
+                  <span class="font-mono text-sm font-medium text-[var(--color-text)]">{{ device.codename || device.device }}</span>
                   <div class="ms-auto flex shrink-0 items-center gap-2">
                     <span
                       v-for="brand in device.brand || []"
@@ -214,7 +214,7 @@
                   {{ deviceName(device) }}
                 </h3>
                 <p class="mt-0.5 truncate font-mono text-xs text-[var(--color-text-tertiary)]">
-                  {{ device.device }}
+                  {{ device.codename || device.device }}
                 </p>
               </div>
             </div>

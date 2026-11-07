@@ -145,7 +145,7 @@
               >
                 {{ pickXmsText(device.name, locale) || device.device }}
               </NuxtLink>
-              <span class="font-mono text-[11px] text-[var(--color-text-tertiary)]">{{ device.device }}</span>
+              <span class="font-mono text-[11px] text-[var(--color-text-tertiary)]">{{ device.codename || device.device }}</span>
               <span
                 v-if="device.isLatest"
                 class="rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-accent)]"

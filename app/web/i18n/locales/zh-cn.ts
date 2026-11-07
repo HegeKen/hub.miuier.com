@@ -24,6 +24,7 @@ export default {
   brand: '品牌',
   android: 'Android',
   supports: '支持系统',
+  api: '数据接口',
   branches: 'ROM 分支',
   romlist: 'ROM 列表',
   numeric: '序号',

@@ -38,16 +38,22 @@ import com.miuier.hub.HubAppState
 import com.miuier.hub.Screen
 import com.miuier.hub.data.HubRepository
 import com.miuier.hub.data.I18nText
+import com.miuier.hub.data.XmsAppDetail
 import com.miuier.hub.data.XmsAppEntry
 import com.miuier.hub.data.XmsDeviceEntry
 import com.miuier.hub.data.XmsDownloadRequest
+import com.miuier.hub.data.XmsDownloadResult
 import com.miuier.hub.data.XmsGroup
+import com.miuier.hub.data.XmsGroupDevice
 import com.miuier.hub.data.XmsLog
 import com.miuier.hub.data.XmsPush
 import com.miuier.hub.data.XmsStatus
+import com.miuier.hub.data.XmsUpdate
+import com.miuier.hub.data.findXmsUpdates
 import com.miuier.hub.data.pickXmsLog
 import com.miuier.hub.platform.DownloadRequest
 import com.miuier.hub.platform.rememberDownloader
+import com.miuier.hub.platform.rememberInstalledApps
 import com.miuier.hub.ui.components.AsyncContent
 import com.miuier.hub.ui.components.Tag
 import com.miuier.hub.ui.components.rememberAsync
@@ -83,6 +89,9 @@ fun XmsScreen(app: HubAppState, contentPadding: PaddingValues, scrollBehavior: S
     val listState = rememberScreenListState(app)
     val holder = rememberAsync("xmsIndex", onRefresh = app.repo::invalidate) { app.repo.xmsIndex() }
 
+    // 本机已安装应用：Android 端才有值，桌面端为空表（不显示「可更新」页签）
+    val installed = rememberInstalledApps()
+
     // 搜索/页签状态放在 AsyncContent 之外，下拉刷新不会把用户的输入清掉
     var query by remember { mutableStateOf("") }
     var tab by remember { mutableIntStateOf(0) }
@@ -105,6 +114,29 @@ fun XmsScreen(app: HubAppState, contentPadding: PaddingValues, scrollBehavior: S
                     entry.name.en.lowercase().contains(q)
             }
         }
+        // 本机装着、且数据里版本更高的应用
+        val updates = remember(index, installed) { findXmsUpdates(index, installed) }
+        val updatePkgs = remember(updates) { updates.mapTo(HashSet()) { it.entry.pkg } }
+        val visibleUpdates = remember(updates, q) {
+            if (q.isBlank()) {
+                updates
+            } else {
+                updates.filter { update ->
+                    update.entry.pkg.lowercase().contains(q) ||
+                        update.entry.name.zh.lowercase().contains(q) ||
+                        update.entry.name.en.lowercase().contains(q)
+                }
+            }
+        }
+        val hasInstalled = installed.isNotEmpty()
+        val tabs = buildList {
+            add(l10n.strings.xmsByDevice)
+            add(l10n.strings.xmsByApp)
+            if (hasInstalled) {
+                add(if (updates.isEmpty()) l10n.strings.xmsUpdates else "${l10n.strings.xmsUpdates} ${updates.size}")
+            }
+        }
+        val selectedTab = tab.coerceIn(0, tabs.lastIndex)
 
         LazyColumn(
             state = listState,
@@ -129,6 +161,35 @@ fun XmsScreen(app: HubAppState, contentPadding: PaddingValues, scrollBehavior: S
                 )
             }
 
+            // 本机有可更新应用时提醒一次，点一下直接跳到「可更新」
+            if (hasInstalled && updates.isNotEmpty() && selectedTab != 2) {
+                item {
+                    Card(
+                        onClick = { tab = 2 },
+                        insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = l10n.strings.xmsUpdateBanner.fill("count" to updates.size),
+                                style = MiuixTheme.textStyles.footnote1,
+                                color = MiuixTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Icon(
+                                imageVector = MiuixIcons.Demibold.ChevronForward,
+                                contentDescription = null,
+                                tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
             item {
                 TextField(
                     value = query,
@@ -142,18 +203,18 @@ fun XmsScreen(app: HubAppState, contentPadding: PaddingValues, scrollBehavior: S
 
             item {
                 TabRow(
-                    tabs = listOf(l10n.strings.xmsByDevice, l10n.strings.xmsByApp),
-                    selectedTabIndex = tab,
+                    tabs = tabs,
+                    selectedTabIndex = selectedTab,
                     onTabSelected = { tab = it },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
 
             item {
-                val summary = if (tab == 0) {
-                    l10n.strings.totalDevices.fill("count" to devices.size)
-                } else {
-                    l10n.strings.xmsApps.fill("count" to apps.size)
+                val summary = when (selectedTab) {
+                    0 -> l10n.strings.totalDevices.fill("count" to devices.size)
+                    1 -> l10n.strings.xmsApps.fill("count" to apps.size)
+                    else -> l10n.strings.xmsApps.fill("count" to visibleUpdates.size)
                 }
                 Text(
                     text = summary,
@@ -163,18 +224,43 @@ fun XmsScreen(app: HubAppState, contentPadding: PaddingValues, scrollBehavior: S
                 )
             }
 
-            if (tab == 0) {
-                if (devices.isEmpty()) item { EmptyHint(l10n.strings.xmsEmpty) }
-                items(devices, key = { "device:${it.device}" }) { entry ->
-                    XmsDeviceRow(entry, l10n) {
-                        app.push(Screen.XmsDevice(entry.device, nameOf(entry.name, entry.device, l10n)))
+            when (selectedTab) {
+                0 -> {
+                    if (devices.isEmpty()) item { EmptyHint(l10n.strings.xmsEmpty) }
+                    items(devices, key = { "device:${it.device}" }) { entry ->
+                        XmsDeviceRow(entry, l10n) {
+                            app.push(Screen.XmsDevice(entry.device, nameOf(entry.name, entry.device, l10n)))
+                        }
                     }
                 }
-            } else {
-                if (apps.isEmpty()) item { EmptyHint(l10n.strings.xmsEmpty) }
-                items(apps, key = { "app:${it.pkg}" }) { entry ->
-                    XmsAppRow(entry, l10n) {
-                        app.push(Screen.XmsAppDetail(entry.pkg, nameOf(entry.name, entry.pkg, l10n)))
+
+                1 -> {
+                    if (apps.isEmpty()) item { EmptyHint(l10n.strings.xmsEmpty) }
+                    items(apps, key = { "app:${it.pkg}" }) { entry ->
+                        XmsAppRow(entry, l10n, updatable = entry.pkg in updatePkgs) {
+                            app.push(Screen.XmsAppDetail(entry.pkg, nameOf(entry.name, entry.pkg, l10n)))
+                        }
+                    }
+                }
+
+                else -> {
+                    if (visibleUpdates.isEmpty()) {
+                        // 有更新但被搜索过滤掉了，提示「无结果」；本来就都最新才说「均为最新」
+                        item {
+                            EmptyHint(
+                                if (updates.isEmpty()) l10n.strings.xmsNoUpdates else l10n.strings.xmsEmpty,
+                            )
+                        }
+                    }
+                    items(visibleUpdates, key = { "update:${it.entry.pkg}" }) { update ->
+                        XmsUpdateRow(app.repo, update, l10n) {
+                            app.push(
+                                Screen.XmsAppDetail(
+                                    update.entry.pkg,
+                                    nameOf(update.entry.name, update.entry.pkg, l10n),
+                                ),
+                            )
+                        }
                     }
                 }
             }
@@ -384,7 +470,12 @@ private fun XmsDeviceRow(entry: XmsDeviceEntry, l10n: UiText, onClick: () -> Uni
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun XmsAppRow(entry: XmsAppEntry, l10n: UiText, onClick: () -> Unit) {
+private fun XmsAppRow(
+    entry: XmsAppEntry,
+    l10n: UiText,
+    updatable: Boolean = false,
+    onClick: () -> Unit,
+) {
     Card(onClick = onClick, insideMargin = PaddingValues(horizontal = 16.dp, vertical = 14.dp), modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -413,6 +504,13 @@ private fun XmsAppRow(entry: XmsAppEntry, l10n: UiText, onClick: () -> Unit) {
                 }
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (updatable) {
+                    Tag(
+                        text = l10n.strings.xmsUpdates,
+                        container = MiuixTheme.colorScheme.primaryContainer,
+                        content = MiuixTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
                 if (entry.latestVersion.isNotBlank()) Tag(entry.latestVersion)
                 Text(
                     text = l10n.strings.totalDevices.fill("count" to entry.deviceCount),
@@ -539,17 +637,40 @@ private fun XmsGroupCard(app: HubAppState, pkg: String, group: XmsGroup, l10n: U
     }
 }
 
+/** 挑一台可用于换签名链接的设备：最新且带系统版本 → 带系统版本 → 第一台 */
+private fun XmsGroup.downloadTarget(): XmsGroupDevice? =
+    devices.firstOrNull { it.isLatest && it.romVersions.isNotEmpty() }
+        ?: devices.firstOrNull { it.romVersions.isNotEmpty() }
+        ?: devices.firstOrNull()
+
+/** 按挑好的设备向小米换签名地址；没有可用设备、或请求失败都返回 null */
+private suspend fun requestXmsDownload(repo: HubRepository, pkg: String, group: XmsGroup): XmsDownloadResult? {
+    val target = group.downloadTarget() ?: return null
+    return runCatching {
+        repo.xmsDownload(
+            XmsDownloadRequest(
+                pkg = pkg,
+                code = target.code.ifBlank { target.device },
+                region = target.region.ifBlank { "cn" },
+                android = target.android,
+                romVersion = target.romVersions.firstOrNull().orEmpty(),
+                xmsVersion = group.version,
+            ),
+        )
+    }.getOrNull()
+}
+
+/** 应用详情里最新的一版：优先 isLatest，否则取第一组 */
+private fun XmsAppDetail.newestGroup(): XmsGroup? =
+    groups.firstOrNull { it.isLatest } ?: groups.firstOrNull()
+
 /**
  * 换取签名下载地址。链接与「机型 + 系统版本」绑定，所以先按网页端的规则挑一台设备：
  * 最新且带系统版本 → 带系统版本 → 第一台。
  */
 @Composable
 private fun XmsDownloadButton(repo: HubRepository, pkg: String, group: XmsGroup, l10n: UiText) {
-    val target = remember(group) {
-        group.devices.firstOrNull { it.isLatest && it.romVersions.isNotEmpty() }
-            ?: group.devices.firstOrNull { it.romVersions.isNotEmpty() }
-            ?: group.devices.firstOrNull()
-    }
+    val target = remember(group) { group.downloadTarget() }
     if (target == null) return
 
     val scope = rememberCoroutineScope()
@@ -564,18 +685,7 @@ private fun XmsDownloadButton(repo: HubRepository, pkg: String, group: XmsGroup,
                 loading = true
                 error = ""
                 scope.launch {
-                    val result = runCatching {
-                        repo.xmsDownload(
-                            XmsDownloadRequest(
-                                pkg = pkg,
-                                code = target.code.ifBlank { target.device },
-                                region = target.region.ifBlank { "cn" },
-                                android = target.android,
-                                romVersion = target.romVersions.firstOrNull().orEmpty(),
-                                xmsVersion = group.version,
-                            ),
-                        )
-                    }.getOrNull()
+                    val result = requestXmsDownload(repo, pkg, group)
 
                     loading = false
                     when {
@@ -607,6 +717,100 @@ private fun XmsDownloadButton(repo: HubRepository, pkg: String, group: XmsGroup,
                 style = MiuixTheme.textStyles.footnote2,
                 color = MiuixTheme.colorScheme.error,
             )
+        }
+    }
+}
+
+/**
+ * 「可更新」页签的一行：本机版本 → 数据里的最新版本。
+ * 点整行进应用详情；点右侧下载按钮直接拉最新一版的签名地址。
+ */
+@Composable
+private fun XmsUpdateRow(repo: HubRepository, update: XmsUpdate, l10n: UiText, onClick: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    val download = rememberDownloader()
+    var loading by remember(update.entry.pkg) { mutableStateOf(false) }
+    var error by remember(update.entry.pkg) { mutableStateOf("") }
+
+    Card(onClick = onClick, insideMargin = PaddingValues(horizontal = 16.dp, vertical = 14.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = nameOf(update.entry.name, update.entry.pkg, l10n),
+                        style = MiuixTheme.textStyles.title4,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = update.entry.pkg,
+                        style = MiuixTheme.textStyles.footnote2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = listOf(
+                            l10n.strings.xmsInstalledVersion.fill(
+                                "version" to update.installedVersion.ifBlank { "—" },
+                            ),
+                            l10n.strings.xmsLatestVersion.fill("version" to update.latestVersion),
+                        ).joinToString(" · "),
+                        style = MiuixTheme.textStyles.footnote2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        if (loading) return@IconButton
+                        loading = true
+                        error = ""
+                        scope.launch {
+                            val group = runCatching { repo.xmsApp(update.entry.pkg) }
+                                .getOrNull()
+                                ?.newestGroup()
+                            val result = group?.let { requestXmsDownload(repo, update.entry.pkg, it) }
+
+                            loading = false
+                            when {
+                                result == null -> error = l10n.strings.requestFailed
+                                result.status == XmsStatus.AVAILABLE && result.urls.isNotEmpty() ->
+                                    download(
+                                        DownloadRequest(
+                                            result.urls.first(),
+                                            result.fileName.ifBlank { update.entry.pkg },
+                                        ),
+                                    )
+
+                                result.status == XmsStatus.UNSIGNED -> error = l10n.strings.otaUnsigned
+                                result.status == XmsStatus.NOTFOUND -> error = l10n.strings.otaNotFound
+                                else -> error = l10n.strings.xmsDownloadFailed
+                            }
+                        }
+                    },
+                ) {
+                    Icon(
+                        imageVector = MiuixIcons.Demibold.Download,
+                        contentDescription = l10n.strings.download,
+                        modifier = Modifier.size(20.dp),
+                        tint = if (loading) {
+                            MiuixTheme.colorScheme.onSurfaceVariantSummary
+                        } else {
+                            MiuixTheme.colorScheme.primary
+                        },
+                    )
+                }
+            }
+            if (error.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = error,
+                    style = MiuixTheme.textStyles.footnote2,
+                    color = MiuixTheme.colorScheme.error,
+                )
+            }
         }
     }
 }

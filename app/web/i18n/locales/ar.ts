@@ -26,6 +26,7 @@ export default {
   brand: 'العلامة التجارية',
   android: 'Android',
   supports: 'الأنظمة المدعومة',
+  api: 'API',
   branches: 'فروع ROM',
   romlist: 'قائمة ROM',
   numeric: 'رقم',

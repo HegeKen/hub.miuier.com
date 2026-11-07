@@ -24,6 +24,7 @@ export default {
   brand: 'Бренд',
   android: 'Android',
   supports: 'Підтримувані OS',
+  api: 'API',
   branches: 'Гілки ROM',
   romlist: 'Список ROM',
   numeric: '№',

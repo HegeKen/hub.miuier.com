@@ -24,6 +24,7 @@ export default {
   brand: 'Marke',
   android: 'Android',
   supports: 'Unterstützte OS',
+  api: 'API',
   branches: 'ROM-Zweige',
   romlist: 'ROM-Liste',
   numeric: 'Nr.',

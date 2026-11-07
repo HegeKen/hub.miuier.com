@@ -191,6 +191,7 @@ async function generateIndex() {
         // Extract only the fields needed for the index
         devices.push({
           device: data.device,
+          codename: data.codename || data.device,
           name: data.name,
           brand: data.brand,
           series: data.series || [],

@@ -44,7 +44,7 @@
           {{ pickXmsText(device.name, locale) || device.device }}
         </h1>
         <p class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-[var(--color-text-tertiary)]">
-          <span>{{ device.device }}</span>
+          <span>{{ device.codename || device.device }}</span>
           <span v-if="device.region" class="rounded border border-[var(--color-border)] px-1.5 py-0.5">
             {{ regionName(device.region) }}
           </span>

@@ -24,6 +24,7 @@ export default {
   brand: 'ཚོང་རྟགས།',
   android: 'Android',
   supports: 'རྒྱབ་སྐྱོར་ OS',
+  api: 'API',
   branches: 'ROM ཡན་ལག',
   romlist: 'ROM ཐོ་ཡིག',
   numeric: 'ཨང་རིམ།',

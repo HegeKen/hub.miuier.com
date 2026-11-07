@@ -24,6 +24,7 @@ export default {
   brand: 'Merek',
   android: 'Android',
   supports: 'OS yang didukung',
+  api: 'API',
   branches: 'Cabang ROM',
   romlist: 'Daftar ROM',
   numeric: 'No.',

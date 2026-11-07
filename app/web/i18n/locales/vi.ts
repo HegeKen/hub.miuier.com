@@ -24,6 +24,7 @@ export default {
   brand: 'Thương hiệu',
   android: 'Android',
   supports: 'OS hỗ trợ',
+  api: 'API',
   branches: 'Nhánh ROM',
   romlist: 'Danh sách ROM',
   numeric: 'STT',

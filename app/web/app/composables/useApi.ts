@@ -40,6 +40,11 @@ export function useApi() {
     return buildUrl(`/v3/devices/${codename}.json`)
   }
 
+  // 指定数据接口版本（v1 / v2 / v3）的机型 JSON
+  const buildDeviceApiUrl = (api: string, codename: string): string => {
+    return buildUrl(`/${api}/devices/${encodeURIComponent(codename)}.json`)
+  }
+
   // 图片：开发环境走本地代理（data/images），生产环境由 api.miuier.com 站点根提供
   const buildImageUrl = (file: string): string => {
     if (isDev) {
@@ -146,6 +151,7 @@ export function useApi() {
   return {
     buildUrl,
     buildDeviceUrl,
+    buildDeviceApiUrl,
     buildDeviceImageUrl,
     buildBrandImageUrl,
     buildDevicesIndexUrl,

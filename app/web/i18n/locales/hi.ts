@@ -24,6 +24,7 @@ export default {
   brand: 'ब्रांड',
   android: 'Android',
   supports: 'समर्थित OS',
+  api: 'API',
   branches: 'ROM शाखाएँ',
   romlist: 'ROM सूची',
   numeric: 'क्रम',

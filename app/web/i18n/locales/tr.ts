@@ -24,6 +24,7 @@ export default {
   brand: 'Marka',
   android: 'Android',
   supports: 'Desteklenen OS',
+  api: 'API',
   branches: 'ROM dalları',
   romlist: 'ROM listesi',
   numeric: 'No.',

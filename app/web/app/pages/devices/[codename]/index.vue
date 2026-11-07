@@ -64,7 +64,7 @@
           </div>
           <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
             <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('devcode') }}</dt>
-            <dd class="min-w-0 break-words font-mono text-sm">{{ device.device }}</dd>
+            <dd class="min-w-0 break-words font-mono text-sm">{{ device.codename || device.device }}</dd>
           </div>
           <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
             <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('brand') }}</dt>
@@ -74,9 +74,24 @@
             <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('android') }}</dt>
             <dd class="min-w-0 break-words text-sm">{{ (device.android || []).join(', ') || '—' }}</dd>
           </div>
-          <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
+          <div class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 border-b border-[var(--color-border)] px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
             <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('supports') }}</dt>
             <dd class="min-w-0 break-words text-sm">{{ (device.supports || []).join(', ') || '—' }}</dd>
+          </div>
+          <div v-if="device.apis?.length" class="grid grid-cols-[60px_1fr] items-center gap-x-3 gap-y-1 px-4 py-3 sm:grid-cols-[110px_1fr] sm:gap-3 sm:px-5">
+            <dt class="whitespace-nowrap text-sm text-[var(--color-text-secondary)]">{{ $t('api') }}</dt>
+            <dd class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 font-mono text-sm">
+              <a
+                v-for="api in device.apis"
+                :key="api"
+                :href="buildDeviceApiUrl(api, device.device)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-[var(--color-accent)] hover:underline"
+              >
+                {{ api }}
+              </a>
+            </dd>
           </div>
         </dl>
       </div>
@@ -376,7 +391,7 @@ import { pickLogs } from '~/utils/logs'
 const route = useRoute()
 const { locale } = useI18n()
 const { t } = useI18n()
-const { buildDeviceUrl, buildDeviceImageUrl, buildBrandImageUrl, buildDownloadLink, buildChangelogUrl, fetchHighSpeed } = useApi()
+const { buildDeviceUrl, buildDeviceApiUrl, buildDeviceImageUrl, buildBrandImageUrl, buildDownloadLink, buildChangelogUrl, fetchHighSpeed } = useApi()
 
 // 区域显示名统一取自 i18n 词条
 const regionName = useRegionName()

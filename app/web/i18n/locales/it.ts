@@ -24,6 +24,7 @@ export default {
   brand: 'Marchio',
   android: 'Android',
   supports: 'OS supportati',
+  api: 'API',
   branches: 'Branch ROM',
   romlist: 'Elenco ROM',
   numeric: 'N.',
