@@ -55,7 +55,8 @@
               :key="d.device"
               role="option"
               class="cursor-pointer px-4 py-2.5 transition-colors hover:bg-[var(--color-bg-subtle)]"
-              @mousedown.prevent="select(d)"
+              @mousedown.prevent
+              @click="select(d)"
             >
               <div class="flex items-center justify-between gap-3">
                 <span class="truncate text-sm font-medium text-[var(--color-text)]">
@@ -308,7 +309,7 @@
             <button
               type="button"
               class="btn-primary !py-1.5 text-xs"
-              :disabled="globalSaving || !globalDirty"
+              :disabled="globalSaving || (!globalDirty && !globalNeedsSync)"
               @click="saveGlobalFields"
             >
               {{ globalSaving ? '保存中…' : '保存并同步全部分支' }}
@@ -587,6 +588,23 @@ const globalDirty = computed(() => {
     || globalFullNamesEn.value !== (parseZhEn(b.full_names).en)
 })
 
+/** 任一分支与当前全局信息不一致时，也允许执行同步 */
+const globalNeedsSync = computed(() => {
+  if (!detail.value) return false
+  const device = globalDevice.value.trim()
+  const devtag = globalDevtag.value.trim()
+  const internal = globalInternal.value.trim()
+  return detail.value.branches.some((b) => {
+    const names = parseZhEn(b.full_names)
+    return (b.device || '') !== device
+      || (b.devtag || '') !== devtag
+      || (b.internal || '') !== internal
+      || (b.full_brands || '') !== globalFullBrands.value
+      || names.zh !== globalFullNamesZh.value
+      || names.en !== globalFullNamesEn.value
+  })
+})
+
 const filtered = computed(() => {
   const k = keyword.value.trim().toLowerCase()
   const all = k
@@ -840,9 +858,10 @@ const saveGlobalFields = async () => {
     // 同步至所有同机型分支（使用旧 device 名称定位）
     const res = await batchUpdateDevice('devices', oldDevice, fields)
     push('success', `全局字段已保存并同步至 ${res.affectedRows} 条记录`)
-    // 刷新（使用新 device 名称）
-    loadDetail(newDevice)
+    // 刷新详情和顶部机型搜索缓存（使用新 device 名称）
     selected.value = newDevice
+    await loadDetail(newDevice)
+    await reloadDevices()
   } catch (e) {
     push('error', errorMessage(e))
   } finally {

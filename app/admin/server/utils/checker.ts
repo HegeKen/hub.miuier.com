@@ -109,6 +109,39 @@ const versionDevtagExpr = (v: string) => `SUBSTRING(${versionTail(v)}, 2, CHAR_L
 export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
   devices: [
     {
+      id: 'required_fields_missing',
+      name: '关键标识缺失',
+      column: '多字段',
+      description:
+        'device、devtag、code、tag、region、branchcode 不应为 NULL 或空字符串；Android One/Go 机型（blue、water、ice、laurel_sprout、tiare、daisy、jasmine、tissot）的 region 可为空',
+      severity: 'error',
+      violation:
+        "device IS NULL OR TRIM(device) = '' OR devtag IS NULL OR TRIM(devtag) = '' " +
+        "OR code IS NULL OR TRIM(code) = '' OR tag IS NULL OR TRIM(tag) = '' " +
+        "OR ((region IS NULL OR TRIM(region) = '') " +
+        "AND device NOT IN ('blue','water','ice','laurel_sprout','tiare','daisy','jasmine','tissot')) " +
+        "OR branchcode IS NULL OR TRIM(branchcode) = ''",
+      sampleCols: ['device', 'devtag', 'code', 'tag', 'region', 'branchcode'],
+    },
+    {
+      id: 'profile_incomplete',
+      name: '设备资料不完整',
+      column: '多字段',
+      description:
+        'full_brands、brands、full_names、names、launch_date 应补全；brands 声明的品牌还应有对应的 xiaomi/redmi/poco 名称',
+      severity: 'warning',
+      violation:
+        "full_brands IS NULL OR TRIM(full_brands) IN ('','[]','null') " +
+        "OR brands IS NULL OR TRIM(brands) IN ('','[]','\"\"','null') " +
+        "OR full_names IS NULL OR TRIM(full_names) IN ('','{}','null') " +
+        "OR names IS NULL OR TRIM(names) IN ('','{}','null') " +
+        "OR (INSTR(brands, 'Xiaomi') > 0 AND (xiaomi IS NULL OR TRIM(xiaomi) IN ('','{}','null'))) " +
+        "OR (INSTR(brands, 'Redmi') > 0 AND (redmi IS NULL OR TRIM(redmi) IN ('','{}','null'))) " +
+        "OR (INSTR(brands, 'POCO') > 0 AND (poco IS NULL OR TRIM(poco) IN ('','{}','null'))) " +
+        "OR launch_date IS NULL",
+      sampleCols: ['full_brands', 'brands', 'full_names', 'names', 'xiaomi', 'redmi', 'poco', 'launch_date'],
+    },
+    {
       id: 'device_format',
       name: 'device 格式',
       column: 'device',
