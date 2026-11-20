@@ -3,8 +3,10 @@ import { getPool } from '../../utils/db'
 /**
  * 某一次 XMS 推送（xms.id）下的应用明细，供管理后台编辑。
  *
- * names / logs 是 longtext 存的 JSON，原样返回字符串，前端在文本框里编辑；
- * 保存仍走通用接口 PUT /api/db/xms_app/:id（服务端会校验 JSON 合法性）。
+ * xms_app 已是推送 ↔ 发布物的薄关联表，元数据在 xms_app_release，
+ * 这里 JOIN 出来返回发布物字段；id 为 xms_app 关联行 id（用于删除 / 定位），
+ * release_id 指向共享发布物。names / logs 是 longtext 存的 JSON，原样返回字符串，
+ * 前端在文本框里编辑；保存走 POST /api/xms/app（服务端 upsert 发布物 + 关联）。
  */
 
 function parseJson(value: unknown): unknown {
@@ -36,7 +38,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const [rows] = await pool.query(
-    'SELECT * FROM `xms_app` WHERE `xms_id` = ? ORDER BY `name`, `pkg`, `id`',
+    `SELECT a.\`id\`, a.\`xms_id\`, a.\`release_id\`, a.\`pkg\`,
+            r.\`name\`, r.\`name_en\`, r.\`names\`, r.\`pkg_ver\`,
+            r.\`apk_name\`, r.\`file_name\`, r.\`size\`, r.\`md5\`,
+            r.\`sha256\`, r.\`logs\`, r.\`release_date\`
+       FROM \`xms_app\` a
+       JOIN \`xms_app_release\` r ON r.\`id\` = a.\`release_id\`
+      WHERE a.\`xms_id\` = ?
+      ORDER BY r.\`name\`, a.\`pkg\`, a.\`id\``,
     [xmsId],
   ) as [Array<Record<string, unknown>>, unknown]
 

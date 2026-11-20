@@ -100,7 +100,7 @@
                   从分支生成
                 </button>
                 <button
-                  v-if="col.name === 'names' && table === 'xms_app'"
+                  v-if="col.name === 'names' && isXmsMetaTable"
                   type="button"
                   class="btn-secondary mt-1.5 !py-1 text-xs"
                   :disabled="translating"
@@ -164,9 +164,9 @@
             </template>
           </form>
 
-          <!-- xms_app：一次修复同包名的所有记录 -->
+          <!-- 应用元数据：一次修复同包名的所有发布物 -->
           <div
-            v-if="table === 'xms_app'"
+            v-if="isXmsMetaTable"
             class="mt-4 flex items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-3 py-2"
           >
             <input id="sync-xms-pkg" v-model="syncXmsPkg" type="checkbox" class="mt-0.5" />
@@ -272,10 +272,16 @@ const bilingualCols = computed(() => {
 })
 const isDeviceTable = computed(() => props.table === 'devices')
 
+/**
+ * 应用元数据表：xms_app_release（归一化后元数据所在）与旧 xms_app 一样，
+ * names 是多语言 JSON（保持文本框编辑）、需用 logs 表补全翻译、保存时可同步同包名。
+ */
+const isXmsMetaTable = computed(() => props.table === 'xms_app' || props.table === 'xms_app_release')
+
 const isBilingual = (col) => {
   if (!BILINGUAL_COLS.has(col.name)) return false
-  // xms_app 的 names 是多语言对象（zh / zh_tw / en / ja …），始终按 JSON 文本编辑
-  if (col.name === 'names' && props.table === 'xms_app') return false
+  // xms 应用元数据的 names 是多语言对象（zh / zh_tw / en / ja …），始终按 JSON 文本编辑
+  if (col.name === 'names' && isXmsMetaTable.value) return false
   return bilingualCols.value.has(col.name)
 }
 
@@ -548,8 +554,8 @@ const onSave = async () => {
 
   saving.value = true
   try {
-    // xms_app：保存时把应用名登记到 logs 的 module 行（缺失则创建占位）
-    if (props.table === 'xms_app') {
+    // 应用元数据：保存时把应用名登记到 logs 的 module 行（缺失则创建占位）
+    if (isXmsMetaTable.value) {
       const zh = String(form.value.name || '').trim()
       if (zh) {
         try {
@@ -600,8 +606,8 @@ const onSave = async () => {
       message = `新记录已创建（id=${res.id}）`
     }
 
-    // xms_app：把名称类字段一次性同步到同包名的所有记录（自查修复）
-    if (props.table === 'xms_app' && syncXmsPkg.value && String(payload.pkg || '').trim()) {
+    // 应用元数据：把名称类字段一次性同步到同包名的所有发布物（自查修复）
+    if (isXmsMetaTable.value && syncXmsPkg.value && String(payload.pkg || '').trim()) {
       // 只同步有值的字段：修哪项就同步哪项，避免用空值把其它行的名称清掉
       const fields = {}
       if (String(payload.name || '').trim()) fields.name = String(payload.name).trim()

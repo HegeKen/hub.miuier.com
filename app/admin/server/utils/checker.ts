@@ -71,7 +71,8 @@ const CONTEXT_COLS: Record<AllowedTable, string[]> = {
   dev: ['week', 'region', 'versions'],
   sitelog: ['site', 'ver', 'log_date'],
   xms: ['device', 'version', 'rom_version'],
-  xms_app: ['pkg', 'name'],
+  xms_app: ['xms_id', 'pkg'],
+  xms_app_release: ['pkg', 'name'],
 }
 
 /* ---------------- 规则定义 ---------------- */
@@ -752,7 +753,9 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
     },
   ],
 
-  // xms_app 表：一次推送里的应用明细，唯一键 (xms_id, pkg)
+  // xms_app 表：推送 ↔ APK 发布物关联表，唯一键 (xms_id, pkg) / (xms_id, release_id)
+  // 元数据（name / names / apk_name / logs …）已抽到 xms_app_release，本表只校验
+  // 归属关系与冗余 pkg 列和发布物的一致性
   xms_app: [
     {
       id: 'pkg_empty',
@@ -761,7 +764,28 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
       description: '应用必须有包名；没有包名的模块应存在 xms.changelog',
       severity: 'error',
       violation: "pkg IS NULL OR TRIM(pkg) = ''",
+      sampleCols: ['xms_id', 'pkg'],
     },
+    {
+      id: 'pkg_drift',
+      name: '冗余 pkg 与发布物不一致',
+      column: 'pkg',
+      description:
+        'xms_app.pkg 是冗余列，应恒等于 xms_app_release.pkg；不一致说明写入端或手工修改出了问题',
+      severity: 'error',
+      violation:
+        "release_id IS NOT NULL AND pkg <> ("
+        + "SELECT r.pkg FROM xms_app_release r WHERE r.id = t.release_id)",
+      sampleCols: ['xms_id', 'pkg'],
+      sampleExprs: {
+        release_pkg:
+          "(SELECT r.pkg FROM xms_app_release r WHERE r.id = t.release_id)",
+      },
+    },
+  ],
+
+  // xms_app_release 表：一个 APK 发布物一行，按 (pkg, pkg_ver) 唯一
+  xms_app_release: [
     {
       id: 'names_json',
       name: 'names 应为 JSON 对象',
@@ -817,48 +841,6 @@ export const CHECK_RULES: Record<AllowedTable, CheckRule[]> = {
         "(file_name IS NULL OR file_name = '') AND (md5 IS NULL OR md5 = '') "
         + "AND (logs IS NULL OR logs = '' OR logs = '[]')",
       sampleCols: ['pkg', 'name'],
-    },
-    {
-      id: 'names_inconsistent',
-      name: '同包名 names 不一致',
-      column: 'names',
-      description:
-        '同一个 pkg 的所有推送应共用一份 names；与多数行不同说明只改了单行 / 历史数据没统一，重新整理或同步即可',
-      severity: 'warning',
-      violation:
-        "names IS NOT NULL AND TRIM(names) <> '' AND names <> ("
-        + "SELECT o.names FROM xms_app o WHERE o.pkg = t.pkg "
-        + "AND o.names IS NOT NULL AND TRIM(o.names) <> '' "
-        + "GROUP BY o.names ORDER BY COUNT(*) DESC, MIN(o.id) LIMIT 1)",
-      sampleCols: ['pkg', 'name'],
-      sampleExprs: {
-        variants:
-          "(SELECT COUNT(DISTINCT o.names) FROM xms_app o "
-          + "WHERE o.pkg = t.pkg AND o.names IS NOT NULL AND o.names <> '')",
-      },
-    },
-    {
-      id: 'apk_name_inconsistent',
-      name: '同包名 apk_name 不一致',
-      column: 'apk_name',
-      description:
-        '同一个 pkg 的 apk_name 多数应一致（平板 / 折叠等变体可能有多个）；与多数行不同通常是接口返回的杂乱名称，建议人工核对',
-      severity: 'warning',
-      violation:
-        "apk_name IS NOT NULL AND TRIM(apk_name) <> '' AND apk_name <> ("
-        + "SELECT o.apk_name FROM xms_app o WHERE o.pkg = t.pkg "
-        + "AND o.apk_name IS NOT NULL AND TRIM(o.apk_name) <> '' "
-        + "GROUP BY o.apk_name ORDER BY COUNT(*) DESC, MIN(o.id) LIMIT 1)",
-      sampleCols: ['pkg', 'apk_name'],
-      sampleExprs: {
-        variants:
-          "(SELECT COUNT(DISTINCT o.apk_name) FROM xms_app o "
-          + "WHERE o.pkg = t.pkg AND o.apk_name IS NOT NULL AND o.apk_name <> '')",
-        majority:
-          "(SELECT o.apk_name FROM xms_app o WHERE o.pkg = t.pkg "
-          + "AND o.apk_name IS NOT NULL AND o.apk_name <> '' "
-          + "GROUP BY o.apk_name ORDER BY COUNT(*) DESC, MIN(o.id) LIMIT 1)",
-      },
     },
   ],
 }

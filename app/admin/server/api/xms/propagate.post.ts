@@ -2,14 +2,15 @@ import { getPool } from '../../utils/db'
 import { ensureModuleLog } from '../../utils/xms'
 
 /**
- * 把当前行的名称类字段一次性同步到同包名的所有记录。
+ * 把当前行的名称类字段一次性同步到同包名的所有发布物。
  *
  * POST /api/xms/propagate
  * body: { pkg, name?, name_en?, names?, apk_name? }
  * → { ok, pkg, updated }
  *
- * 只同步 name / name_en / names / apk_name（xms_app 自查里的「不一致 / 缺失」问题），
- * 日志、版本号、安装包文件等仍按各自的推送保留。
+ * 名称类字段已归一化到 xms_app_release（同一包名共享一份），
+ * 这里 UPDATE xms_app_release WHERE pkg 即自动覆盖引用该包的所有推送。
+ * 日志、版本号、安装包文件等仍按各自发布物保留。
  */
 
 const PKG_RE = /^[A-Za-z][A-Za-z0-9._]*$/
@@ -55,7 +56,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const [result] = await getPool().query(
-    `UPDATE \`xms_app\` SET ${columns.map((key) => `\`${key}\` = ?`).join(', ')} WHERE \`pkg\` = ?`,
+    `UPDATE \`xms_app_release\` SET ${columns.map((key) => `\`${key}\` = ?`).join(', ')} WHERE \`pkg\` = ?`,
     [...columns.map((key) => fields[key]), pkg],
   ) as [{ affectedRows: number }, unknown]
 

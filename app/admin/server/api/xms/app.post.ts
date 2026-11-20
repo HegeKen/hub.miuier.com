@@ -10,8 +10,11 @@ import { ensureModuleLog, moduleTranslations } from '../../utils/xms'
  *
  * - names 为空时按 name / name_en 生成；随后用 logs 表 type='module' 的同名译文
  *   补齐缺失语种（显式填写的语种不被覆盖）。
- * - propagate 默认 true：保存后把 name / name_en / names 同步到所有 pkg 相同的行
- *   （日志内容按推送各自保留，不参与同步）。
+ * - propagate 默认 true：保存后把 name / name_en / names 同步到所有 pkg 相同的发布物
+ *   （名称已归一化到 xms_app_release，同步即自动覆盖引用它的所有推送；日志按发布物各自保留）。
+ *
+ * 落库：先 upsert xms_app_release（按 pkg + pkg_ver 唯一），再 upsert xms_app
+ * （推送 ↔ 发布物关联，唯一键 xms_id + pkg）。id 为 xms_app 关联行 id。
  */
 
 const PKG_RE = /^[A-Za-z][A-Za-z0-9._]*$/
@@ -132,13 +135,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: '体积必须是非负数字（字节）' })
   }
 
-  const fields = {
-    xms_id: xmsId,
-    pkg,
+  const pkgVer = String(body?.pkg_ver || '').trim()
+
+  // 发布物元数据（共享，按 pkg + pkg_ver 唯一）；release_date 由抓取脚本维护，这里不动
+  const meta = {
     name: canonicalZh,
     name_en: canonicalEn,
     names: namesJson,
-    pkg_ver: String(body?.pkg_ver || '').trim(),
     apk_name: String(body?.apk_name || '').trim(),
     file_name: String(body?.file_name || '').trim(),
     size: sizeValue,
@@ -147,22 +150,51 @@ export default defineEventHandler(async (event) => {
     logs: logsJson,
   }
 
+  // 1) upsert 共享发布物 xms_app_release（与 scripts/miroms/xms.py 落库一致）
+  let releaseId = 0
+  try {
+    const [relRows] = await pool.query(
+      'SELECT `id` FROM `xms_app_release` WHERE `pkg` = ? AND `pkg_ver` <=> ?',
+      [pkg, pkgVer],
+    ) as [Array<Record<string, unknown>>, unknown]
+    const existing = relRows[0]?.id ? Number(relRows[0].id) : 0
+    if (existing) {
+      releaseId = existing
+      await pool.query(
+        'UPDATE `xms_app_release` SET `name` = ?, `name_en` = ?, `names` = ?, `apk_name` = ?, '
+        + '`file_name` = ?, `size` = ?, `md5` = ?, `sha256` = ?, `logs` = ? WHERE `id` = ?',
+        [meta.name, meta.name_en, meta.names, meta.apk_name, meta.file_name, meta.size,
+          meta.md5, meta.sha256, meta.logs, releaseId],
+      )
+    } else {
+      const [result] = await pool.query(
+        'INSERT INTO `xms_app_release` (`pkg`, `pkg_ver`, `name`, `name_en`, `names`, '
+        + '`apk_name`, `file_name`, `size`, `md5`, `sha256`, `logs`) '
+        + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [pkg, pkgVer, meta.name, meta.name_en, meta.names, meta.apk_name, meta.file_name,
+          meta.size, meta.md5, meta.sha256, meta.logs],
+      ) as [{ insertId: number }, unknown]
+      releaseId = Number(result.insertId)
+    }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    throw createError({ statusCode: 500, message: `保存发布物失败：${message}` })
+  }
+
+  // 2) upsert 推送 ↔ 发布物关联 xms_app（pkg 变更可能让同一推送命中已有包名）
   let savedId = id
   try {
     if (id) {
-      const columns = Object.keys(fields).filter((key) => key !== 'xms_id')
       await pool.query(
-        `UPDATE \`xms_app\` SET ${columns.map((key) => `\`${key}\` = ?`).join(', ')} WHERE \`id\` = ?`,
-        [...columns.map((key) => fields[key as keyof typeof fields]), id],
+        'UPDATE `xms_app` SET `release_id` = ?, `pkg` = ? WHERE `id` = ?',
+        [releaseId, pkg, id],
       )
     } else {
-      const columns = Object.keys(fields)
       const [result] = await pool.query(
-        `INSERT INTO \`xms_app\` (${columns.map((key) => `\`${key}\``).join(', ')}) `
-        + `VALUES (${columns.map(() => '?').join(', ')})`,
-        columns.map((key) => fields[key as keyof typeof fields]),
+        'INSERT INTO `xms_app` (`xms_id`, `release_id`, `pkg`) VALUES (?, ?, ?)',
+        [xmsId, releaseId, pkg],
       ) as [{ insertId: number }, unknown]
-      savedId = result.insertId
+      savedId = Number(result.insertId)
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
@@ -172,11 +204,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: `保存失败：${message}` })
   }
 
-  // 同一包名的所有推送共享一份名称 / 多语言；日志按推送各自保留
+  // 同一包名的所有发布物共用一份名称 / 多语言（日志按发布物各自保留）
   let propagated = 0
   if (body?.propagate !== false) {
     const [result] = await pool.query(
-      'UPDATE `xms_app` SET `name` = ?, `name_en` = ?, `names` = ? WHERE `pkg` = ?',
+      'UPDATE `xms_app_release` SET `name` = ?, `name_en` = ?, `names` = ? WHERE `pkg` = ?',
       [canonicalZh, canonicalEn, namesJson, pkg],
     ) as [{ affectedRows: number }, unknown]
     propagated = Number(result?.affectedRows || 0)
@@ -185,6 +217,7 @@ export default defineEventHandler(async (event) => {
   return {
     ok: true,
     id: savedId,
+    release_id: releaseId,
     propagated,
     translated: Object.keys(translations).length,
     logCreated: ensured?.created ?? false,

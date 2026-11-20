@@ -16,7 +16,7 @@
           to="/xms_app"
           class="text-xs font-medium text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text)]"
         >
-          原始应用表 →
+          应用发布物 →
         </NuxtLink>
         <NuxtLink to="/" class="text-xs font-medium text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text)]">
           ← 返回仪表盘
