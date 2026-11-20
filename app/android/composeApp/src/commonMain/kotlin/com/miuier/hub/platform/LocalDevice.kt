@@ -27,6 +27,11 @@ data class LocalDevice(
     val incremental: String,
     /** `rust.runtime_version`，HyperOS 3 起才有 */
     val rustVersion: String,
+    /**
+     * 机型类别，取 [TYPE_PHONE] / [TYPE_PAD] / [TYPE_FOLD]。
+     * 与 XMS 数据的 `type` 字段是同一套词，用来保证应用更新只在同类机型之间比对。
+     */
+    val deviceType: String = TYPE_PHONE,
 ) {
     /** 用来和 hub 机型名单比对的代号候选（有些机型 `Build.DEVICE` 与数据里的代号不同） */
     val codeNameCandidates: List<String>
@@ -34,6 +39,12 @@ data class LocalDevice(
 
     /** 界面上优先显示营销名；没有就退回 `Build.MODEL` */
     val displayName: String get() = marketName.ifBlank { model }
+
+    companion object {
+        const val TYPE_PHONE = "phone"
+        const val TYPE_PAD = "pad"
+        const val TYPE_FOLD = "fold"
+    }
 }
 
 /**

@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -52,6 +53,7 @@ import com.miuier.hub.data.XmsUpdate
 import com.miuier.hub.data.findXmsUpdates
 import com.miuier.hub.data.pickXmsLog
 import com.miuier.hub.platform.DownloadRequest
+import com.miuier.hub.platform.LocalDevice
 import com.miuier.hub.platform.rememberDownloader
 import com.miuier.hub.platform.rememberInstalledApps
 import com.miuier.hub.ui.components.AsyncContent
@@ -114,8 +116,15 @@ fun XmsScreen(app: HubAppState, contentPadding: PaddingValues, scrollBehavior: S
                     entry.name.en.lowercase().contains(q)
             }
         }
-        // 本机装着、且数据里版本更高的应用
-        val updates = remember(index, installed) { findXmsUpdates(index, installed) }
+        // 本机装着、且数据里同类别有更高版本的应用
+        val updates by produceState(emptyList<XmsUpdate>(), index, installed, app.local?.deviceType) {
+            value = findXmsUpdates(
+                index = index,
+                installed = installed,
+                deviceType = app.local?.deviceType ?: LocalDevice.TYPE_PHONE,
+                detailOf = { pkg -> runCatching { app.repo.xmsApp(pkg) }.getOrNull() },
+            )
+        }
         val updatePkgs = remember(updates) { updates.mapTo(HashSet()) { it.entry.pkg } }
         val visibleUpdates = remember(updates, q) {
             if (q.isBlank()) {
@@ -768,9 +777,12 @@ private fun XmsUpdateRow(repo: HubRepository, update: XmsUpdate, l10n: UiText, o
                         loading = true
                         error = ""
                         scope.launch {
-                            val group = runCatching { repo.xmsApp(update.entry.pkg) }
-                                .getOrNull()
-                                ?.newestGroup()
+                            // 必须取「本机类别 + 检测到的版本」那一条，不能用 newestGroup()：
+                            // 总表里的最新版可能是平板包，下到手机上是错的
+                            val detail = runCatching { repo.xmsApp(update.entry.pkg) }.getOrNull()
+                            val group = detail?.groups?.firstOrNull {
+                                it.type == update.type && it.appVersion == update.latestVersion
+                            } ?: detail?.newestGroup()
                             val result = group?.let { requestXmsDownload(repo, update.entry.pkg, it) }
 
                             loading = false

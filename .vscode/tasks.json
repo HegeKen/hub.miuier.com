@@ -29,6 +29,15 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "run-backfillXmsDates",
+			"type": "shell",
+			"command": "python3",
+			"args": ["${workspaceFolder}/data/scripts/backfill_xms_release_dates.py"],
+			"group": "build",
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
 			"label": "run-xfuFull",
 			"type": "shell",
 			"command": "python3",
@@ -75,10 +84,12 @@
 		},
 		{
 			"label": "run-all-jobs",
+			"dependsOrder": "sequence",
 			"dependsOn": [
 				"run-getNewBranch",
 				"run-otaFormer",
 				"run-otaFull",
+				"run-backfillXmsDates",
 				"run-xfuFull",
 				"run-mgcFastboot",
 				"run-getCurrentFastboot",
