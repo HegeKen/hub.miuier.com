@@ -84,7 +84,7 @@
 		},
 		{
 			"label": "run-all-jobs",
-			"dependsOrder": "sequence",
+			"dependsOrder": "parallel",
 			"dependsOn": [
 				"run-getNewBranch",
 				"run-otaFormer",
